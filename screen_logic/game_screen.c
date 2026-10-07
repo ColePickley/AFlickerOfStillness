@@ -76,9 +76,7 @@ static void draw_ceiling_line(const GameScreen* game_screen, SDL_Renderer* rende
         const int texture_y = max(0, ceiling_y % GRID_SIZE);
         ceiling_y = max(0, min(game_data->num_map_rows - 1, ceiling_y / GRID_SIZE));
         const int texture_index = game_data->texture_locations[ceiling_y][ceiling_x][4];
-        if (texture_index == 0) {
-            continue;
-        }
+        if (texture_index == 0) continue;
         SDL_Color color;
         set_surface_pixel_color(game_screen->map_textures[texture_index]->surface[texture_x], 0, texture_y, &color);
         SDL_FRect rect = {.x = (float) (ray_num * LINE_WIDTH), .y = (float) y, .w = LINE_WIDTH, .h = (float) vert_res};
@@ -139,49 +137,40 @@ static void draw_wall_line(const GameScreen* game_screen, SDL_Renderer* renderer
 }
 
 static void draw_entities(const GameScreen* game_screen, SDL_Renderer* renderer, GameData* game_data) {
-    order_entities(game_data);
+    set_entity_vectors(game_data);
+    quick_sort_entities(game_data->entities, 0, game_data->num_entities - 1);
     const double player_vect_x = cos(toRadians(game_data->player->rotation - 90.0));
     const double player_vect_y = -1.0 * sin(toRadians(game_data->player->rotation - 90.0));
     for (int i = 0; i < game_data->num_entities; i++) {
-        const double dot_product =
-            game_data->entities[i]->vect_x * player_vect_x + game_data->entities[i]->vect_y * player_vect_y;
-        if (game_data->entities[i]->vect_mag == 0) {
-            continue;
-        }
-        double angle = toDegrees(acos(dot_product / game_data->entities[i]->vect_mag));
-        const double determinant =
-            game_data->entities[i]->vect_x * player_vect_y - game_data->entities[i]->vect_y * player_vect_x;
-        if (determinant < 0) {
-            angle = angle * -1;
-        }
-        const int entity_size =
-            (int) round(game_data->entities[i]->scale * WINDOW_HEIGHT / game_data->entities[i]->vect_mag);
-        const int entity_height =
-            (int) round(game_data->entities[i]->height * 2 * WINDOW_HEIGHT / game_data->entities[i]->vect_mag);
-        const int height_offset =
-            (int) round((GRID_SIZE - game_data->entities[i]->scale) * WINDOW_HEIGHT / game_data->entities[i]->vect_mag);
+        Entity* entity = game_data->entities[i];
+        if (entity->vect_mag == 0) continue;
+        const double angle = getEntityAngle(entity, player_vect_x, player_vect_y);
+        const double adjusted_entity_vect_mag = entity->vect_mag * cos(toRadians(max(-30.0, min(30.0, angle))));
+
+        const int entity_size = (int) round(entity->scale * WINDOW_HEIGHT / adjusted_entity_vect_mag);
+        const int entity_height = (int) round(entity->height * 2 * WINDOW_HEIGHT / adjusted_entity_vect_mag);
+        const int height_offset = (int) round((GRID_SIZE - entity->scale) * WINDOW_HEIGHT / adjusted_entity_vect_mag);
+        const int entity_height_adjustment = entity_size - height_offset + entity_height;
+
         const int start_x = (int) ((angle + 30.0) * (double) LINE_WIDTH * 4.0 - (double) entity_size / 2.0);
-        const int start_j = start_x / LINE_WIDTH;
-        const int end_j = (start_x + entity_size) / LINE_WIDTH;
-        for (int j = start_j; j < end_j; j++) {
-            if (0 <= j && j < WINDOW_WIDTH / LINE_WIDTH &&
-                    game_data->player->rays[j]->length >= game_data->entities[i]->vect_mag) {
-                int texture_index = (int) round((j - start_j) / ((end_j - start_j) / 64.0));
-                texture_index = min(63, max(0, texture_index));
-                const int start_y = (int) ((WINDOW_HEIGHT - entity_size + height_offset - entity_height) / 2.0);
-                if (WINDOW_WIDTH / 2 - 10 <= j * LINE_WIDTH && j * LINE_WIDTH <= WINDOW_WIDTH / 2 + 10) {
-                    game_data->entities[i]->in_scope = true;
-                }
-                SDL_Texture* texture =
-                    game_screen->entity_textures[game_data->entities[i]->type_index]->texture[texture_index];
-                SDL_FRect rect = {
-                    .x = (float) (j * LINE_WIDTH),
-                    .y = (float) start_y + LINE_WIDTH / 2.0f,
-                    .w = LINE_WIDTH,
-                    .h = (float) entity_size
-                };
-                SDL_RenderTexture(renderer, texture, NULL, &rect);
+        const int start_ray = start_x / LINE_WIDTH;
+        const int end_ray = (start_x + entity_size) / LINE_WIDTH;
+        for (int ray_num = max(0, start_ray); ray_num < min(NUM_RAYS, end_ray); ray_num++) {
+            if (game_data->player->rays[ray_num]->length < entity->vect_mag) continue;
+            int texture_index = (int) round((ray_num - start_ray) / ((end_ray - start_ray) / 64.0));
+            texture_index = min(63, max(0, texture_index));
+            const int start_y = (int) ((WINDOW_HEIGHT - entity_height_adjustment) / 2.0);
+            if (WINDOW_WIDTH / 2 - 10 <= ray_num * LINE_WIDTH && ray_num * LINE_WIDTH <= WINDOW_WIDTH / 2 + 10) {
+                entity->in_scope = true;
             }
+            SDL_Texture* texture = game_screen->entity_textures[entity->type_index]->texture[texture_index];
+            SDL_FRect rect = {
+                .x = (float) (ray_num * LINE_WIDTH),
+                .y = (float) start_y + LINE_WIDTH / 2.0f,
+                .w = LINE_WIDTH,
+                .h = (float) entity_size
+            };
+            SDL_RenderTexture(renderer, texture, NULL, &rect);
         }
     }
 }
@@ -196,24 +185,22 @@ static void draw_entities(const GameScreen* game_screen, SDL_Renderer* renderer,
  * Helper Functions
  */
 
-static bool set_surface_pixel_color(const SDL_Surface* surface, const int x, const int y, SDL_Color* out_color) {
+static void set_surface_pixel_color(const SDL_Surface* surface, const int x, const int y, SDL_Color* out_color) {
     const Uint8* pixel_ptr = (const Uint8*)surface->pixels + (y * surface->pitch) + (x * 4);
     const Uint32 pixel_value = *(const Uint32*)pixel_ptr;
     out_color->r = (pixel_value >> 24) & 0xFF;
     out_color->g = (pixel_value >> 16) & 0xFF;
     out_color->b = (pixel_value >> 8) & 0xFF;
     out_color->a = pixel_value & 0xFF;
-    return true;
 }
 
-static void order_entities(GameData* game_data) {
+static void set_entity_vectors(const GameData* game_data) {
     for (int i = 0; i < game_data->num_entities; i++) {
         game_data->entities[i]->vect_x = game_data->entities[i]->x - game_data->player->x;
         game_data->entities[i]->vect_y = game_data->entities[i]->y - game_data->player->y;
         game_data->entities[i]->vect_mag = sqrt(pow(game_data->entities[i]->vect_x, 2) +
             pow(game_data->entities[i]->vect_y, 2));
     }
-    quick_sort_entities(game_data->entities, 0, game_data->num_entities - 1);
 }
 
 static void quick_sort_entities(Entity* entities[MAX_NUM_ENTITIES], const int low, const int high) {
@@ -235,6 +222,15 @@ static void quick_sort_entities(Entity* entities[MAX_NUM_ENTITIES], const int lo
         quick_sort_entities(entities, low, pi - 1);
         quick_sort_entities(entities, pi + 1, high);
     }
+}
+
+static double getEntityAngle(const Entity* entity, const double player_vect_x, const double player_vect_y) {
+    const double dot_product = entity->vect_x * player_vect_x + entity->vect_y * player_vect_y;
+    double angle = toDegrees(acos(dot_product / entity->vect_mag));
+    const double determinant = entity->vect_x * player_vect_y - entity->vect_y * player_vect_x;
+    if (determinant < 0)
+        angle *= -1;
+    return angle;
 }
 
 static int get_texture_side(const double angle, const Ray ray) {

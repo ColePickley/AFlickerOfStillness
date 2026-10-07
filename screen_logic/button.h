@@ -23,7 +23,15 @@ void initButton(Button** button, Label* label, ButtonColorData color_data);
 
 void destroyButton(Button* button);
 
-bool isButtonPressed(const Button* button, SDL_FPoint mouse_pos);
+bool isPointWithinButton(const Button* button, SDL_FPoint mouse_pos);
+
+bool buttonPressCheck(Button* button, SDL_FPoint mouse_pos);
+
+int buttonGroupPressCheck(uint8_t num_buttons, Button* const buttons[num_buttons], SDL_FPoint mouse_pos);
+
+bool buttonReleaseCheck(Button* button, SDL_FPoint mouse_pos);
+
+bool buttonMouseDragCheck(Button* button, SDL_FPoint mouse_pos);
 
 void turnOnButton(Button* button);
 

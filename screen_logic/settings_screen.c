@@ -152,25 +152,25 @@ void paintSettingsScreen(SettingsScreen* settings_screen, SDL_Renderer* renderer
 }
 
 void settingsScreenMousePressed(const SettingsScreen* settings_screen, const SDL_FPoint mouse_pos) {
-    if (isButtonPressed(settings_screen->fps_button, mouse_pos)) {
+    if (isPointWithinButton(settings_screen->fps_button, mouse_pos)) {
         turnOnButton(settings_screen->fps_button);
         settings_screen->fps_button->is_selected = true;
-    } else if (isButtonPressed(settings_screen->graphics_quality_button, mouse_pos)) {
+    } else if (isPointWithinButton(settings_screen->graphics_quality_button, mouse_pos)) {
         turnOnButton(settings_screen->graphics_quality_button);
         settings_screen->graphics_quality_button->is_selected = true;
-    } else if (isButtonPressed(settings_screen->sensitivity_button, mouse_pos)) {
+    } else if (isPointWithinButton(settings_screen->sensitivity_button, mouse_pos)) {
         turnOnButton(settings_screen->sensitivity_button);
         settings_screen->sensitivity_button->is_selected = true;
-    } else if (isButtonPressed(settings_screen->fullscreen_button, mouse_pos)) {
+    } else if (isPointWithinButton(settings_screen->fullscreen_button, mouse_pos)) {
         turnOnButton(settings_screen->fullscreen_button);
         settings_screen->fullscreen_button->is_selected = true;
-    } else if (isButtonPressed(settings_screen->back_button, mouse_pos)) {
+    } else if (isPointWithinButton(settings_screen->back_button, mouse_pos)) {
         turnOnButton(settings_screen->back_button);
         settings_screen->back_button->is_selected = true;
-    } else if (isButtonPressed(settings_screen->reset_button, mouse_pos)) {
+    } else if (isPointWithinButton(settings_screen->reset_button, mouse_pos)) {
         turnOnButton(settings_screen->reset_button);
         settings_screen->reset_button->is_selected = true;
-    } else if (isButtonPressed(settings_screen->save_button, mouse_pos)) {
+    } else if (isPointWithinButton(settings_screen->save_button, mouse_pos)) {
         turnOnButton(settings_screen->save_button);
         settings_screen->save_button->is_selected = true;
     }
@@ -208,18 +208,18 @@ void settingsScreenMouseReleased(SettingsScreen* settings_screen, const SDL_FPoi
         adjusted_x = max(0.0f, min(730.0f, adjusted_x));
         user_data->sensitivity = (int) (adjusted_x / 730.0f * 100.0f);
         resetSettingsScreen(settings_screen, user_data);
-    } else if (isButtonPressed(settings_screen->fullscreen_button, mouse_pos) &&
+    } else if (isPointWithinButton(settings_screen->fullscreen_button, mouse_pos) &&
             settings_screen->fullscreen_button->is_selected) {
         user_data->fullscreen = !user_data->fullscreen;
         SDL_SetWindowFullscreen(window, user_data->fullscreen);
         resetSettingsScreen(settings_screen, user_data);
-    } else if (isButtonPressed(settings_screen->back_button, mouse_pos) && settings_screen->back_button->is_selected) {
+    } else if (isPointWithinButton(settings_screen->back_button, mouse_pos) && settings_screen->back_button->is_selected) {
         settings_screen->do_exit_animation = true;
-    } else if (isButtonPressed(settings_screen->reset_button, mouse_pos) && settings_screen->reset_button->is_selected) {
+    } else if (isPointWithinButton(settings_screen->reset_button, mouse_pos) && settings_screen->reset_button->is_selected) {
         resetUserData(user_data);
         SDL_SetWindowFullscreen(window, user_data->fullscreen);
         resetSettingsScreen(settings_screen, user_data);
-    } else if (isButtonPressed(settings_screen->save_button, mouse_pos) && settings_screen->save_button->is_selected) {
+    } else if (isPointWithinButton(settings_screen->save_button, mouse_pos) && settings_screen->save_button->is_selected) {
         saveUserData(user_data);
     }
 
@@ -268,7 +268,7 @@ void settingsScreenMouseDragged(SettingsScreen* settings_screen, const SDL_FPoin
         setSettingsScreenLabels(settings_screen, user_data);
     }
 
-    if (isButtonPressed(settings_screen->fullscreen_button, mouse_pos)) {
+    if (isPointWithinButton(settings_screen->fullscreen_button, mouse_pos)) {
         if (settings_screen->fullscreen_button->is_selected) {
             turnOnButton(settings_screen->fullscreen_button);
         }
@@ -276,7 +276,7 @@ void settingsScreenMouseDragged(SettingsScreen* settings_screen, const SDL_FPoin
         turnOffButton(settings_screen->fullscreen_button);
     }
 
-    if (isButtonPressed(settings_screen->back_button, mouse_pos)) {
+    if (isPointWithinButton(settings_screen->back_button, mouse_pos)) {
         if (settings_screen->back_button->is_selected) {
             turnOnButton(settings_screen->back_button);
         }
@@ -284,7 +284,7 @@ void settingsScreenMouseDragged(SettingsScreen* settings_screen, const SDL_FPoin
         turnOffButton(settings_screen->back_button);
     }
 
-    if (isButtonPressed(settings_screen->reset_button, mouse_pos)) {
+    if (isPointWithinButton(settings_screen->reset_button, mouse_pos)) {
         if (settings_screen->reset_button->is_selected) {
             turnOnButton(settings_screen->reset_button);
         }
@@ -292,7 +292,7 @@ void settingsScreenMouseDragged(SettingsScreen* settings_screen, const SDL_FPoin
         turnOffButton(settings_screen->reset_button);
     }
 
-    if (isButtonPressed(settings_screen->save_button, mouse_pos)) {
+    if (isPointWithinButton(settings_screen->save_button, mouse_pos)) {
         if (settings_screen->save_button->is_selected) {
             turnOnButton(settings_screen->save_button);
         }

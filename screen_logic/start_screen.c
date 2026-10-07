@@ -52,17 +52,11 @@ void paintStartScreen(StartScreen* start_screen, SDL_Renderer* renderer) {
 
 void startScreenMousePressed(const StartScreen* start_screen, const SDL_FPoint mouse_pos) {
     if (start_screen->paint_start_screen && !start_screen->paint_settings_screen) {
-        if (isButtonPressed(start_screen->play_button, mouse_pos)) {
-            turnOnButton(start_screen->play_button);
-            start_screen->play_button->is_selected = true;
-        } else if (isButtonPressed(start_screen->settings_button, mouse_pos)) {
-            turnOnButton(start_screen->settings_button);
-            start_screen->settings_button->is_selected = true;
-        } else if (isButtonPressed(start_screen->exit_button, mouse_pos)) {
-            turnOnButton(start_screen->exit_button);
-            start_screen->exit_button->is_selected = true;
-        }
-    } else if (start_screen->paint_settings_screen && !start_screen->paint_start_screen) {
+        if (buttonPressCheck(start_screen->play_button, mouse_pos)) return;
+        if (buttonPressCheck(start_screen->settings_button, mouse_pos)) return;
+        if (buttonPressCheck(start_screen->exit_button, mouse_pos)) return;
+    }
+    if (start_screen->paint_settings_screen && !start_screen->paint_start_screen) {
         settingsScreenMousePressed(start_screen->settings_screen, mouse_pos);
     }
 }
@@ -70,25 +64,14 @@ void startScreenMousePressed(const StartScreen* start_screen, const SDL_FPoint m
 void startScreenMouseReleased(StartScreen* start_screen, const SDL_FPoint mouse_pos, bool* program_running,
         uint8_t* current_screen, uint8_t* prev_screen, UserData* user_data, SDL_Window* window) {
     if (start_screen->paint_start_screen && !start_screen->paint_settings_screen) {
-        turnOffButton(start_screen->play_button);
-        turnOffButton(start_screen->settings_button);
-        turnOffButton(start_screen->exit_button);
-
-        if (isButtonPressed(start_screen->play_button, mouse_pos) &&
-                start_screen->play_button->is_selected) {
+        if (buttonReleaseCheck(start_screen->play_button, mouse_pos)) {
             *current_screen = SAVES_SCREEN;
             *prev_screen = START_SCREEN;
-        } else if (isButtonPressed(start_screen->settings_button, mouse_pos) &&
-                start_screen->settings_button->is_selected) {
+        } else if (buttonReleaseCheck(start_screen->settings_button, mouse_pos)) {
             start_screen->paint_settings_screen = true;
-        } else if (isButtonPressed(start_screen->exit_button, mouse_pos) &&
-                start_screen->exit_button->is_selected) {
+        } else if (buttonReleaseCheck(start_screen->exit_button, mouse_pos)) {
             *program_running = false;
         }
-
-        start_screen->play_button->is_selected = false;
-        start_screen->settings_button->is_selected = false;
-        start_screen->exit_button->is_selected = false;
     } else if (start_screen->paint_settings_screen && !start_screen->paint_start_screen) {
         settingsScreenMouseReleased(start_screen->settings_screen, mouse_pos, user_data, window);
     }
@@ -96,29 +79,9 @@ void startScreenMouseReleased(StartScreen* start_screen, const SDL_FPoint mouse_
 
 void startScreenMouseDragged(const StartScreen* start_screen, const SDL_FPoint mouse_pos, UserData* user_data) {
     if (start_screen->paint_start_screen && !start_screen->paint_settings_screen) {
-        if (isButtonPressed(start_screen->play_button, mouse_pos)) {
-            if (start_screen->play_button->is_selected) {
-                turnOnButton(start_screen->play_button);
-            }
-        } else {
-            turnOffButton(start_screen->play_button);
-        }
-
-        if (isButtonPressed(start_screen->settings_button, mouse_pos)) {
-            if (start_screen->settings_button->is_selected) {
-                turnOnButton(start_screen->settings_button);
-            }
-        } else {
-            turnOffButton(start_screen->settings_button);
-        }
-
-        if (isButtonPressed(start_screen->exit_button, mouse_pos)) {
-            if (start_screen->exit_button->is_selected) {
-                turnOnButton(start_screen->exit_button);
-            }
-        } else {
-            turnOffButton(start_screen->exit_button);
-        }
+        buttonMouseDragCheck(start_screen->play_button, mouse_pos);
+        buttonMouseDragCheck(start_screen->settings_button, mouse_pos);
+        buttonMouseDragCheck(start_screen->exit_button, mouse_pos);
     } else if (start_screen->paint_settings_screen && !start_screen->paint_start_screen) {
         settingsScreenMouseDragged(start_screen->settings_screen, mouse_pos, user_data);
     }

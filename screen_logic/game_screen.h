@@ -10,6 +10,8 @@ typedef struct {
 }SlicedTexture;
 
 typedef struct {
+    bool paint_game_screen;
+    bool paint_pause_screen;
     int num_map_textures;
     int num_entity_textures;
     SlicedTexture* map_textures[MAX_NUM_TEXTURES];
@@ -37,11 +39,13 @@ static void draw_entities(const GameScreen* game_screen, SDL_Renderer* renderer,
  * Helper functions
  */
 
-static bool set_surface_pixel_color(const SDL_Surface* surface, int x, int y, SDL_Color* out_color);
+static void set_surface_pixel_color(const SDL_Surface* surface, int x, int y, SDL_Color* out_color);
 
-static void order_entities(GameData* game_data);
+static void set_entity_vectors(const GameData* game_data);
 
 static void quick_sort_entities(Entity* entities[MAX_NUM_ENTITIES], int low, int high);
+
+static double getEntityAngle(const Entity* entity, double player_vect_x, double player_vect_y);
 
 static int get_texture_side(double angle, Ray ray);
 

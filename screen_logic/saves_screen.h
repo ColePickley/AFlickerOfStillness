@@ -18,9 +18,7 @@ typedef struct {
     Label* saves_label;
     Button* back_button;
     Button* play_button;
-    Button* save1_button;
-    Button* save2_button;
-    Button* save3_button;
+    Button* save_buttons[3];
     Button* delete_save_button;
     SDL_Texture* delete_save_texture;
 }SavesScreen;

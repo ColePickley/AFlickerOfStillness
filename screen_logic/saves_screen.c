@@ -18,9 +18,9 @@ void destroySavesScreen(const SavesScreen* saves_screen) {
     destroyLabel(saves_screen->select_save_label);
     destroyButton(saves_screen->back_button);
     destroyButton(saves_screen->play_button);
-    destroyButton(saves_screen->save1_button);
-    destroyButton(saves_screen->save2_button);
-    destroyButton(saves_screen->save3_button);
+    for (int i = 0; i < 3; i++) {
+        destroyButton(saves_screen->save_buttons[i]);
+    }
     destroyButton(saves_screen->delete_save_button);
     SDL_DestroyTexture(saves_screen->background_texture);
     SDL_DestroyTexture(saves_screen->left_panel_texture);
@@ -41,17 +41,17 @@ void paintSavesScreen(const SavesScreen* saves_screen, SDL_Renderer* renderer) {
     SDL_RenderTexture(renderer, saves_screen->background_texture, NULL, &background_rect);
     paintLabel(renderer, saves_screen->select_save_label);
     paintLabel(renderer, saves_screen->saves_label);
-    paintLabel(renderer, saves_screen->save1_button->label);
-    paintLabel(renderer, saves_screen->save2_button->label);
-    paintLabel(renderer, saves_screen->save3_button->label);
     paintLabel(renderer, saves_screen->back_button->label);
     paintLabel(renderer, saves_screen->play_button->label);
-    if (saves_screen->save1_button->is_on &&
-            strcmp(saves_screen->save1_button->label->text_data.text[0], "EMPTY") != 0 ||
-            saves_screen->save2_button->is_on &&
-            strcmp(saves_screen->save2_button->label->text_data.text[0], "EMPTY") != 0 ||
-            saves_screen->save3_button->is_on &&
-            strcmp(saves_screen->save3_button->label->text_data.text[0], "EMPTY") != 0) {
+    bool paint_delete_save_button = false;
+    for (int i = 0; i < 3; i++) {
+        paintLabel(renderer, saves_screen->save_buttons[i]->label);
+        if (saves_screen->save_buttons[0]->is_on &&
+                saves_screen->save_buttons[0]->label->text_data.horizontal_text_alignment == ALIGN_LEFT) {
+            paint_delete_save_button = true;
+        }
+    }
+    if (paint_delete_save_button) {
         paintLabel(renderer, saves_screen->delete_save_button->label);
         if (saves_screen->delete_save_button->is_on) {
             SDL_SetTextureAlphaMod(saves_screen->delete_save_texture, 255);
@@ -64,44 +64,39 @@ void paintSavesScreen(const SavesScreen* saves_screen, SDL_Renderer* renderer) {
 }
 
 void savesScreenMousePressed(const SavesScreen* saves_screen, const SDL_FPoint mouse_pos) {
-    if ((saves_screen->save1_button->is_on || saves_screen->save2_button->is_on || saves_screen->save3_button->is_on) &&
-            isButtonPressed(saves_screen->delete_save_button, mouse_pos)) {
-        turnOnButton(saves_screen->delete_save_button);
-        saves_screen->delete_save_button->is_selected = true;
-    } else if (isButtonPressed(saves_screen->save1_button, mouse_pos)) {
-        turnOnButton(saves_screen->save1_button);
-        saves_screen->save1_button->is_selected = true;
-        turnOffButton(saves_screen->save2_button);
-        saves_screen->save2_button->is_selected = false;
-        turnOffButton(saves_screen->save3_button);
-        saves_screen->save3_button->is_selected = false;
-        saves_screen->delete_save_button->label->rect.y = 255;
-    } else if (isButtonPressed(saves_screen->save2_button, mouse_pos)) {
-        turnOnButton(saves_screen->save2_button);
-        saves_screen->save2_button->is_selected = true;
-        turnOffButton(saves_screen->save1_button);
-        saves_screen->save1_button->is_selected = false;
-        turnOffButton(saves_screen->save3_button);
-        saves_screen->save3_button->is_selected = false;
-        saves_screen->delete_save_button->label->rect.y = 405;
-    } else if (isButtonPressed(saves_screen->save3_button, mouse_pos)) {
-        turnOnButton(saves_screen->save3_button);
-        saves_screen->save3_button->is_selected = true;
-        turnOffButton(saves_screen->save1_button);
-        saves_screen->save1_button->is_selected = false;
-        turnOffButton(saves_screen->save2_button);
-        saves_screen->save2_button->is_selected = false;
-        saves_screen->delete_save_button->label->rect.y = 555;
-    } else if (isButtonPressed(saves_screen->back_button, mouse_pos)) {
-        turnOnButton(saves_screen->back_button);
-        saves_screen->back_button->is_selected = true;
-    } else if (isButtonPressed(saves_screen->play_button, mouse_pos)) {
-        turnOnButton(saves_screen->play_button);
-        saves_screen->play_button->is_selected = true;
-    } else {
-        saves_screen->save1_button->is_selected = false;
-        saves_screen->save2_button->is_selected = false;
-        saves_screen->save3_button->is_selected = false;
+    bool save_selected = false;
+    for (int i = 0; i < 3; i++) {
+        if (saves_screen->save_buttons[i]->is_on) {
+            save_selected = true;
+            break;
+        }
+    }
+    if (save_selected && buttonPressCheck(saves_screen->delete_save_button, mouse_pos)) return;
+    bool button_released = false;
+    const int clicked_save_button_index = buttonGroupPressCheck(3, saves_screen->save_buttons, mouse_pos);
+    if (clicked_save_button_index != -1) {
+        button_released = true;
+        switch (clicked_save_button_index) {
+            case 0:
+                saves_screen->delete_save_button->label->rect.y = 255;
+                break;
+            case 1:
+                saves_screen->delete_save_button->label->rect.y = 405;
+                break;
+            case 2:
+                saves_screen->delete_save_button->label->rect.y = 555;
+                break;
+            default:
+                break;
+        }
+    }
+
+    if (buttonPressCheck(saves_screen->back_button, mouse_pos)) button_released = true;
+    if (buttonPressCheck(saves_screen->play_button, mouse_pos)) button_released = true;
+    if (!button_released) {
+        for (int i = 0; i < 3; i++) {
+            saves_screen->save_buttons[i]->is_selected = false;
+        }
     }
 }
 
@@ -112,33 +107,26 @@ void savesScreenMouseReleased(SavesScreen* saves_screen, const SDL_FPoint mouse_
     turnOffButton(saves_screen->delete_save_button);
 
     bool button_released = false;
-    if (saves_screen->save1_button->is_selected) {
-        game_data->save_index = 0;
-        button_released = true;
-    } else if (saves_screen->save2_button->is_selected) {
-        game_data->save_index = 1;
-        button_released = true;
-    } else if (saves_screen->save3_button->is_selected) {
-        game_data->save_index = 2;
-        button_released = true;
+    for (int i = 0; i < 3; i++) {
+        if (saves_screen->save_buttons[i]->is_selected) {
+            game_data->save_index = i;
+            button_released = true;
+            break;
+        }
     }
-    if (isButtonPressed(saves_screen->back_button, mouse_pos) && saves_screen->back_button->is_selected) {
-        saves_screen->save1_button->is_selected = false;
-        saves_screen->save2_button->is_selected = false;
-        saves_screen->save3_button->is_selected = false;
-        turnOffButton(saves_screen->save1_button);
-        turnOffButton(saves_screen->save2_button);
-        turnOffButton(saves_screen->save3_button);
+    if (isPointWithinButton(saves_screen->back_button, mouse_pos) && saves_screen->back_button->is_selected) {
+        for (int i = 0; i < 3; i++) {
+            saves_screen->save_buttons[i]->is_selected = false;
+            turnOffButton(saves_screen->save_buttons[i]);
+        }
         *current_screen = *prev_screen;
         *prev_screen = SAVES_SCREEN;
         button_released = true;
-    } else if (isButtonPressed(saves_screen->play_button, mouse_pos) && saves_screen->play_button->is_selected) {
-        saves_screen->save1_button->is_selected = false;
-        saves_screen->save2_button->is_selected = false;
-        saves_screen->save3_button->is_selected = false;
-        turnOffButton(saves_screen->save1_button);
-        turnOffButton(saves_screen->save2_button);
-        turnOffButton(saves_screen->save3_button);
+    } else if (isPointWithinButton(saves_screen->play_button, mouse_pos) && saves_screen->play_button->is_selected) {
+        for (int i = 0; i < 3; i++) {
+            saves_screen->save_buttons[i]->is_selected = false;
+            turnOffButton(saves_screen->save_buttons[i]);
+        }
         if (button_released) {
             *current_screen = GAME_SCREEN;
             *prev_screen = SAVES_SCREEN;
@@ -149,22 +137,22 @@ void savesScreenMouseReleased(SavesScreen* saves_screen, const SDL_FPoint mouse_
         } else {
             button_released = true;
         }
-    } else if (isButtonPressed(saves_screen->delete_save_button, mouse_pos)
+    } else if (isPointWithinButton(saves_screen->delete_save_button, mouse_pos)
             && saves_screen->delete_save_button->is_selected) {
         deleteSave(game_data->save_index);
         destroyButton(saves_screen->back_button);
         destroyButton(saves_screen->play_button);
-        destroyButton(saves_screen->save1_button);
-        destroyButton(saves_screen->save2_button);
-        destroyButton(saves_screen->save3_button);
+        for (int i = 0; i < 3; i++) {
+            destroyButton(saves_screen->save_buttons[i]);
+        }
         destroyButton(saves_screen->delete_save_button);
         setSavesScreenButtons(saves_screen);
     }
 
     if (!button_released) {
-        turnOffButton(saves_screen->save1_button);
-        turnOffButton(saves_screen->save2_button);
-        turnOffButton(saves_screen->save3_button);
+        for (int i = 0; i < 3; i++) {
+            turnOffButton(saves_screen->save_buttons[i]);
+        }
     }
 
     saves_screen->back_button->is_selected = false;
@@ -173,27 +161,9 @@ void savesScreenMouseReleased(SavesScreen* saves_screen, const SDL_FPoint mouse_
 }
 
 void savesScreenMouseDragged(const SavesScreen* saves_screen, const SDL_FPoint mouse_pos) {
-    if (isButtonPressed(saves_screen->back_button, mouse_pos)) {
-        if (saves_screen->back_button->is_selected) {
-            turnOnButton(saves_screen->back_button);
-        }
-    } else {
-        turnOffButton(saves_screen->back_button);
-    }
-    if (isButtonPressed(saves_screen->play_button, mouse_pos)) {
-        if (saves_screen->play_button->is_selected) {
-            turnOnButton(saves_screen->play_button);
-        }
-    } else {
-        turnOffButton(saves_screen->play_button);
-    }
-    if (isButtonPressed(saves_screen->delete_save_button, mouse_pos)) {
-        if (saves_screen->delete_save_button->is_selected) {
-            turnOnButton(saves_screen->delete_save_button);
-        }
-    } else {
-        turnOffButton(saves_screen->delete_save_button);
-    }
+    buttonMouseDragCheck(saves_screen->back_button, mouse_pos);
+    buttonMouseDragCheck(saves_screen->play_button, mouse_pos);
+    buttonMouseDragCheck(saves_screen->delete_save_button, mouse_pos);
 }
 
 static void setSavesScreenBackground(SavesScreen* saves_screen, SDL_Renderer* renderer) {
@@ -213,15 +183,18 @@ static void setSavesScreenBackground(SavesScreen* saves_screen, SDL_Renderer* re
         SDL_Log("Failed to load image: %s", SDL_GetError());
     }
 
-    saves_screen->left_panel_rect.x = ((float) (WINDOW_WIDTH - WINDOW_HEIGHT) / 2.0f - (float) WINDOW_HEIGHT) / 2.0f;
-    saves_screen->left_panel_rect.y = 0.0f;
-    saves_screen->left_panel_rect.w = (float) WINDOW_HEIGHT;
-    saves_screen->left_panel_rect.h = (float) WINDOW_HEIGHT;
-
-    saves_screen->right_panel_rect.x = (3.0f * (float) WINDOW_WIDTH - (float) WINDOW_HEIGHT) / 4.0f;
-    saves_screen->right_panel_rect.y = 0.0f;
-    saves_screen->right_panel_rect.w = (float) WINDOW_HEIGHT;
-    saves_screen->right_panel_rect.h = (float) WINDOW_HEIGHT;
+    saves_screen->left_panel_rect = (SDL_FRect) {
+        .x = ((float) (WINDOW_WIDTH - WINDOW_HEIGHT) / 2.0f - (float) WINDOW_HEIGHT) / 2.0f,
+        .y = 0.0f,
+        .w = (float) WINDOW_HEIGHT,
+        .h = (float) WINDOW_HEIGHT
+    };
+    saves_screen->right_panel_rect = (SDL_FRect) {
+        .x = (3.0f * (float) WINDOW_WIDTH - (float) WINDOW_HEIGHT) / 4.0f,
+        .y = 0.0f,
+        .w = (float) WINDOW_HEIGHT,
+        .h = (float) WINDOW_HEIGHT
+    };
 
     const SDL_FRect left_label_rect = {
         .x = 0.0f,
@@ -377,58 +350,26 @@ static void setSavesScreenButtons(SavesScreen* saves_screen) {
     const float y = (WINDOW_HEIGHT - 480.0f) / 2.0f + 30.0f;
     const float width = 740.0f;
     const float height = 120.0f;
-    const float spacing = 30.0f;
-    // save1 button
-    LabelTextData save1_text_data;
-    char save1_label_text[100];
-    setSaveText(save1_label_text, sizeof(save1_label_text), 0);
-    if (strcmp(save1_label_text, "EMPTY") == 0) {
-        horizontal_text_alignment = ALIGN_CENTER;
-        horizontal_text_margin = 0.0f;
-    } else {
-        horizontal_text_alignment = ALIGN_LEFT;
-        horizontal_text_margin = 30.0f;
+    // save buttons
+    for (int i = 0; i < 3; i++) {
+        const float spacing = 30.0f;
+        LabelTextData save_text_data;
+        char save_label_text[100];
+        setSaveText(save_label_text, sizeof(save_label_text), i);
+        if (strcmp(save_label_text, "EMPTY") == 0) {
+            horizontal_text_alignment = ALIGN_CENTER;
+            horizontal_text_margin = 0.0f;
+        } else {
+            horizontal_text_alignment = ALIGN_LEFT;
+            horizontal_text_margin = 30.0f;
+        }
+        initLabelTextData(&save_text_data, save_label_text, font_size, line_spacing, vertical_text_margin,
+            horizontal_text_margin, vertical_text_alignment, horizontal_text_alignment, text_color);
+        Label* save_label = NULL;
+        initLabel(&save_label, (SDL_FRect) {.x = x, .y = y + (height + spacing) * (float) i, .w = width, .h = height},
+            fill_color, style_data, save_text_data);
+        initButton(&saves_screen->save_buttons[i], save_label, color_data);
     }
-    initLabelTextData(&save1_text_data, save1_label_text, font_size, line_spacing, vertical_text_margin,
-        horizontal_text_margin, vertical_text_alignment, horizontal_text_alignment, text_color);
-    Label* save1_label = NULL;
-    initLabel(&save1_label, (SDL_FRect) {.x = x, .y = y, .w = width, .h = height}, fill_color, style_data,
-        save1_text_data);
-    initButton(&saves_screen->save1_button, save1_label, color_data);
-    // save2 button
-    LabelTextData save2_text_data;
-    char save2_label_text[100];
-    setSaveText(save2_label_text, sizeof(save2_label_text), 1);
-    if (strcmp(save2_label_text, "EMPTY") == 0) {
-        horizontal_text_alignment = ALIGN_CENTER;
-        horizontal_text_margin = 0.0f;
-    } else {
-        horizontal_text_alignment = ALIGN_LEFT;
-        horizontal_text_margin = 30.0f;
-    }
-    initLabelTextData(&save2_text_data, save2_label_text, font_size, line_spacing, vertical_text_margin,
-        horizontal_text_margin, vertical_text_alignment, horizontal_text_alignment, text_color);
-    Label* save2_label = NULL;
-    initLabel(&save2_label, (SDL_FRect) {.x = x, .y = y + height + spacing, .w = width, .h = height}, fill_color,
-        style_data, save2_text_data);
-    initButton(&saves_screen->save2_button, save2_label, color_data);
-    // save3 button
-    LabelTextData save3_text_data;
-    char save3_label_text[100];
-    setSaveText(save3_label_text, sizeof(save3_label_text), 2);
-    if (strcmp(save3_label_text, "EMPTY") == 0) {
-        horizontal_text_alignment = ALIGN_CENTER;
-        horizontal_text_margin = 0.0f;
-    } else {
-        horizontal_text_alignment = ALIGN_LEFT;
-        horizontal_text_margin = 30.0f;
-    }
-    initLabelTextData(&save3_text_data, save3_label_text, font_size, line_spacing, vertical_text_margin,
-        horizontal_text_margin, vertical_text_alignment, horizontal_text_alignment, text_color);
-    Label* save3_label = NULL;
-    initLabel(&save3_label, (SDL_FRect) {.x = x, .y = y + (height + spacing) * 2, .w = width, .h = height}, fill_color,
-        style_data, save3_text_data);
-    initButton(&saves_screen->save3_button, save3_label, color_data);
 
     /*
      * delete save button
