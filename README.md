@@ -8,6 +8,7 @@ inner-workings of the specific implementation that I created for this game engin
 
 ## Table of Contents:
 - [Prerequisites](#Prerequisites)
+- [Build Instructions](#Build-Instructions)
 - [Files](#Files)
   - [Map Files](#Map-Files)
   - [Save Files](#Save-Files)
