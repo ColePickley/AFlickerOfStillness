@@ -141,15 +141,18 @@ static void setStartScreenBackground(StartScreen* start_screen, SDL_Renderer* re
         SDL_Log("Failed to load image: %s", SDL_GetError());
     }
 
-    start_screen->left_panel_rect.x = ((float) (WINDOW_WIDTH - WINDOW_HEIGHT) / 2.0f - (float) WINDOW_HEIGHT) / 2.0f;
-    start_screen->left_panel_rect.y = 0.0f;
-    start_screen->left_panel_rect.w = (float) WINDOW_HEIGHT;
-    start_screen->left_panel_rect.h = (float) WINDOW_HEIGHT;
-
-    start_screen->right_panel_rect.x = (3.0f * (float) WINDOW_WIDTH - (float) WINDOW_HEIGHT) / 4.0f;
-    start_screen->right_panel_rect.y = 0.0f;
-    start_screen->right_panel_rect.w = (float) WINDOW_HEIGHT;
-    start_screen->right_panel_rect.h = (float) WINDOW_HEIGHT;
+    start_screen->left_panel_rect = (SDL_FRect) {
+        .x = ((float) (WINDOW_WIDTH - WINDOW_HEIGHT) / 2.0f - (float) WINDOW_HEIGHT) / 2.0f,
+        .y = 0.0f,
+        .w = (float) WINDOW_HEIGHT,
+        .h = (float) WINDOW_HEIGHT
+    };
+    start_screen->right_panel_rect = (SDL_FRect) {
+        .x = (3.0f * (float) WINDOW_WIDTH - (float) WINDOW_HEIGHT) / 4.0f,
+        .y = 0.0f,
+        .w = (float) WINDOW_HEIGHT,
+        .h = (float) WINDOW_HEIGHT
+    };
 
     const SDL_FRect left_label_rect = {
         .x = 0.0f,
@@ -168,7 +171,9 @@ static void setStartScreenBackground(StartScreen* start_screen, SDL_Renderer* re
         .bevel_radius = 0.0f,
         .boarder_color = {.r = 0, .g = 0, .b = 0, .a = 100}
     };
-    const LabelTextData text_data = {};
+    LabelTextData text_data;
+    initLabelTextData(&text_data, "", 0, 0, 0, 0,
+        0, 0, (SDL_Color) {.r = 0, .g = 0, .b = 0, .a = 0});
     initLabel(&start_screen->left_panel_label, left_label_rect, (SDL_Color) {.r = 255, .g = 255, .b = 255, .a = 0},
         style_data, text_data);
     initLabel(&start_screen->right_panel_label, right_label_rect, (SDL_Color) {.r = 255, .g = 255, .b = 255, .a = 0},
