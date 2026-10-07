@@ -24,7 +24,7 @@ inner-workings of the specific implementation that I created for this game engin
   - **SDL3_image** (Development Libraries)
 
 *Note: Within CMakeList.txt, you will see the file paths I used for both SDL3 and SDL3_image. If your SDL libraries 
-exist at a different location on your computer, make sure to change these! (It also tells where to do so in the 
+exist at a different location on your computer, make sure to change these! (It also tells you where to do so in the 
 CMakeList.txt file)*
 
 ## Build Instructions
