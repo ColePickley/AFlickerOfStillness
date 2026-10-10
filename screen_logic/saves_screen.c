@@ -72,6 +72,7 @@ void savesScreenMousePressed(const SavesScreen* saves_screen, const SDL_FPoint m
         }
     }
     if (save_selected && buttonPressCheck(saves_screen->delete_save_button, mouse_pos)) return;
+
     bool button_released = false;
     const int clicked_save_button_index = buttonGroupPressCheck(3, saves_screen->save_buttons, mouse_pos);
     if (clicked_save_button_index != -1) {
@@ -91,8 +92,10 @@ void savesScreenMousePressed(const SavesScreen* saves_screen, const SDL_FPoint m
         }
     }
 
-    if (buttonPressCheck(saves_screen->back_button, mouse_pos)) button_released = true;
-    if (buttonPressCheck(saves_screen->play_button, mouse_pos)) button_released = true;
+    if (buttonPressCheck(saves_screen->back_button, mouse_pos))
+        button_released = true;
+    if (buttonPressCheck(saves_screen->play_button, mouse_pos))
+        button_released = true;
     if (!button_released) {
         for (int i = 0; i < 3; i++) {
             saves_screen->save_buttons[i]->is_selected = false;
@@ -102,10 +105,6 @@ void savesScreenMousePressed(const SavesScreen* saves_screen, const SDL_FPoint m
 
 void savesScreenMouseReleased(SavesScreen* saves_screen, const SDL_FPoint mouse_pos, GameData* game_data,
         uint8_t* current_screen, uint8_t* prev_screen) {
-    turnOffButton(saves_screen->back_button);
-    turnOffButton(saves_screen->play_button);
-    turnOffButton(saves_screen->delete_save_button);
-
     bool button_released = false;
     for (int i = 0; i < 3; i++) {
         if (saves_screen->save_buttons[i]->is_selected) {
@@ -114,7 +113,8 @@ void savesScreenMouseReleased(SavesScreen* saves_screen, const SDL_FPoint mouse_
             break;
         }
     }
-    if (isPointWithinButton(saves_screen->back_button, mouse_pos) && saves_screen->back_button->is_selected) {
+
+    if (buttonReleaseCheck(saves_screen->back_button, mouse_pos)) {
         for (int i = 0; i < 3; i++) {
             saves_screen->save_buttons[i]->is_selected = false;
             turnOffButton(saves_screen->save_buttons[i]);
@@ -122,7 +122,7 @@ void savesScreenMouseReleased(SavesScreen* saves_screen, const SDL_FPoint mouse_
         *current_screen = *prev_screen;
         *prev_screen = SAVES_SCREEN;
         button_released = true;
-    } else if (isPointWithinButton(saves_screen->play_button, mouse_pos) && saves_screen->play_button->is_selected) {
+    } else if (buttonReleaseCheck(saves_screen->play_button, mouse_pos)) {
         for (int i = 0; i < 3; i++) {
             saves_screen->save_buttons[i]->is_selected = false;
             turnOffButton(saves_screen->save_buttons[i]);
@@ -137,8 +137,7 @@ void savesScreenMouseReleased(SavesScreen* saves_screen, const SDL_FPoint mouse_
         } else {
             button_released = true;
         }
-    } else if (isPointWithinButton(saves_screen->delete_save_button, mouse_pos)
-            && saves_screen->delete_save_button->is_selected) {
+    } else if (buttonReleaseCheck(saves_screen->delete_save_button, mouse_pos)) {
         deleteSave(game_data->save_index);
         destroyButton(saves_screen->back_button);
         destroyButton(saves_screen->play_button);
@@ -154,10 +153,6 @@ void savesScreenMouseReleased(SavesScreen* saves_screen, const SDL_FPoint mouse_
             turnOffButton(saves_screen->save_buttons[i]);
         }
     }
-
-    saves_screen->back_button->is_selected = false;
-    saves_screen->play_button->is_selected = false;
-    saves_screen->delete_save_button->is_selected = false;
 }
 
 void savesScreenMouseDragged(const SavesScreen* saves_screen, const SDL_FPoint mouse_pos) {

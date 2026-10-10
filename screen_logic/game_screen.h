@@ -1,6 +1,8 @@
 #ifndef AFLICKEROFSTILLNESS_GAME_SCREEN_H
 #define AFLICKEROFSTILLNESS_GAME_SCREEN_H
 #include <SDL3/SDL_render.h>
+
+#include "pause_screen.h"
 #include "../program_data.h"
 #include "../constants.h"
 
@@ -12,6 +14,7 @@ typedef struct {
 typedef struct {
     bool paint_game_screen;
     bool paint_pause_screen;
+    PauseScreen* pause_screen;
     int num_map_textures;
     int num_entity_textures;
     SlicedTexture* map_textures[MAX_NUM_TEXTURES];
@@ -22,7 +25,7 @@ void initGameScreen(GameScreen* game_screen, SDL_Renderer* renderer);
 
 void destroyGameScreen(GameScreen* game_screen);
 
-void paintGameScreen(const GameScreen* game_screen, SDL_Renderer* renderer, GameData* game_data, const UserData* user_data);
+void paintGameScreen(GameScreen* game_screen, SDL_Renderer* renderer, GameData* game_data, const UserData* user_data);
 
 static void draw_ceiling_line(const GameScreen* game_screen, SDL_Renderer* renderer, const GameData* game_data,
     int vert_res, int ray_num, int start_y, double angle, double pre_adjustment);

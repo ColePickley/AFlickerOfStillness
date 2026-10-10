@@ -1,7 +1,6 @@
 #ifndef AFLICKEROFSTILLNESS_SETTINGS_SCREEN_H
 #define AFLICKEROFSTILLNESS_SETTINGS_SCREEN_H
 #include "button.h"
-#include "game_screen.h"
 #include "label.h"
 #include "../file_handling/user_data_handling.h"
 

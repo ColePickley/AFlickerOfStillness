@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdint.h>
+#include <time.h>
 #include <SDL3/SDL.h>
 #include "constants.h"
 #include "program_data.h"
@@ -28,7 +29,7 @@ static void printGameData(const GameData* game_data);
 
 int main(const int argc, char* argv[]) {
     SDL_SetHint(SDL_HINT_RENDER_DRIVER, "opengl");
-
+    srand((unsigned int)time(NULL));
     uint64_t mouse_down_time = 0;
     bool mouse_down = false;
     double prev_mouse_x = 0;

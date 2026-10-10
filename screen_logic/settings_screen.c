@@ -152,28 +152,13 @@ void paintSettingsScreen(SettingsScreen* settings_screen, SDL_Renderer* renderer
 }
 
 void settingsScreenMousePressed(const SettingsScreen* settings_screen, const SDL_FPoint mouse_pos) {
-    if (isPointWithinButton(settings_screen->fps_button, mouse_pos)) {
-        turnOnButton(settings_screen->fps_button);
-        settings_screen->fps_button->is_selected = true;
-    } else if (isPointWithinButton(settings_screen->graphics_quality_button, mouse_pos)) {
-        turnOnButton(settings_screen->graphics_quality_button);
-        settings_screen->graphics_quality_button->is_selected = true;
-    } else if (isPointWithinButton(settings_screen->sensitivity_button, mouse_pos)) {
-        turnOnButton(settings_screen->sensitivity_button);
-        settings_screen->sensitivity_button->is_selected = true;
-    } else if (isPointWithinButton(settings_screen->fullscreen_button, mouse_pos)) {
-        turnOnButton(settings_screen->fullscreen_button);
-        settings_screen->fullscreen_button->is_selected = true;
-    } else if (isPointWithinButton(settings_screen->back_button, mouse_pos)) {
-        turnOnButton(settings_screen->back_button);
-        settings_screen->back_button->is_selected = true;
-    } else if (isPointWithinButton(settings_screen->reset_button, mouse_pos)) {
-        turnOnButton(settings_screen->reset_button);
-        settings_screen->reset_button->is_selected = true;
-    } else if (isPointWithinButton(settings_screen->save_button, mouse_pos)) {
-        turnOnButton(settings_screen->save_button);
-        settings_screen->save_button->is_selected = true;
-    }
+    if (buttonPressCheck(settings_screen->fps_button, mouse_pos)) return;
+    if (buttonPressCheck(settings_screen->graphics_quality_button, mouse_pos)) return;
+    if (buttonPressCheck(settings_screen->sensitivity_button, mouse_pos)) return;
+    if (buttonPressCheck(settings_screen->fullscreen_button, mouse_pos)) return;
+    if (buttonPressCheck(settings_screen->back_button, mouse_pos)) return;
+    if (buttonPressCheck(settings_screen->reset_button, mouse_pos)) return;
+    buttonPressCheck(settings_screen->save_button, mouse_pos);
 }
 
 void settingsScreenMouseReleased(SettingsScreen* settings_screen, const SDL_FPoint mouse_pos, UserData* user_data,
@@ -181,20 +166,16 @@ void settingsScreenMouseReleased(SettingsScreen* settings_screen, const SDL_FPoi
     turnOffButton(settings_screen->fps_button);
     turnOffButton(settings_screen->graphics_quality_button);
     turnOffButton(settings_screen->sensitivity_button);
-    turnOffButton(settings_screen->fullscreen_button);
-    turnOffButton(settings_screen->back_button);
-    turnOffButton(settings_screen->reset_button);
-    turnOffButton(settings_screen->save_button);
 
     if (settings_screen->fps_button->is_selected) {
         float adjusted_x = mouse_pos.x - ((WINDOW_WIDTH - 800.0f) / 2.0f + 30.0f);
         adjusted_x = max(0.0f, min(730.0f, adjusted_x));
         const int slider_state = (int) round((double) adjusted_x / 730.0 * 2.0);
-        int frame_rate_cap = 15;
+        int frame_rate_cap = 30;
         if (slider_state == 1) {
-            frame_rate_cap = 30;
-        } else if (slider_state == 2) {
             frame_rate_cap = 60;
+        } else if (slider_state == 2) {
+            frame_rate_cap = 120;
         }
         user_data->frame_rate_cap = frame_rate_cap;
         resetSettingsScreen(settings_screen, user_data);
@@ -208,28 +189,23 @@ void settingsScreenMouseReleased(SettingsScreen* settings_screen, const SDL_FPoi
         adjusted_x = max(0.0f, min(730.0f, adjusted_x));
         user_data->sensitivity = (int) (adjusted_x / 730.0f * 100.0f);
         resetSettingsScreen(settings_screen, user_data);
-    } else if (isPointWithinButton(settings_screen->fullscreen_button, mouse_pos) &&
-            settings_screen->fullscreen_button->is_selected) {
+    } else if (buttonReleaseCheck(settings_screen->fullscreen_button, mouse_pos)) {
         user_data->fullscreen = !user_data->fullscreen;
         SDL_SetWindowFullscreen(window, user_data->fullscreen);
         resetSettingsScreen(settings_screen, user_data);
-    } else if (isPointWithinButton(settings_screen->back_button, mouse_pos) && settings_screen->back_button->is_selected) {
+    } else if (buttonReleaseCheck(settings_screen->back_button, mouse_pos)) {
         settings_screen->do_exit_animation = true;
-    } else if (isPointWithinButton(settings_screen->reset_button, mouse_pos) && settings_screen->reset_button->is_selected) {
+    } else if (buttonReleaseCheck(settings_screen->reset_button, mouse_pos)) {
         resetUserData(user_data);
         SDL_SetWindowFullscreen(window, user_data->fullscreen);
         resetSettingsScreen(settings_screen, user_data);
-    } else if (isPointWithinButton(settings_screen->save_button, mouse_pos) && settings_screen->save_button->is_selected) {
+    } else if (buttonReleaseCheck(settings_screen->save_button, mouse_pos)) {
         saveUserData(user_data);
     }
 
     settings_screen->fps_button->is_selected = false;
     settings_screen->graphics_quality_button->is_selected = false;
     settings_screen->sensitivity_button->is_selected = false;
-    settings_screen->fullscreen_button->is_selected = false;
-    settings_screen->back_button->is_selected = false;
-    settings_screen->reset_button->is_selected = false;
-    settings_screen->save_button->is_selected = false;
 }
 
 void settingsScreenMouseDragged(SettingsScreen* settings_screen, const SDL_FPoint mouse_pos,
@@ -238,11 +214,11 @@ void settingsScreenMouseDragged(SettingsScreen* settings_screen, const SDL_FPoin
         float adjusted_x = mouse_pos.x - ((WINDOW_WIDTH - 800.0f) / 2.0f + 30.0f);
         adjusted_x = max(0.0f, min(730.0f, adjusted_x));
         const int slider_state = (int) round((double) adjusted_x / 730.0 * 2.0);
-        int frame_rate_cap = 15;
+        int frame_rate_cap = 30;
         if (slider_state == 1) {
-            frame_rate_cap = 30;
-        } else if (slider_state == 2) {
             frame_rate_cap = 60;
+        } else if (slider_state == 2) {
+            frame_rate_cap = 120;
         }
         user_data->frame_rate_cap = frame_rate_cap;
         const float slider_x = 730.0f * ((float) slider_state / 2.0f);
@@ -268,37 +244,10 @@ void settingsScreenMouseDragged(SettingsScreen* settings_screen, const SDL_FPoin
         setSettingsScreenLabels(settings_screen, user_data);
     }
 
-    if (isPointWithinButton(settings_screen->fullscreen_button, mouse_pos)) {
-        if (settings_screen->fullscreen_button->is_selected) {
-            turnOnButton(settings_screen->fullscreen_button);
-        }
-    } else {
-        turnOffButton(settings_screen->fullscreen_button);
-    }
-
-    if (isPointWithinButton(settings_screen->back_button, mouse_pos)) {
-        if (settings_screen->back_button->is_selected) {
-            turnOnButton(settings_screen->back_button);
-        }
-    } else {
-        turnOffButton(settings_screen->back_button);
-    }
-
-    if (isPointWithinButton(settings_screen->reset_button, mouse_pos)) {
-        if (settings_screen->reset_button->is_selected) {
-            turnOnButton(settings_screen->reset_button);
-        }
-    } else {
-        turnOffButton(settings_screen->reset_button);
-    }
-
-    if (isPointWithinButton(settings_screen->save_button, mouse_pos)) {
-        if (settings_screen->save_button->is_selected) {
-            turnOnButton(settings_screen->save_button);
-        }
-    } else {
-        turnOffButton(settings_screen->save_button);
-    }
+    buttonMouseDragCheck(settings_screen->fullscreen_button, mouse_pos);
+    buttonMouseDragCheck(settings_screen->back_button, mouse_pos);
+    buttonMouseDragCheck(settings_screen->reset_button, mouse_pos);
+    buttonMouseDragCheck(settings_screen->save_button, mouse_pos);
 }
 
 static void setSettingsScreenBackground(SettingsScreen* settings_screen, SDL_Renderer* renderer) {
@@ -359,7 +308,7 @@ static void setSettingsScreenLabels(SettingsScreen* settings_screen, const UserD
      * fps label
      */
 
-    char fps_label_text[19] = "Max Frame Rate: ";
+    char fps_label_text[20] = "Max Frame Rate: ";
     snprintf(fps_label_text, sizeof(fps_label_text), "%s%d",
         fps_label_text, user_data->frame_rate_cap);
     initLabelTextData(&text_data, fps_label_text, font_size, line_spacing, vertical_text_margin, horizontal_text_margin,
@@ -516,9 +465,9 @@ static void setSettingsScreenButtons(SettingsScreen* settings_screen, const User
      */
 
     int slider_index = 0;
-    if (user_data->frame_rate_cap == 30) {
+    if (user_data->frame_rate_cap == 60) {
         slider_index = 1;
-    } else if (user_data->frame_rate_cap == 60) {
+    } else if (user_data->frame_rate_cap == 120) {
         slider_index = 2;
     }
     SDL_FRect fps_rect = {

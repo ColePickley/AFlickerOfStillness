@@ -37,14 +37,14 @@ void destroyGameData(GameData* game_data) {
 
 void initUserData(UserData** user_data) {
     *user_data = malloc(sizeof(UserData));
-    (*user_data)->frame_rate_cap = 30;
+    (*user_data)->frame_rate_cap = 60;
     (*user_data)->fullscreen = false;
     (*user_data)->graphics_quality = GRAPHICS_QUALITY_LOW;
     (*user_data)->sensitivity = 50;
 }
 
 void resetUserData(UserData* user_data) {
-    user_data->frame_rate_cap = 30;
+    user_data->frame_rate_cap = 60;
     user_data->fullscreen = false;
     user_data->graphics_quality = GRAPHICS_QUALITY_LOW;
     user_data->sensitivity = 50;
