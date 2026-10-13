@@ -7,7 +7,8 @@
 #include "../functions.h"
 #include "start_screen.h"
 
-void initSettingsScreen(SettingsScreen** settings_screen, SDL_Renderer* renderer, const UserData* user_data) {
+void initSettingsScreen(SettingsScreen** settings_screen, SDL_Renderer* renderer, const UserData* user_data,
+        const int prev_screen) {
     *settings_screen = malloc(sizeof(SettingsScreen));
     setSettingsScreenBackground(*settings_screen, renderer);
     setSettingsScreenLabels(*settings_screen, user_data);
@@ -20,6 +21,7 @@ void initSettingsScreen(SettingsScreen** settings_screen, SDL_Renderer* renderer
         .w = WINDOW_WIDTH, .h = WINDOW_HEIGHT};
     (*settings_screen)->right_background_rect = (SDL_FRect) {.x = 2.0f * WINDOW_WIDTH / 3, .y = 0,
         .w = WINDOW_WIDTH, .h = WINDOW_HEIGHT};
+    (*settings_screen)->prev_screen = prev_screen;
 }
 
 void resetSettingsScreen(SettingsScreen* settings_screen, const UserData* user_data) {
@@ -28,26 +30,27 @@ void resetSettingsScreen(SettingsScreen* settings_screen, const UserData* user_d
     setSettingsScreenRects(settings_screen);
 }
 
-void destroySettingsScreen(SettingsScreen* settings_screen) {
-    destroyLabel(settings_screen->settings_label);
-    destroyLabel(settings_screen->fps_label);
-    destroyLabel(settings_screen->graphics_quality_label);
-    destroyLabel(settings_screen->sensitivity_label);
-    destroyButton(settings_screen->fullscreen_button);
-    destroyButton(settings_screen->fps_button);
-    destroyButton(settings_screen->graphics_quality_button);
-    destroyButton(settings_screen->sensitivity_button);
-    destroyButton(settings_screen->back_button);
-    destroyButton(settings_screen->reset_button);
-    destroyButton(settings_screen->save_button);
-    SDL_DestroyTexture(settings_screen->left_background_texture);
-    SDL_DestroyTexture(settings_screen->right_background_texture);
-    free(settings_screen);
-    settings_screen = NULL;
+void destroySettingsScreen(SettingsScreen** settings_screen) {
+    if (*settings_screen == NULL) return;
+    destroyLabel((*settings_screen)->settings_label);
+    destroyLabel((*settings_screen)->fps_label);
+    destroyLabel((*settings_screen)->graphics_quality_label);
+    destroyLabel((*settings_screen)->sensitivity_label);
+    destroyButton((*settings_screen)->fullscreen_button);
+    destroyButton((*settings_screen)->fps_button);
+    destroyButton((*settings_screen)->graphics_quality_button);
+    destroyButton((*settings_screen)->sensitivity_button);
+    destroyButton((*settings_screen)->back_button);
+    destroyButton((*settings_screen)->reset_button);
+    destroyButton((*settings_screen)->save_button);
+    SDL_DestroyTexture((*settings_screen)->left_background_texture);
+    SDL_DestroyTexture((*settings_screen)->right_background_texture);
+    free(*settings_screen);
+    *settings_screen = NULL;
 }
 
-void paintSettingsScreen(SettingsScreen* settings_screen, SDL_Renderer* renderer, bool* paint_settings_screen,
-        bool* paint_prev_screen) {
+int paintSettingsScreen(SettingsScreen* settings_screen, SDL_Renderer* renderer) {
+    int screen_change = -1;
 
     /*
      * checking for entrance animation
@@ -90,19 +93,8 @@ void paintSettingsScreen(SettingsScreen* settings_screen, SDL_Renderer* renderer
         if (settings_screen->left_background_rect.x == -2.0f * WINDOW_WIDTH / 3) {
             settings_screen->do_exit_animation = false;
             settings_screen->last_paint_time = 0;
-            *paint_settings_screen = false;
+            screen_change = settings_screen->prev_screen;
         }
-    }
-
-    /*
-     * checking if an animation has ended
-     */
-
-    if (*paint_prev_screen && !settings_screen->do_entrance_animation && !settings_screen->do_exit_animation &&
-            settings_screen->last_paint_time != 0) {
-        *paint_prev_screen = false;
-    } else if (!*paint_prev_screen && settings_screen->do_exit_animation) {
-        *paint_prev_screen = true;
     }
 
     /*
@@ -149,7 +141,13 @@ void paintSettingsScreen(SettingsScreen* settings_screen, SDL_Renderer* renderer
     if (settings_screen->last_paint_time != 0) {
         settings_screen->last_paint_time = SDL_GetTicks();
     }
+
+    return screen_change;
 }
+
+/*
+ * Event handling
+ */
 
 void settingsScreenMousePressed(const SettingsScreen* settings_screen, const SDL_FPoint mouse_pos) {
     if (buttonPressCheck(settings_screen->fps_button, mouse_pos)) return;
@@ -161,7 +159,7 @@ void settingsScreenMousePressed(const SettingsScreen* settings_screen, const SDL
     buttonPressCheck(settings_screen->save_button, mouse_pos);
 }
 
-void settingsScreenMouseReleased(SettingsScreen* settings_screen, const SDL_FPoint mouse_pos, UserData* user_data,
+int settingsScreenMouseReleased(SettingsScreen* settings_screen, const SDL_FPoint mouse_pos, UserData* user_data,
         SDL_Window* window) {
     turnOffButton(settings_screen->fps_button);
     turnOffButton(settings_screen->graphics_quality_button);
@@ -206,6 +204,7 @@ void settingsScreenMouseReleased(SettingsScreen* settings_screen, const SDL_FPoi
     settings_screen->fps_button->is_selected = false;
     settings_screen->graphics_quality_button->is_selected = false;
     settings_screen->sensitivity_button->is_selected = false;
+    return -1;
 }
 
 void settingsScreenMouseDragged(SettingsScreen* settings_screen, const SDL_FPoint mouse_pos,
@@ -249,6 +248,10 @@ void settingsScreenMouseDragged(SettingsScreen* settings_screen, const SDL_FPoin
     buttonMouseDragCheck(settings_screen->reset_button, mouse_pos);
     buttonMouseDragCheck(settings_screen->save_button, mouse_pos);
 }
+
+/*
+ * Helper functions
+ */
 
 static void setSettingsScreenBackground(SettingsScreen* settings_screen, SDL_Renderer* renderer) {
     settings_screen->left_background_texture =

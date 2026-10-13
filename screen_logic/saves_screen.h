@@ -23,16 +23,15 @@ typedef struct {
     SDL_Texture* delete_save_texture;
 }SavesScreen;
 
-void initSavesScreen(SavesScreen* saves_screen, SDL_Renderer* renderer);
+void initSavesScreen(SavesScreen** saves_screen, SDL_Renderer* renderer);
 
-void destroySavesScreen(const SavesScreen* saves_screen);
+void destroySavesScreen(SavesScreen** saves_screen);
 
-void paintSavesScreen(const SavesScreen* saves_screen, SDL_Renderer* renderer);
+int paintSavesScreen(const SavesScreen* saves_screen, SDL_Renderer* renderer);
 
 void savesScreenMousePressed(const SavesScreen* saves_screen, SDL_FPoint mouse_pos);
 
-void savesScreenMouseReleased(SavesScreen* saves_screen, SDL_FPoint mouse_pos, GameData* game_data,
-    uint8_t* current_screen, uint8_t* prev_screen);
+int savesScreenMouseReleased(SavesScreen* saves_screen, SDL_FPoint mouse_pos, GameData* game_data);
 
 void savesScreenMouseDragged(const SavesScreen* saves_screen, SDL_FPoint mouse_pos);
 

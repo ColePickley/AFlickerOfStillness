@@ -30,9 +30,10 @@ void initGameData(GameData** game_data) {
     (*game_data)->player = NULL;
 }
 
-void destroyGameData(GameData* game_data) {
-    free(game_data);
-    game_data = NULL;
+void destroyGameData(GameData** game_data) {
+    if (*game_data == NULL) return;
+    free(*game_data);
+    *game_data = NULL;
 }
 
 void initUserData(UserData** user_data) {
@@ -50,7 +51,8 @@ void resetUserData(UserData* user_data) {
     user_data->sensitivity = 50;
 }
 
-void destroyUserData(UserData* user_data) {
-    free(user_data);
-    user_data = NULL;
+void destroyUserData(UserData** user_data) {
+    if (*user_data == NULL) return;
+    free(*user_data);
+    *user_data = NULL;
 }

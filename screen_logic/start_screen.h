@@ -7,9 +7,6 @@
 #include "settings_screen.h"
 
 typedef struct {
-    bool paint_start_screen;
-    bool paint_settings_screen;
-    SettingsScreen* settings_screen;
     SDL_Texture* background_texture;
     SDL_Texture* left_panel_texture;
     SDL_Texture* right_panel_texture;
@@ -23,18 +20,25 @@ typedef struct {
     Button* exit_button;
 }StartScreen;
 
-void initStartScreen(StartScreen* start_screen, SDL_Renderer* renderer, const UserData* user_data);
+void initStartScreen(StartScreen** start_screen, SDL_Renderer* renderer, const UserData* user_data);
 
-void paintStartScreen(StartScreen* start_screen, SDL_Renderer* renderer);
+void destroyStartScreen(StartScreen** start_screen);
+
+int paintStartScreen(const StartScreen* start_screen, SDL_Renderer* renderer);
+
+/*
+ * Event handling
+ */
 
 void startScreenMousePressed(const StartScreen* start_screen, SDL_FPoint mouse_pos);
 
-void startScreenMouseReleased(StartScreen* start_screen, SDL_FPoint mouse_pos, bool* program_running,
-    uint8_t* current_screen, uint8_t* prev_screen, UserData* user_data, SDL_Window* window);
+int startScreenMouseReleased(const StartScreen* start_screen, SDL_FPoint mouse_pos, bool* program_running);
 
-void startScreenMouseDragged(const StartScreen* start_screen, SDL_FPoint mouse_pos, UserData* user_data);
+void startScreenMouseDragged(const StartScreen* start_screen, SDL_FPoint mouse_pos);
 
-void destroyStartScreen(const StartScreen* start_screen);
+/*
+ * Helper Functions
+ */
 
 static void setStartScreenBackground(StartScreen* start_screen, SDL_Renderer* renderer);
 

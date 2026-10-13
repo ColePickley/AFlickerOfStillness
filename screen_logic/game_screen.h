@@ -12,20 +12,22 @@ typedef struct {
 }SlicedTexture;
 
 typedef struct {
-    bool paint_game_screen;
-    bool paint_pause_screen;
-    PauseScreen* pause_screen;
     int num_map_textures;
     int num_entity_textures;
     SlicedTexture* map_textures[MAX_NUM_TEXTURES];
     SlicedTexture* entity_textures[MAX_NUM_TEXTURES];
 }GameScreen;
 
-void initGameScreen(GameScreen* game_screen, SDL_Renderer* renderer);
+void initGameScreen(GameScreen** game_screen, SDL_Renderer* renderer);
 
-void destroyGameScreen(GameScreen* game_screen);
+void destroyGameScreen(GameScreen** game_screen);
 
-void paintGameScreen(GameScreen* game_screen, SDL_Renderer* renderer, GameData* game_data, const UserData* user_data);
+/*
+ * Painting
+ */
+
+int paintGameScreen(const GameScreen* game_screen, SDL_Renderer* renderer, GameData* game_data,
+    const UserData* user_data);
 
 static void draw_ceiling_line(const GameScreen* game_screen, SDL_Renderer* renderer, const GameData* game_data,
     int vert_res, int ray_num, int start_y, double angle, double pre_adjustment);
@@ -37,6 +39,23 @@ static void draw_wall_line(const GameScreen* game_screen, SDL_Renderer* renderer
     double angle, Ray ray, float line_length, int x, int y);
 
 static void draw_entities(const GameScreen* game_screen, SDL_Renderer* renderer, GameData* game_data);
+
+/*
+ * Event Handling
+ */
+
+void gameScreenMousePressed(GameScreen* game_screen, SDL_FPoint mouse_pos);
+
+int gameScreenMouseReleased(GameScreen* game_screen, SDL_FPoint mouse_pos);
+
+void gameScreenMouseMoved(GameScreen* game_screen, SDL_FPoint mouse_pos, double prev_mouse_x, bool mouse_down,
+    const GameData* game_data, const UserData* user_data);
+
+void gameScreenKeyPressed(SDL_Keycode keycode, const GameData* game_data);
+
+void gameScreenKeyReleased(SDL_Keycode keycode, const GameData* game_data);
+
+int gameScreenKeyClicked(SDL_Keycode keycode);
 
 /*
  * Helper functions

@@ -32,12 +32,12 @@ typedef struct {
 
 void initGameData(GameData** game_data);
 
-void destroyGameData(GameData* game_data);
+void destroyGameData(GameData** game_data);
 
 void initUserData(UserData** user_data);
 
 void resetUserData(UserData* user_data);
 
-void destroyUserData(UserData* user_data);
+void destroyUserData(UserData** user_data);
 
 #endif //AFLICKEROFSTILLNESS_PROGRAM_DATA_H

@@ -26,23 +26,32 @@ typedef struct {
     uint64_t last_paint_time;
     bool do_entrance_animation;
     bool do_exit_animation;
+    int prev_screen;
 }SettingsScreen;
 
-void initSettingsScreen(SettingsScreen** settings_screen, SDL_Renderer* renderer, const UserData* user_data);
+void initSettingsScreen(SettingsScreen** settings_screen, SDL_Renderer* renderer, const UserData* user_data,
+    int prev_screen);
 
 void resetSettingsScreen(SettingsScreen* settings_screen, const UserData* user_data);
 
-void destroySettingsScreen(SettingsScreen* settings_screen);
+void destroySettingsScreen(SettingsScreen** settings_screen);
 
-void paintSettingsScreen(SettingsScreen* settings_screen, SDL_Renderer* renderer, bool* paint_settings_screen,
-    bool* paint_prev_screen);
+int paintSettingsScreen(SettingsScreen* settings_screen, SDL_Renderer* renderer);
+
+/*
+ * Event Handling
+ */
 
 void settingsScreenMousePressed(const SettingsScreen* settings_screen, SDL_FPoint mouse_pos);
 
-void settingsScreenMouseReleased(SettingsScreen* settings_screen, SDL_FPoint mouse_pos, UserData* user_data,
-        SDL_Window* window);
+int settingsScreenMouseReleased(SettingsScreen* settings_screen, SDL_FPoint mouse_pos, UserData* user_data,
+    SDL_Window* window);
 
 void settingsScreenMouseDragged(SettingsScreen* settings_screen, SDL_FPoint mouse_pos, UserData* user_data);
+
+/*
+ * Helper Functions
+ */
 
 static void setSettingsScreenBackground(SettingsScreen* settings_screen, SDL_Renderer* renderer);
 

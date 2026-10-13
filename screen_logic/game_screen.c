@@ -3,42 +3,48 @@
 #include <math.h>
 #include <dirent.h>
 #include <SDL3_image/SDL_image.h>
+
+#include "screen_data.h"
 #include "../constants.h"
 #include "../functions.h"
 #include "../program_data.h"
 #include "../ray_calculator.h"
 
-void initGameScreen(GameScreen* game_screen, SDL_Renderer* renderer) {
-    initPauseScreen(&game_screen->pause_screen, renderer);
-    game_screen->num_map_textures = set_map_textures(game_screen, renderer);
-    game_screen->num_entity_textures = set_entity_textures(game_screen, renderer);
-    game_screen->paint_game_screen = true;
-    game_screen->paint_pause_screen = true;
+void initGameScreen(GameScreen** game_screen, SDL_Renderer* renderer) {
+    *game_screen = malloc(sizeof(GameScreen));
+    (*game_screen)->num_map_textures = set_map_textures(*game_screen, renderer);
+    (*game_screen)->num_entity_textures = set_entity_textures(*game_screen, renderer);
 }
 
-void destroyGameScreen(GameScreen* game_screen) {
-    for (int i = 0; i < game_screen->num_map_textures; i++) {
+void destroyGameScreen(GameScreen** game_screen) {
+    if (*game_screen == NULL) return;
+    for (int i = 0; i < (*game_screen)->num_map_textures; i++) {
         for (int j = 0; j < TEXTURE_RESOLUTION; j++) {
-            SDL_DestroyTexture(game_screen->map_textures[i]->texture[j]);
-            SDL_DestroySurface(game_screen->map_textures[i]->surface[j]);
-            game_screen->map_textures[i]->texture[j] = NULL;
+            SDL_DestroyTexture((*game_screen)->map_textures[i]->texture[j]);
+            SDL_DestroySurface((*game_screen)->map_textures[i]->surface[j]);
+            (*game_screen)->map_textures[i]->texture[j] = NULL;
         }
-        free(game_screen->map_textures[i]);
-        game_screen->map_textures[i] = NULL;
+        free((*game_screen)->map_textures[i]);
+        (*game_screen)->map_textures[i] = NULL;
     }
-    for (int i = 0; i < game_screen->num_entity_textures; i++) {
+    for (int i = 0; i < (*game_screen)->num_entity_textures; i++) {
         for (int j = 0; j < TEXTURE_RESOLUTION; j++) {
-            SDL_DestroyTexture(game_screen->entity_textures[i]->texture[j]);
-            SDL_DestroySurface(game_screen->entity_textures[i]->surface[j]);
-            game_screen->entity_textures[i]->texture[j] = NULL;
+            SDL_DestroyTexture((*game_screen)->entity_textures[i]->texture[j]);
+            SDL_DestroySurface((*game_screen)->entity_textures[i]->surface[j]);
+            (*game_screen)->entity_textures[i]->texture[j] = NULL;
         }
-        free(game_screen->entity_textures[i]);
-        game_screen->entity_textures[i] = NULL;
+        free((*game_screen)->entity_textures[i]);
+        (*game_screen)->entity_textures[i] = NULL;
     }
-    destroyPauseScreen(game_screen->pause_screen);
+    free(*game_screen);
+    *game_screen = NULL;
 }
 
-void paintGameScreen(GameScreen* game_screen, SDL_Renderer* renderer, GameData* game_data,
+/*
+ * Painting
+ */
+
+int paintGameScreen(const GameScreen* game_screen, SDL_Renderer* renderer, GameData* game_data,
         const UserData* user_data) {
     setPlayerRays(game_data->player, game_data->num_map_rows, game_data->num_map_cols, game_data->map_grid);
     // int skyX = (int) ((double) WINDOW_WIDTH / 360.0 * (360.0 - player->rotation) * 3.0);
@@ -67,10 +73,7 @@ void paintGameScreen(GameScreen* game_screen, SDL_Renderer* renderer, GameData* 
         draw_wall_line(game_screen, renderer, game_data, angle, *game_data->player->rays[i], line_length, x, y);
     }
     draw_entities(game_screen, renderer, game_data);
-    if (game_screen->paint_pause_screen) {
-        paintPauseScreen(game_screen->pause_screen, renderer, &game_screen->paint_game_screen,
-            &game_screen->paint_pause_screen);
-    }
+    return -1;
 }
 
 static void draw_ceiling_line(const GameScreen* game_screen, SDL_Renderer* renderer, const GameData* game_data,
@@ -188,7 +191,65 @@ static void draw_entities(const GameScreen* game_screen, SDL_Renderer* renderer,
  * Event processing
  */
 
+void gameScreenMousePressed(GameScreen* game_screen, SDL_FPoint mouse_pos) {
 
+}
+
+int gameScreenMouseReleased(GameScreen* game_screen, SDL_FPoint mouse_pos) {
+    return -1;
+}
+
+void gameScreenMouseMoved(GameScreen* game_screen, const SDL_FPoint mouse_pos, const double prev_mouse_x,
+        const bool mouse_down, const GameData* game_data, const UserData* user_data) {
+    if (mouse_down) {
+        rotatePlayer(game_data->player, user_data->sensitivity, mouse_pos.x - prev_mouse_x);
+    }
+}
+
+void gameScreenKeyPressed(const SDL_Keycode keycode, const GameData* game_data) {
+    switch (keycode) {
+        case SDLK_W:
+            game_data->player->w_pressed = true;
+            break;
+        case SDLK_A:
+            game_data->player->a_pressed = true;
+            break;
+        case SDLK_S:
+            game_data->player->s_pressed = true;
+            break;
+        case SDLK_D:
+            game_data->player->d_pressed = true;
+            break;
+        default:
+            break;
+    }
+}
+
+void gameScreenKeyReleased(const SDL_Keycode keycode, const GameData* game_data) {
+    switch (keycode) {
+        case SDLK_W:
+            game_data->player->w_pressed = false;
+            break;
+        case SDLK_A:
+            game_data->player->a_pressed = false;
+            break;
+        case SDLK_S:
+            game_data->player->s_pressed = false;
+            break;
+        case SDLK_D:
+            game_data->player->d_pressed = false;
+            break;
+        default:
+            break;
+    }
+}
+
+int gameScreenKeyClicked(const SDL_Keycode keycode) {
+    if (keycode == SDLK_ESCAPE) {
+        return PAUSE_SCREEN;
+    }
+    return -1;
+}
 
 /*
  * Helper Functions

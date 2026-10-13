@@ -4,88 +4,79 @@
 #include "SDL3_image/SDL_image.h"
 #include "../constants.h"
 
-void initStartScreen(StartScreen* start_screen, SDL_Renderer* renderer, const UserData* user_data) {
-    setStartScreenBackground(start_screen, renderer);
-    setStartScreenLabels(start_screen);
-    setStartScreenButtons(start_screen);
-    initSettingsScreen(&start_screen->settings_screen, renderer, user_data);
-    start_screen->paint_start_screen = true;
-    start_screen->paint_settings_screen = false;
+void initStartScreen(StartScreen** start_screen, SDL_Renderer* renderer, const UserData* user_data) {
+    *start_screen = malloc(sizeof(StartScreen));
+    setStartScreenBackground(*start_screen, renderer);
+    setStartScreenLabels(*start_screen);
+    setStartScreenButtons(*start_screen);
 }
 
-void destroyStartScreen(const StartScreen* start_screen) {
-    destroySettingsScreen(start_screen->settings_screen);
-    destroyLabel(start_screen->game_label);
-    destroyButton(start_screen->play_button);
-    destroyButton(start_screen->settings_button);
-    destroyButton(start_screen->exit_button);
-    SDL_DestroyTexture(start_screen->background_texture);
-    SDL_DestroyTexture(start_screen->left_panel_texture);
-    SDL_DestroyTexture(start_screen->right_panel_texture);
+void destroyStartScreen(StartScreen** start_screen) {
+    if (*start_screen == NULL) return;
+    destroyLabel((*start_screen)->game_label);
+    destroyButton((*start_screen)->play_button);
+    destroyButton((*start_screen)->settings_button);
+    destroyButton((*start_screen)->exit_button);
+    SDL_DestroyTexture((*start_screen)->background_texture);
+    SDL_DestroyTexture((*start_screen)->left_panel_texture);
+    SDL_DestroyTexture((*start_screen)->right_panel_texture);
+    free(*start_screen);
+    *start_screen = NULL;
 }
 
-void paintStartScreen(StartScreen* start_screen, SDL_Renderer* renderer) {
-    if (start_screen->paint_start_screen) {
-        SDL_RenderTexture(renderer, start_screen->left_panel_texture, NULL,
-            &start_screen->left_panel_rect);
-        SDL_RenderTexture(renderer, start_screen->right_panel_texture, NULL,
-            &start_screen->right_panel_rect);
-        paintLabel(renderer, start_screen->left_panel_label);
-        paintLabel(renderer, start_screen->right_panel_label);
-        const SDL_FRect background_rect = {
-            .x = (float) (WINDOW_WIDTH - WINDOW_HEIGHT) / 2.0f,
-            .y = 0.0f,
-            .w = WINDOW_HEIGHT,
-            .h = WINDOW_HEIGHT
-        };
-        SDL_RenderTexture(renderer, start_screen->background_texture, NULL, &background_rect);
-        paintLabel(renderer, start_screen->game_label);
-        paintLabel(renderer, start_screen->play_button->label);
-        paintLabel(renderer, start_screen->settings_button->label);
-        paintLabel(renderer, start_screen->exit_button->label);
-    }
-    if (start_screen->paint_settings_screen) {
-        paintSettingsScreen(start_screen->settings_screen, renderer, &start_screen->paint_settings_screen,
-            &start_screen->paint_start_screen);
-    }
+int paintStartScreen(const StartScreen* start_screen, SDL_Renderer* renderer) {
+    SDL_RenderTexture(renderer, start_screen->left_panel_texture, NULL,
+        &start_screen->left_panel_rect);
+    SDL_RenderTexture(renderer, start_screen->right_panel_texture, NULL,
+        &start_screen->right_panel_rect);
+    paintLabel(renderer, start_screen->left_panel_label);
+    paintLabel(renderer, start_screen->right_panel_label);
+    const SDL_FRect background_rect = {
+        .x = (float) (WINDOW_WIDTH - WINDOW_HEIGHT) / 2.0f,
+        .y = 0.0f,
+        .w = WINDOW_HEIGHT,
+        .h = WINDOW_HEIGHT
+    };
+    SDL_RenderTexture(renderer, start_screen->background_texture, NULL, &background_rect);
+    paintLabel(renderer, start_screen->game_label);
+    paintLabel(renderer, start_screen->play_button->label);
+    paintLabel(renderer, start_screen->settings_button->label);
+    paintLabel(renderer, start_screen->exit_button->label);
+    return -1;
 }
+
+/*
+ * Event handling
+ */
 
 void startScreenMousePressed(const StartScreen* start_screen, const SDL_FPoint mouse_pos) {
-    if (start_screen->paint_start_screen && !start_screen->paint_settings_screen) {
-        if (buttonPressCheck(start_screen->play_button, mouse_pos)) return;
-        if (buttonPressCheck(start_screen->settings_button, mouse_pos)) return;
-        if (buttonPressCheck(start_screen->exit_button, mouse_pos)) return;
-    }
-    if (start_screen->paint_settings_screen && !start_screen->paint_start_screen) {
-        settingsScreenMousePressed(start_screen->settings_screen, mouse_pos);
-    }
+    if (buttonPressCheck(start_screen->play_button, mouse_pos)) return;
+    if (buttonPressCheck(start_screen->settings_button, mouse_pos)) return;
+    buttonPressCheck(start_screen->exit_button, mouse_pos);
 }
 
-void startScreenMouseReleased(StartScreen* start_screen, const SDL_FPoint mouse_pos, bool* program_running,
-        uint8_t* current_screen, uint8_t* prev_screen, UserData* user_data, SDL_Window* window) {
-    if (start_screen->paint_start_screen && !start_screen->paint_settings_screen) {
-        if (buttonReleaseCheck(start_screen->play_button, mouse_pos)) {
-            *current_screen = SAVES_SCREEN;
-            *prev_screen = START_SCREEN;
-        } else if (buttonReleaseCheck(start_screen->settings_button, mouse_pos)) {
-            start_screen->paint_settings_screen = true;
-        } else if (buttonReleaseCheck(start_screen->exit_button, mouse_pos)) {
-            *program_running = false;
-        }
-    } else if (start_screen->paint_settings_screen && !start_screen->paint_start_screen) {
-        settingsScreenMouseReleased(start_screen->settings_screen, mouse_pos, user_data, window);
+int startScreenMouseReleased(const StartScreen* start_screen, const SDL_FPoint mouse_pos, bool* program_running) {
+    if (buttonReleaseCheck(start_screen->play_button, mouse_pos)) {
+        return SAVES_SCREEN;
     }
+    if (buttonReleaseCheck(start_screen->settings_button, mouse_pos)) {
+        return SETTINGS_SCREEN;
+    }
+    if (buttonReleaseCheck(start_screen->exit_button, mouse_pos)) {
+        *program_running = false;
+    }
+    return -1;
 }
 
-void startScreenMouseDragged(const StartScreen* start_screen, const SDL_FPoint mouse_pos, UserData* user_data) {
-    if (start_screen->paint_start_screen && !start_screen->paint_settings_screen) {
-        buttonMouseDragCheck(start_screen->play_button, mouse_pos);
-        buttonMouseDragCheck(start_screen->settings_button, mouse_pos);
-        buttonMouseDragCheck(start_screen->exit_button, mouse_pos);
-    } else if (start_screen->paint_settings_screen && !start_screen->paint_start_screen) {
-        settingsScreenMouseDragged(start_screen->settings_screen, mouse_pos, user_data);
-    }
+void startScreenMouseDragged(const StartScreen* start_screen, const SDL_FPoint mouse_pos) {
+    buttonMouseDragCheck(start_screen->play_button, mouse_pos);
+    buttonMouseDragCheck(start_screen->settings_button, mouse_pos);
+    buttonMouseDragCheck(start_screen->exit_button, mouse_pos);
 }
+
+/*
+ * Helper functions
+ */
 
 static void setStartScreenBackground(StartScreen* start_screen, SDL_Renderer* renderer) {
     start_screen->background_texture = IMG_LoadTexture(renderer,

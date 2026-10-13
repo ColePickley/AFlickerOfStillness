@@ -39,7 +39,9 @@ file(GLOB_RECURSE SOURCE_FILES_FILE_HANDLING
 # Combine all source and header files into a single list
 set(SOURCE_FILES ${SOURCE_FILES_ROOT} ${SOURCE_FILES_SCREEN_LOGIC} ${SOURCE_FILES_FILE_HANDLING}
         screen_logic/pause_screen.c
-        screen_logic/pause_screen.h)
+        screen_logic/pause_screen.h
+        screen_logic/screen_data.c
+        screen_logic/screen_data.h)
 
 #[[
 Define project executable
