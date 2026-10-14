@@ -6,15 +6,26 @@
 #define BACKGROUND_TEXTURE_HEIGHT 271.125f
 
 typedef struct {
+    SDL_Texture* background_textures[24];
+    SDL_Texture* texture_set_1[12];
+    SDL_Texture* texture_set_2[12];
+}PauseScreenTextures;
+
+typedef struct {
+    SDL_Surface* background_surfaces[24];
+    SDL_Surface* surface_set_1[12];
+    SDL_Surface* surface_set_2[12];
+}PauseScreenSurfaces;
+
+typedef struct {
     bool do_entrance_animation;
     bool do_exit_animation;
     int next_screen;
     float animation_state;
     float animation_speed;
     uint64_t last_paint_time;
-    SDL_Texture* background_textures[24];
-    SDL_Texture* texture_set_1[12];
-    SDL_Texture* texture_set_2[12];
+    PauseScreenTextures* textures;
+    PauseScreenSurfaces* surfaces;
     Button* resume_button;
     Button* last_checkpoint_button;
     Button* restart_level_button;
@@ -22,7 +33,9 @@ typedef struct {
     Button* exit_button;
 }PauseScreen;
 
-void initPauseScreen(PauseScreen** pause_screen, SDL_Renderer* renderer);
+void initPauseScreen(PauseScreen** pause_screen);
+
+void setPauseScreenTextures(const PauseScreen* pause_screen, SDL_Renderer* renderer);
 
 void destroyPauseScreen(PauseScreen** pause_screen);
 
@@ -46,7 +59,7 @@ void pauseScreenMouseDragged(const PauseScreen* pause_screen, SDL_FPoint mouse_p
  * Helper functions
  */
 
-static void setPauseScreenBackground(PauseScreen* pause_screen, SDL_Renderer* renderer);
+static void setPauseScreenSurfaces(const PauseScreen* pause_screen);
 
 static void setPauseScreenButtons(PauseScreen* pause_screen);
 

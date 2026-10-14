@@ -7,6 +7,16 @@
 typedef struct {
     SDL_Texture* left_background_texture;
     SDL_Texture* right_background_texture;
+}SettingsScreenTextures;
+
+typedef struct {
+    SDL_Surface* left_background_surface;
+    SDL_Surface* right_background_surface;
+}SettingsScreenSurfaces;
+
+typedef struct {
+    SettingsScreenTextures* textures;
+    SettingsScreenSurfaces* surfaces;
     SDL_FRect left_background_rect;
     SDL_FRect right_background_rect;
     SDL_FRect fps_slider_rects[5];
@@ -29,8 +39,9 @@ typedef struct {
     int prev_screen;
 }SettingsScreen;
 
-void initSettingsScreen(SettingsScreen** settings_screen, SDL_Renderer* renderer, const UserData* user_data,
-    int prev_screen);
+void initSettingsScreen(SettingsScreen** settings_screen, const UserData* user_data, int prev_screen);
+
+void setSettingsScreenTextures(const SettingsScreen* settings_screen, SDL_Renderer* renderer);
 
 void resetSettingsScreen(SettingsScreen* settings_screen, const UserData* user_data);
 
@@ -53,7 +64,7 @@ void settingsScreenMouseDragged(SettingsScreen* settings_screen, SDL_FPoint mous
  * Helper Functions
  */
 
-static void setSettingsScreenBackground(SettingsScreen* settings_screen, SDL_Renderer* renderer);
+static void setSettingsScreenSurfaces(const SettingsScreen* settings_screen);
 
 static void setSettingsScreenLabels(SettingsScreen* settings_screen, const UserData* user_data);
 

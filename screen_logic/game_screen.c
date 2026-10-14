@@ -10,10 +10,37 @@
 #include "../program_data.h"
 #include "../ray_calculator.h"
 
-void initGameScreen(GameScreen** game_screen, SDL_Renderer* renderer) {
+void initGameScreen(GameScreen** game_screen) {
     *game_screen = malloc(sizeof(GameScreen));
-    (*game_screen)->num_map_textures = set_map_textures(*game_screen, renderer);
-    (*game_screen)->num_entity_textures = set_entity_textures(*game_screen, renderer);
+    (*game_screen)->num_map_textures = setMapSurfaces(*game_screen);
+    (*game_screen)->num_entity_textures = setEntitySurfaces(*game_screen);
+}
+
+void setGameScreenTextures(const GameScreen* game_screen, SDL_Renderer* renderer) {
+    for (int i = 0; i < game_screen->num_map_textures; i++) {
+        for (int j = 0; j < TEXTURE_RESOLUTION; j++) {
+            SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, game_screen->map_textures[i]->surface[j]);
+            if (!texture) {
+                SDL_Log("Failed to create texture from slice: %s", SDL_GetError());
+                return;
+            }
+            SDL_SetTextureScaleMode(texture, SDL_SCALEMODE_NEAREST);
+            SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND);
+            game_screen->map_textures[i]->texture[j] = texture;
+        }
+    }
+    for (int i = 0; i < game_screen->num_entity_textures; i++) {
+        for (int j = 0; j < TEXTURE_RESOLUTION; j++) {
+            SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, game_screen->entity_textures[i]->surface[j]);
+            if (!texture) {
+                SDL_Log("Failed to create texture from slice: %s", SDL_GetError());
+                return;
+            }
+            SDL_SetTextureScaleMode(texture, SDL_SCALEMODE_NEAREST);
+            SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND);
+            game_screen->entity_textures[i]->texture[j] = texture;
+        }
+    }
 }
 
 void destroyGameScreen(GameScreen** game_screen) {
@@ -59,7 +86,7 @@ int paintGameScreen(const GameScreen* game_screen, SDL_Renderer* renderer, GameD
 
         const int y = (WINDOW_HEIGHT - (int) line_length) / 2;
         const int x = i * LINE_WIDTH;
-        const double angle = get_ray_angle(game_data->player->rays[i]->degree, game_data->player->rotation);
+        const double angle = getRayAngle(game_data->player->rays[i]->degree, game_data->player->rotation);
         const double pre_adjustment = (double) WINDOW_HEIGHT / 2.0 * (double) GRID_SIZE /
             cos(toRadians(game_data->player->rays[i]->degree));
         int vert_res = LINE_WIDTH;
@@ -68,61 +95,61 @@ int paintGameScreen(const GameScreen* game_screen, SDL_Renderer* renderer, GameD
         } else if (user_data->graphics_quality == GRAPHICS_QUALITY_HIGH) {
             vert_res = 1;
         }
-        draw_ceiling_line(game_screen, renderer, game_data, vert_res, i, y, angle, pre_adjustment);
-        draw_floor_line(game_screen, renderer, game_data, vert_res, i, line_length, y, angle, pre_adjustment);
-        draw_wall_line(game_screen, renderer, game_data, angle, *game_data->player->rays[i], line_length, x, y);
+        drawCeilingLine(game_screen, renderer, game_data, vert_res, i, y, angle, pre_adjustment);
+        drawFloorLine(game_screen, renderer, game_data, vert_res, i, line_length, y, angle, pre_adjustment);
+        drawWallLine(game_screen, renderer, game_data, angle, *game_data->player->rays[i], line_length, x, y);
     }
-    draw_entities(game_screen, renderer, game_data);
+    drawEntities(game_screen, renderer, game_data);
     return -1;
 }
 
-static void draw_ceiling_line(const GameScreen* game_screen, SDL_Renderer* renderer, const GameData* game_data,
+static void drawCeilingLine(const GameScreen* game_screen, SDL_Renderer* renderer, const GameData* game_data,
         const int vert_res, const int ray_num, const int start_y, const double angle, const double pre_adjustment) {
     for (int y = start_y; y >= 0; y -= vert_res) {
         const double dy = (double) WINDOW_HEIGHT / 2.0 - (double) y;
         const double post_adjustment = pre_adjustment / dy;
-        int ceiling_x = get_floor_x(game_data, angle, post_adjustment);
+        int ceiling_x = getFloorX(game_data, angle, post_adjustment);
         const int texture_x = max(0, ceiling_x % GRID_SIZE);
         ceiling_x = max(0, min(game_data->num_map_cols - 1, ceiling_x / GRID_SIZE));
-        int ceiling_y = get_floor_y(game_data, angle, post_adjustment);
+        int ceiling_y = getFloorY(game_data, angle, post_adjustment);
         const int texture_y = max(0, ceiling_y % GRID_SIZE);
         ceiling_y = max(0, min(game_data->num_map_rows - 1, ceiling_y / GRID_SIZE));
         const int texture_index = game_data->texture_locations[ceiling_y][ceiling_x][4];
         if (texture_index == 0) continue;
         SDL_Color color;
-        set_surface_pixel_color(game_screen->map_textures[texture_index]->surface[texture_x], 0, texture_y, &color);
+        setSurfacePixelColor(game_screen->map_textures[texture_index]->surface[texture_x], 0, texture_y, &color);
         SDL_FRect rect = {.x = (float) (ray_num * LINE_WIDTH), .y = (float) y, .w = LINE_WIDTH, .h = (float) vert_res};
         SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
         SDL_RenderFillRect(renderer, &rect);
     }
 }
 
-static void draw_floor_line(const GameScreen* game_screen, SDL_Renderer* renderer, const GameData* game_data,
+static void drawFloorLine(const GameScreen* game_screen, SDL_Renderer* renderer, const GameData* game_data,
         const int vert_res, const int ray_num, const float line_length, const int start_y, const double angle,
         const double pre_adjustment) {
     for (int y = start_y + (int) line_length; y < WINDOW_HEIGHT; y += vert_res) {
         const double dy = y - WINDOW_HEIGHT / 2.0;
         const double post_adjustment = pre_adjustment / dy;
-        int floor_x = get_floor_x(game_data, angle, post_adjustment);
+        int floor_x = getFloorX(game_data, angle, post_adjustment);
         const int texture_x = max(0, floor_x % GRID_SIZE);
         floor_x = max(0, min(game_data->num_map_cols - 1, floor_x / GRID_SIZE));
-        int floor_y = get_floor_y(game_data, angle, post_adjustment);
+        int floor_y = getFloorY(game_data, angle, post_adjustment);
         const int texture_y = max(0, floor_y % GRID_SIZE);
         floor_y = max(0, min(game_data->num_map_rows - 1, floor_y / GRID_SIZE));
         const int texture_index = game_data->texture_locations[floor_y][floor_x][5];
         SDL_Color color;
-        set_surface_pixel_color(game_screen->map_textures[texture_index]->surface[texture_x], 0, texture_y, &color);
+        setSurfacePixelColor(game_screen->map_textures[texture_index]->surface[texture_x], 0, texture_y, &color);
         SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
         SDL_FRect rect = {.x = (float) (ray_num * LINE_WIDTH), .y = (float) y, .w = LINE_WIDTH, .h = (float) vert_res};
         SDL_RenderFillRect(renderer, &rect);
     }
 }
 
-static void draw_wall_line(const GameScreen* game_screen, SDL_Renderer* renderer, const GameData* game_data,
+static void drawWallLine(const GameScreen* game_screen, SDL_Renderer* renderer, const GameData* game_data,
         const double angle, const Ray ray, const float line_length, const int x, const int y) {
     // get texture
-    const int side = get_texture_side(angle, ray);
-    const SlicedTexture* sliced_texture = get_wall_texture(game_screen, game_data, angle, ray, side);
+    const int side = getTextureSide(angle, ray);
+    const SlicedTexture* sliced_texture = getWallTexture(game_screen, game_data, angle, ray, side);
     int img_x;
     if (ray.vert_collision) {
         img_x = (int) round(GRID_SIZE - (int) ray.y % GRID_SIZE);
@@ -148,9 +175,9 @@ static void draw_wall_line(const GameScreen* game_screen, SDL_Renderer* renderer
     // }
 }
 
-static void draw_entities(const GameScreen* game_screen, SDL_Renderer* renderer, GameData* game_data) {
-    set_entity_vectors(game_data);
-    quick_sort_entities(game_data->entities, 0, game_data->num_entities - 1);
+static void drawEntities(const GameScreen* game_screen, SDL_Renderer* renderer, GameData* game_data) {
+    setEntityVectors(game_data);
+    quickSortEntities(game_data->entities, 0, game_data->num_entities - 1);
     const double player_vect_x = cos(toRadians(game_data->player->rotation - 90.0));
     const double player_vect_y = -1.0 * sin(toRadians(game_data->player->rotation - 90.0));
     for (int i = 0; i < game_data->num_entities; i++) {
@@ -255,8 +282,8 @@ int gameScreenKeyClicked(const SDL_Keycode keycode) {
  * Helper Functions
  */
 
-static void set_surface_pixel_color(const SDL_Surface* surface, const int x, const int y, SDL_Color* out_color) {
-    const Uint8* pixel_ptr = (const Uint8*)surface->pixels + (y * surface->pitch) + (x * 4);
+static void setSurfacePixelColor(const SDL_Surface* surface, const int x, const int y, SDL_Color* out_color) {
+    const Uint8* pixel_ptr = (const Uint8*)surface->pixels + y * surface->pitch + x * 4;
     const Uint32 pixel_value = *(const Uint32*)pixel_ptr;
     out_color->r = (pixel_value >> 24) & 0xFF;
     out_color->g = (pixel_value >> 16) & 0xFF;
@@ -264,7 +291,7 @@ static void set_surface_pixel_color(const SDL_Surface* surface, const int x, con
     out_color->a = pixel_value & 0xFF;
 }
 
-static void set_entity_vectors(const GameData* game_data) {
+static void setEntityVectors(const GameData* game_data) {
     for (int i = 0; i < game_data->num_entities; i++) {
         game_data->entities[i]->vect_x = game_data->entities[i]->x - game_data->player->x;
         game_data->entities[i]->vect_y = game_data->entities[i]->y - game_data->player->y;
@@ -273,7 +300,7 @@ static void set_entity_vectors(const GameData* game_data) {
     }
 }
 
-static void quick_sort_entities(Entity* entities[MAX_NUM_ENTITIES], const int low, const int high) {
+static void quickSortEntities(Entity* entities[MAX_NUM_ENTITIES], const int low, const int high) {
     if (low < high) {
         const double pivot = entities[high]->vect_mag;
         int i = low - 1;
@@ -289,8 +316,8 @@ static void quick_sort_entities(Entity* entities[MAX_NUM_ENTITIES], const int lo
         entities[i + 1] = entities[high];
         entities[high] = temp;
         const int pi = i + 1;
-        quick_sort_entities(entities, low, pi - 1);
-        quick_sort_entities(entities, pi + 1, high);
+        quickSortEntities(entities, low, pi - 1);
+        quickSortEntities(entities, pi + 1, high);
     }
 }
 
@@ -303,7 +330,7 @@ static double getEntityAngle(const Entity* entity, const double player_vect_x, c
     return angle;
 }
 
-static int get_texture_side(const double angle, const Ray ray) {
+static int getTextureSide(const double angle, const Ray ray) {
     if (ray.vert_collision) {
         if (angle < 180) {
             return 3;
@@ -316,14 +343,14 @@ static int get_texture_side(const double angle, const Ray ray) {
     return 2;
 }
 
-static SlicedTexture* get_wall_texture(const GameScreen* game_screen, const GameData* game_data, const double angle,
+static SlicedTexture* getWallTexture(const GameScreen* game_screen, const GameData* game_data, const double angle,
         const Ray ray, const int side) {
-    const int x = get_wall_texture_index_x(game_data, angle, ray);
-    const int y = get_wall_texture_index_y(game_data, angle, ray);
+    const int x = getWallTextureIndexX(game_data, angle, ray);
+    const int y = getWallTextureIndexY(game_data, angle, ray);
     return game_screen->map_textures[game_data->texture_locations[y][x][side]];
 }
 
-static int get_wall_texture_index_x(const GameData* game_data, const double angle, const Ray ray) {
+static int getWallTextureIndexX(const GameData* game_data, const double angle, const Ray ray) {
     int ray_x = (int) ray.x;
     if (GRID_SIZE - fmod(ray.x, 64.0) < 0.00000001) {
         ray_x = (int) round(ray.x);
@@ -335,7 +362,7 @@ static int get_wall_texture_index_x(const GameData* game_data, const double angl
     return max(0, min(game_data->num_map_cols - 1, x));
 }
 
-static int get_wall_texture_index_y(const GameData* game_data, const double angle, const Ray ray) {
+static int getWallTextureIndexY(const GameData* game_data, const double angle, const Ray ray) {
     int ray_y = (int) ray.y;
     if (GRID_SIZE - fmod(ray.y, 64.0) < 0.00000001) {
         ray_y = (int) round(ray.y);
@@ -347,7 +374,7 @@ static int get_wall_texture_index_y(const GameData* game_data, const double angl
     return max(0, min(game_data->num_map_rows - 1, y));
 }
 
-static int get_floor_x(const GameData* game_data, const double angle, const double post_adjustment) {
+static int getFloorX(const GameData* game_data, const double angle, const double post_adjustment) {
     if (angle < 90) {
         return (int) (game_data->player->x + sin(toRadians(angle)) * post_adjustment);
     }
@@ -360,7 +387,7 @@ static int get_floor_x(const GameData* game_data, const double angle, const doub
     return (int) (game_data->player->x - cos(toRadians(angle - 270)) * post_adjustment);
 }
 
-static int get_floor_y(const GameData* game_data, const double angle, const double post_adjustment) {
+static int getFloorY(const GameData* game_data, const double angle, const double post_adjustment) {
     if (angle < 90) {
         return (int) (game_data->player->y + cos(toRadians(angle)) * post_adjustment);
     }
@@ -373,7 +400,7 @@ static int get_floor_y(const GameData* game_data, const double angle, const doub
     return (int) (game_data->player->y + sin(toRadians(angle - 270)) * post_adjustment);
 }
 
-static double get_ray_angle(const double ray_degree, const double player_rotation) {
+static double getRayAngle(const double ray_degree, const double player_rotation) {
     double angle = ray_degree + player_rotation;
     if (angle < 0.0) {
         angle += 360.0;
@@ -383,7 +410,7 @@ static double get_ray_angle(const double ray_degree, const double player_rotatio
     return angle;
 }
 
-static int set_map_textures(GameScreen* game_screen, SDL_Renderer* renderer) {
+static int setMapSurfaces(GameScreen* game_screen) {
     // get directory
     const char* base_path = SDL_GetBasePath();
     if (!base_path) {
@@ -433,14 +460,6 @@ static int set_map_textures(GameScreen* game_screen, SDL_Renderer* renderer) {
                 return -1;
             }
             game_screen->map_textures[i]->surface[j] = optimized_surface;
-            SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, optimized_surface);
-            if (!tex) {
-                SDL_Log("Failed to create texture from slice: %s", SDL_GetError());
-                return -1;
-            }
-            SDL_SetTextureScaleMode(tex, SDL_SCALEMODE_NEAREST);
-            SDL_SetTextureBlendMode(tex, SDL_BLENDMODE_BLEND);
-            game_screen->map_textures[i]->texture[j] = tex;
             SDL_DestroySurface(slice_surface);
         }
         SDL_DestroySurface(surface);
@@ -450,7 +469,7 @@ static int set_map_textures(GameScreen* game_screen, SDL_Renderer* renderer) {
     return num_files;
 }
 
-static int set_entity_textures(GameScreen* game_screen, SDL_Renderer* renderer) {
+static int setEntitySurfaces(GameScreen* game_screen) {
     // get directory
     const char* base_path = SDL_GetBasePath();
     if (!base_path) {
@@ -500,14 +519,6 @@ static int set_entity_textures(GameScreen* game_screen, SDL_Renderer* renderer) 
                 return -1;
             }
             game_screen->entity_textures[i]->surface[j] = optimized_surface;
-            SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, optimized_surface);
-            if (!tex) {
-                SDL_Log("Failed to create texture from slice: %s", SDL_GetError());
-                return -1;
-            }
-            SDL_SetTextureScaleMode(tex, SDL_SCALEMODE_NEAREST);
-            SDL_SetTextureBlendMode(tex, SDL_BLENDMODE_BLEND);
-            game_screen->entity_textures[i]->texture[j] = tex;
             SDL_DestroySurface(slice_surface);
         }
         SDL_DestroySurface(surface);

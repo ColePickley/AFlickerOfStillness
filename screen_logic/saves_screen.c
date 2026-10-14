@@ -5,12 +5,38 @@
 #include "../file_handling/save_handling.h"
 #include "../file_handling/map_reader.h"
 
-void initSavesScreen(SavesScreen** saves_screen, SDL_Renderer* renderer) {
+void initSavesScreen(SavesScreen** saves_screen) {
     *saves_screen = malloc(sizeof(SavesScreen));
-    setSavesScreenBackground(*saves_screen, renderer);
+    (*saves_screen)->surfaces = malloc(sizeof(SavesScreenTextures));
+    (*saves_screen)->textures = malloc(sizeof(SavesScreenTextures));
+    setSavesScreenSurfaces(*saves_screen);
     setSavesScreenLabels(*saves_screen);
     setSavesScreenButtons(*saves_screen);
-    setSavesScreenDeleteSaveTexture(*saves_screen, renderer);
+    setSavesScreenRects(*saves_screen);
+}
+
+void setSavesScreenTextures(const SavesScreen* saves_screen, SDL_Renderer* renderer) {
+    saves_screen->textures->background_texture =
+        SDL_CreateTextureFromSurface(renderer, saves_screen->surfaces->background_surface);
+    SDL_DestroySurface(saves_screen->surfaces->background_surface);
+    saves_screen->surfaces->background_surface = NULL;
+
+    saves_screen->textures->left_panel_texture =
+        SDL_CreateTextureFromSurface(renderer, saves_screen->surfaces->left_panel_surface);
+    SDL_DestroySurface(saves_screen->surfaces->left_panel_surface);
+    saves_screen->surfaces->left_panel_surface = NULL;
+
+    saves_screen->textures->right_panel_texture =
+        SDL_CreateTextureFromSurface(renderer, saves_screen->surfaces->right_panel_surface);
+    SDL_DestroySurface(saves_screen->surfaces->right_panel_surface);
+    saves_screen->surfaces->right_panel_surface = NULL;
+
+    saves_screen->textures->delete_save_texture =
+        SDL_CreateTextureFromSurface(renderer, saves_screen->surfaces->delete_save_surface);
+    SDL_DestroySurface(saves_screen->surfaces->delete_save_surface);
+    saves_screen->surfaces->delete_save_surface = NULL;
+
+    SDL_SetTextureBlendMode(saves_screen->textures->delete_save_texture, SDL_BLENDMODE_BLEND);
 }
 
 void destroySavesScreen(SavesScreen** saves_screen) {
@@ -24,16 +50,20 @@ void destroySavesScreen(SavesScreen** saves_screen) {
         destroyButton((*saves_screen)->save_buttons[i]);
     }
     destroyButton((*saves_screen)->delete_save_button);
-    SDL_DestroyTexture((*saves_screen)->background_texture);
-    SDL_DestroyTexture((*saves_screen)->left_panel_texture);
-    SDL_DestroyTexture((*saves_screen)->right_panel_texture);
+    SDL_DestroyTexture((*saves_screen)->textures->background_texture);
+    SDL_DestroyTexture((*saves_screen)->textures->left_panel_texture);
+    SDL_DestroyTexture((*saves_screen)->textures->right_panel_texture);
+    free((*saves_screen)->surfaces);
+    free((*saves_screen)->textures);
     free(*saves_screen);
     *saves_screen = NULL;
 }
 
 int paintSavesScreen(const SavesScreen* saves_screen, SDL_Renderer* renderer) {
-    SDL_RenderTexture(renderer, saves_screen->left_panel_texture, NULL, &saves_screen->left_panel_rect);
-    SDL_RenderTexture(renderer, saves_screen->right_panel_texture, NULL, &saves_screen->right_panel_rect);
+    SDL_RenderTexture(renderer, saves_screen->textures->left_panel_texture, NULL,
+        &saves_screen->left_panel_rect);
+    SDL_RenderTexture(renderer, saves_screen->textures->right_panel_texture, NULL,
+        &saves_screen->right_panel_rect);
     paintLabel(renderer, saves_screen->left_panel_label);
     paintLabel(renderer, saves_screen->right_panel_label);
     const SDL_FRect background_rect = {
@@ -42,7 +72,7 @@ int paintSavesScreen(const SavesScreen* saves_screen, SDL_Renderer* renderer) {
         .w = WINDOW_HEIGHT,
         .h = WINDOW_HEIGHT
     };
-    SDL_RenderTexture(renderer, saves_screen->background_texture, NULL, &background_rect);
+    SDL_RenderTexture(renderer, saves_screen->textures->background_texture, NULL, &background_rect);
     paintLabel(renderer, saves_screen->select_save_label);
     paintLabel(renderer, saves_screen->saves_label);
     paintLabel(renderer, saves_screen->back_button->label);
@@ -50,19 +80,19 @@ int paintSavesScreen(const SavesScreen* saves_screen, SDL_Renderer* renderer) {
     bool paint_delete_save_button = false;
     for (int i = 0; i < 3; i++) {
         paintLabel(renderer, saves_screen->save_buttons[i]->label);
-        if (saves_screen->save_buttons[0]->is_on &&
-                saves_screen->save_buttons[0]->label->text_data.horizontal_text_alignment == ALIGN_LEFT) {
+        if (saves_screen->save_buttons[i]->is_on &&
+                saves_screen->save_buttons[i]->label->text_data.horizontal_text_alignment == ALIGN_LEFT) {
             paint_delete_save_button = true;
         }
     }
     if (paint_delete_save_button) {
         paintLabel(renderer, saves_screen->delete_save_button->label);
         if (saves_screen->delete_save_button->is_on) {
-            SDL_SetTextureAlphaMod(saves_screen->delete_save_texture, 255);
+            SDL_SetTextureAlphaMod(saves_screen->textures->delete_save_texture, 255);
         } else {
-            SDL_SetTextureAlphaMod(saves_screen->delete_save_texture, 100);
+            SDL_SetTextureAlphaMod(saves_screen->textures->delete_save_texture, 100);
         }
-        SDL_RenderTexture(renderer, saves_screen->delete_save_texture, NULL,
+        SDL_RenderTexture(renderer, saves_screen->textures->delete_save_texture, NULL,
             &saves_screen->delete_save_button->label->rect);
     }
     return -1;
@@ -173,35 +203,29 @@ void savesScreenMouseDragged(const SavesScreen* saves_screen, const SDL_FPoint m
  * Helper functions
  */
 
-static void setSavesScreenBackground(SavesScreen* saves_screen, SDL_Renderer* renderer) {
-    saves_screen->background_texture = IMG_LoadTexture(renderer,
-        "game_data/textures/saves_screen/background.png");
-    if (!saves_screen->background_texture) {
+static void setSavesScreenSurfaces(const SavesScreen* saves_screen) {
+    saves_screen->surfaces->background_surface = IMG_Load("game_data/textures/saves_screen/background.png");
+    if (!saves_screen->surfaces->background_surface) {
         SDL_Log("Failed to load image: %s", SDL_GetError());
     }
-    saves_screen->left_panel_texture = IMG_LoadTexture(renderer,
-        "game_data/textures/saves_screen/left_panel.png");
-    if (!saves_screen->left_panel_texture) {
+    saves_screen->surfaces->left_panel_surface = IMG_Load("game_data/textures/saves_screen/left_panel.png");
+    if (!saves_screen->surfaces->left_panel_surface) {
         SDL_Log("Failed to load image: %s", SDL_GetError());
     }
-    saves_screen->right_panel_texture = IMG_LoadTexture(renderer,
-        "game_data/textures/saves_screen/right_panel.png");
-    if (!saves_screen->right_panel_texture) {
+    saves_screen->surfaces->right_panel_surface = IMG_Load("game_data/textures/saves_screen/right_panel.png");
+    if (!saves_screen->surfaces->right_panel_surface) {
         SDL_Log("Failed to load image: %s", SDL_GetError());
     }
+    saves_screen->surfaces->delete_save_surface = IMG_Load("game_data/textures/saves_screen/trash_can.png");
+    if (!saves_screen->surfaces->delete_save_surface) {
+        SDL_Log("Failed to load image: %s", SDL_GetError());
+    }
+}
 
-    saves_screen->left_panel_rect = (SDL_FRect) {
-        .x = ((float) (WINDOW_WIDTH - WINDOW_HEIGHT) / 2.0f - (float) WINDOW_HEIGHT) / 2.0f,
-        .y = 0.0f,
-        .w = (float) WINDOW_HEIGHT,
-        .h = (float) WINDOW_HEIGHT
-    };
-    saves_screen->right_panel_rect = (SDL_FRect) {
-        .x = (3.0f * (float) WINDOW_WIDTH - (float) WINDOW_HEIGHT) / 4.0f,
-        .y = 0.0f,
-        .w = (float) WINDOW_HEIGHT,
-        .h = (float) WINDOW_HEIGHT
-    };
+static void setSavesScreenLabels(SavesScreen* saves_screen) {
+    /*
+     * Panel labels
+     */
 
     const SDL_FRect left_label_rect = {
         .x = 0.0f,
@@ -225,12 +249,11 @@ static void setSavesScreenBackground(SavesScreen* saves_screen, SDL_Renderer* re
         style_data, text_data);
     initLabel(&saves_screen->right_panel_label, right_label_rect, (SDL_Color) {.r = 255, .g = 255, .b = 255, .a = 0},
         style_data, text_data);
-}
 
-static void setSavesScreenLabels(SavesScreen* saves_screen) {
     /*
      * select save label
      */
+
     const LabelStyleData select_save_style_data = {
         .boarder_thickness = 10,
         .bevel_radius = 30,
@@ -411,11 +434,17 @@ static void setSavesScreenButtons(SavesScreen* saves_screen) {
     initButton(&saves_screen->delete_save_button, delete_save_label, delete_save_color_data);
 }
 
-static void setSavesScreenDeleteSaveTexture(SavesScreen* saves_screen, SDL_Renderer* renderer) {
-    saves_screen->delete_save_texture = IMG_LoadTexture(renderer,
-        "game_data/textures/saves_screen/trash_can.png");
-    if (!saves_screen->delete_save_texture) {
-        SDL_Log("Failed to load image: %s", SDL_GetError());
-    }
-    SDL_SetTextureBlendMode(saves_screen->delete_save_texture, SDL_BLENDMODE_BLEND);
+static void setSavesScreenRects(SavesScreen* saves_screen) {
+    saves_screen->left_panel_rect = (SDL_FRect) {
+        .x = ((float) (WINDOW_WIDTH - WINDOW_HEIGHT) / 2.0f - (float) WINDOW_HEIGHT) / 2.0f,
+        .y = 0.0f,
+        .w = (float) WINDOW_HEIGHT,
+        .h = (float) WINDOW_HEIGHT
+    };
+    saves_screen->right_panel_rect = (SDL_FRect) {
+        .x = (3.0f * (float) WINDOW_WIDTH - (float) WINDOW_HEIGHT) / 4.0f,
+        .y = 0.0f,
+        .w = (float) WINDOW_HEIGHT,
+        .h = (float) WINDOW_HEIGHT
+    };
 }

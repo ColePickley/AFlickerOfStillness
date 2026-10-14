@@ -5,9 +5,11 @@
 #include <stdlib.h>
 #include <SDL3_image/SDL_image.h>
 
-void initPauseScreen(PauseScreen** pause_screen, SDL_Renderer* renderer) {
+void initPauseScreen(PauseScreen** pause_screen) {
     *pause_screen = malloc(sizeof(PauseScreen));
-    setPauseScreenBackground(*pause_screen, renderer);
+    (*pause_screen)->textures = malloc(sizeof(PauseScreenTextures));
+    (*pause_screen)->surfaces = malloc(sizeof(PauseScreenSurfaces));
+    setPauseScreenSurfaces(*pause_screen);
     setPauseScreenButtons(*pause_screen);
     (*pause_screen)->last_paint_time = 0;
     (*pause_screen)->do_entrance_animation = false;
@@ -16,11 +18,24 @@ void initPauseScreen(PauseScreen** pause_screen, SDL_Renderer* renderer) {
     (*pause_screen)->animation_speed = 0.0f;
 }
 
+void setPauseScreenTextures(const PauseScreen* pause_screen, SDL_Renderer* renderer) {
+    for (int i = 0; i < 24; i++) {
+        pause_screen->textures->background_textures[i] =
+            SDL_CreateTextureFromSurface(renderer, pause_screen->surfaces->background_surfaces[i]);
+        SDL_DestroySurface(pause_screen->surfaces->background_surfaces[i]);
+        pause_screen->surfaces->background_surfaces[i] = NULL;
+    }
+}
+
 void destroyPauseScreen(PauseScreen** pause_screen) {
     if (*pause_screen == NULL) return;
     for (int i = 0; i < 24; i++) {
-        SDL_DestroyTexture((*pause_screen)->background_textures[i]);
+        SDL_DestroyTexture((*pause_screen)->textures->background_textures[i]);
     }
+    free((*pause_screen)->textures);
+    (*pause_screen)->textures = NULL;
+    free((*pause_screen)->surfaces);
+    (*pause_screen)->surfaces = NULL;
     free(*pause_screen);
     *pause_screen = NULL;
 }
@@ -54,10 +69,11 @@ int paintPauseScreen(PauseScreen* pause_screen, SDL_Renderer* renderer) {
         pause_screen->last_paint_time = SDL_GetTicks();
         pause_screen->do_entrance_animation = true;
         pause_screen->animation_speed = 2.0f;
-        shuffleBackgroundTextures(&pause_screen->background_textures);
+        pause_screen->animation_state = 0.0f;
+        shuffleBackgroundTextures(&pause_screen->textures->background_textures);
         for (int i = 0; i < 12; i++) {
-            pause_screen->texture_set_1[i] = pause_screen->background_textures[i];
-            pause_screen->texture_set_2[i] = pause_screen->background_textures[i + 12];
+            pause_screen->textures->texture_set_1[i] = pause_screen->textures->background_textures[i];
+            pause_screen->textures->texture_set_2[i] = pause_screen->textures->background_textures[i + 12];
         }
     }
 
@@ -79,10 +95,10 @@ int paintPauseScreen(PauseScreen* pause_screen, SDL_Renderer* renderer) {
         if (pause_screen->do_entrance_animation) {
             rect.y -= animation_adjustment * BACKGROUND_TEXTURE_HEIGHT * 4;
         }
-        SDL_Texture* bottom_texture = pause_screen->texture_set_1[i];
+        SDL_Texture* bottom_texture = pause_screen->textures->texture_set_1[i];
         SDL_RenderTexture(renderer, bottom_texture, NULL, &rect);
         rect.y -= animation_adjustment * BACKGROUND_TEXTURE_HEIGHT * 4;
-        SDL_Texture* top_texture = pause_screen->texture_set_2[i];
+        SDL_Texture* top_texture = pause_screen->textures->texture_set_2[i];
         SDL_RenderTexture(renderer, top_texture, NULL, &rect);
     }
 
@@ -116,11 +132,11 @@ int paintPauseScreen(PauseScreen* pause_screen, SDL_Renderer* renderer) {
             pause_screen->animation_speed = 0.15f;
         } else {
             for (int i = 0; i < 12; i++) {
-                SDL_Texture* temp = pause_screen->texture_set_1[i];
-                pause_screen->texture_set_1[i] = pause_screen->texture_set_2[i];
-                pause_screen->texture_set_2[i] = temp;
+                SDL_Texture* temp = pause_screen->textures->texture_set_1[i];
+                pause_screen->textures->texture_set_1[i] = pause_screen->textures->texture_set_2[i];
+                pause_screen->textures->texture_set_2[i] = temp;
             }
-            shuffleTextureSet(&pause_screen->texture_set_2);
+            shuffleTextureSet(&pause_screen->textures->texture_set_2);
         }
     }
 
@@ -188,14 +204,14 @@ void pauseScreenMouseDragged(const PauseScreen* pause_screen, const SDL_FPoint m
  * Helper functions
  */
 
-static void setPauseScreenBackground(PauseScreen* pause_screen, SDL_Renderer* renderer) {
+static void setPauseScreenSurfaces(const PauseScreen* pause_screen) {
     for (int i = 0; i < 24; i++) {
         char file_path[50] = "../game_data/textures/pause_screen/background_img";
         char file_type[5] = ".png";
         char full_path[56];
         snprintf(full_path, sizeof(full_path), "%s%d%s", file_path, i + 1, file_type);
-        pause_screen->background_textures[i] = IMG_LoadTexture(renderer, full_path);
-        if (!pause_screen->background_textures[i]) {
+        pause_screen->surfaces->background_surfaces[i] = IMG_Load(full_path);
+        if (!pause_screen->surfaces->background_surfaces[i]) {
             SDL_Log("Failed to load image: %s", SDL_GetError());
         }
     }

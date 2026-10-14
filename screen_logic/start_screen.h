@@ -10,6 +10,17 @@ typedef struct {
     SDL_Texture* background_texture;
     SDL_Texture* left_panel_texture;
     SDL_Texture* right_panel_texture;
+}StartScreenTextures;
+
+typedef struct {
+    SDL_Surface* background_surface;
+    SDL_Surface* left_panel_surface;
+    SDL_Surface* right_panel_surface;
+}StartScreenSurfaces;
+
+typedef struct {
+    StartScreenTextures* textures;
+    StartScreenSurfaces* surfaces;
     SDL_FRect left_panel_rect;
     SDL_FRect right_panel_rect;
     Label* left_panel_label;
@@ -20,7 +31,9 @@ typedef struct {
     Button* exit_button;
 }StartScreen;
 
-void initStartScreen(StartScreen** start_screen, SDL_Renderer* renderer, const UserData* user_data);
+void initStartScreen(StartScreen** start_screen);
+
+void setStartScreenTextures(const StartScreen* start_screen, SDL_Renderer* renderer);
 
 void destroyStartScreen(StartScreen** start_screen);
 
@@ -40,7 +53,9 @@ void startScreenMouseDragged(const StartScreen* start_screen, SDL_FPoint mouse_p
  * Helper Functions
  */
 
-static void setStartScreenBackground(StartScreen* start_screen, SDL_Renderer* renderer);
+static void setStartScreenSurfaces(const StartScreen* start_screen);
+
+static void setStartScreenRects(StartScreen* start_screen);
 
 static void setStartScreenLabels(StartScreen* start_screen);
 

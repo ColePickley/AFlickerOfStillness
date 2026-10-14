@@ -6,22 +6,36 @@
 #include "pause_screen.h"
 #include "settings_screen.h"
 
+typedef struct ScreenData ScreenData;
+
 typedef struct {
+    ScreenData* screen_data;
+    const UserData* user_data;
+    SDL_Renderer* renderer;
+    int screen_id;
+    volatile bool is_done;
+} ThreadLoadArgs;
+
+struct ScreenData {
     uint8_t prev_screen, current_screen;
     StartScreen* start_screen;
     SavesScreen* saves_screen;
     GameScreen* game_screen;
     PauseScreen* pause_screen;
     SettingsScreen* settings_screen;
-}ScreenData;
+
+    bool is_loading_in_background;
+    ThreadLoadArgs* active_async_task;
+    SDL_Thread* bg_thread;
+};
 
 void initScreenData(ScreenData** screen_data, SDL_Renderer* renderer, const UserData* user_data);
 
 void destroyScreenData(ScreenData** screen_data);
 
-void loadScreen(ScreenData* screen_data, uint8_t new_screen, SDL_Renderer* renderer, const UserData* user_data);
+void loadScreenTextures(ScreenData* screen_data, SDL_Renderer* renderer, int screen_id);
 
-void unloadScreen(ScreenData* screen_data, uint8_t screen_id);
+static int asyncScreenChange(void* data);
 
 void changeScreen(ScreenData* screen_data, int screen_id, SDL_Renderer* renderer, const UserData* user_data);
 

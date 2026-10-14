@@ -18,7 +18,9 @@ typedef struct {
     SlicedTexture* entity_textures[MAX_NUM_TEXTURES];
 }GameScreen;
 
-void initGameScreen(GameScreen** game_screen, SDL_Renderer* renderer);
+void initGameScreen(GameScreen** game_screen);
+
+void setGameScreenTextures(const GameScreen* game_screen, SDL_Renderer* renderer);
 
 void destroyGameScreen(GameScreen** game_screen);
 
@@ -29,16 +31,16 @@ void destroyGameScreen(GameScreen** game_screen);
 int paintGameScreen(const GameScreen* game_screen, SDL_Renderer* renderer, GameData* game_data,
     const UserData* user_data);
 
-static void draw_ceiling_line(const GameScreen* game_screen, SDL_Renderer* renderer, const GameData* game_data,
+static void drawCeilingLine(const GameScreen* game_screen, SDL_Renderer* renderer, const GameData* game_data,
     int vert_res, int ray_num, int start_y, double angle, double pre_adjustment);
 
-static void draw_floor_line(const GameScreen* game_screen, SDL_Renderer* renderer, const GameData* game_data,
+static void drawFloorLine(const GameScreen* game_screen, SDL_Renderer* renderer, const GameData* game_data,
     int vert_res, int ray_num, float line_length, int start_y, double angle, double pre_adjustment);
 
-static void draw_wall_line(const GameScreen* game_screen, SDL_Renderer* renderer, const GameData* game_data,
+static void drawWallLine(const GameScreen* game_screen, SDL_Renderer* renderer, const GameData* game_data,
     double angle, Ray ray, float line_length, int x, int y);
 
-static void draw_entities(const GameScreen* game_screen, SDL_Renderer* renderer, GameData* game_data);
+static void drawEntities(const GameScreen* game_screen, SDL_Renderer* renderer, GameData* game_data);
 
 /*
  * Event Handling
@@ -61,31 +63,31 @@ int gameScreenKeyClicked(SDL_Keycode keycode);
  * Helper functions
  */
 
-static void set_surface_pixel_color(const SDL_Surface* surface, int x, int y, SDL_Color* out_color);
+static void setSurfacePixelColor(const SDL_Surface* surface, int x, int y, SDL_Color* out_color);
 
-static void set_entity_vectors(const GameData* game_data);
+static void setEntityVectors(const GameData* game_data);
 
-static void quick_sort_entities(Entity* entities[MAX_NUM_ENTITIES], int low, int high);
+static void quickSortEntities(Entity* entities[MAX_NUM_ENTITIES], int low, int high);
 
 static double getEntityAngle(const Entity* entity, double player_vect_x, double player_vect_y);
 
-static int get_texture_side(double angle, Ray ray);
+static int getTextureSide(double angle, Ray ray);
 
-static SlicedTexture* get_wall_texture(const GameScreen* game_screen, const GameData* game_data, double angle, Ray ray,
+static SlicedTexture* getWallTexture(const GameScreen* game_screen, const GameData* game_data, double angle, Ray ray,
     int side);
 
-static int get_wall_texture_index_x(const GameData* game_data, double angle, Ray ray);
+static int getWallTextureIndexX(const GameData* game_data, double angle, Ray ray);
 
-static int get_wall_texture_index_y(const GameData* game_data, double angle, Ray ray);
+static int getWallTextureIndexY(const GameData* game_data, double angle, Ray ray);
 
-static int get_floor_x(const GameData* game_data, double angle, double post_adjustment);
+static int getFloorX(const GameData* game_data, double angle, double post_adjustment);
 
-static int get_floor_y(const GameData* game_data, double angle, double post_adjustment);
+static int getFloorY(const GameData* game_data, double angle, double post_adjustment);
 
-static double get_ray_angle(double ray_degree, double player_rotation);
+static double getRayAngle(double ray_degree, double player_rotation);
 
-static int set_map_textures(GameScreen* game_screen, SDL_Renderer* renderer);
+static int setMapSurfaces(GameScreen* game_screen);
 
-static int set_entity_textures(GameScreen* game_screen, SDL_Renderer* renderer);
+static int setEntitySurfaces(GameScreen* game_screen);
 
 #endif //AFLICKEROFSTILLNESS_GAME_SCREEN_H

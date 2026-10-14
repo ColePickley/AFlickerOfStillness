@@ -80,9 +80,6 @@ int main() {
     int frame_count = 0;
     while (program_running) {
         const uint64_t start_time = SDL_GetPerformanceCounter();
-        // clear screen
-        SDL_SetRenderDrawColor(renderer, 38, 31, 28, 255);
-        SDL_RenderClear(renderer);
         // paint screen
         paintScreen(screen_data->current_screen, screen_data, renderer, game_data, user_data);
         // update player

@@ -10,6 +10,19 @@ typedef struct {
     SDL_Texture* background_texture;
     SDL_Texture* left_panel_texture;
     SDL_Texture* right_panel_texture;
+    SDL_Texture* delete_save_texture;
+}SavesScreenTextures;
+
+typedef struct {
+    SDL_Surface* background_surface;
+    SDL_Surface* left_panel_surface;
+    SDL_Surface* right_panel_surface;
+    SDL_Surface* delete_save_surface;
+}SavesScreenSurfaces;
+
+typedef struct {
+    SavesScreenTextures* textures;
+    SavesScreenSurfaces* surfaces;
     SDL_FRect left_panel_rect;
     SDL_FRect right_panel_rect;
     Label* left_panel_label;
@@ -20,14 +33,19 @@ typedef struct {
     Button* play_button;
     Button* save_buttons[3];
     Button* delete_save_button;
-    SDL_Texture* delete_save_texture;
 }SavesScreen;
 
-void initSavesScreen(SavesScreen** saves_screen, SDL_Renderer* renderer);
+void initSavesScreen(SavesScreen** saves_screen);
+
+void setSavesScreenTextures(const SavesScreen* saves_screen, SDL_Renderer* renderer);
 
 void destroySavesScreen(SavesScreen** saves_screen);
 
 int paintSavesScreen(const SavesScreen* saves_screen, SDL_Renderer* renderer);
+
+/*
+ * Event handling
+ */
 
 void savesScreenMousePressed(const SavesScreen* saves_screen, SDL_FPoint mouse_pos);
 
@@ -35,12 +53,16 @@ int savesScreenMouseReleased(SavesScreen* saves_screen, SDL_FPoint mouse_pos, Ga
 
 void savesScreenMouseDragged(const SavesScreen* saves_screen, SDL_FPoint mouse_pos);
 
-static void setSavesScreenBackground(SavesScreen* saves_screen, SDL_Renderer* renderer);
+/*
+ * Helper functions
+ */
+
+static void setSavesScreenSurfaces(const SavesScreen* saves_screen);
 
 static void setSavesScreenLabels(SavesScreen* saves_screen);
 
 static void setSavesScreenButtons(SavesScreen* saves_screen);
 
-static void setSavesScreenDeleteSaveTexture(SavesScreen* saves_screen, SDL_Renderer* renderer);
+static void setSavesScreenRects(SavesScreen* saves_screen);
 
 #endif //AFLICKEROFSTILLNESS_SAVES_SCREEN_H

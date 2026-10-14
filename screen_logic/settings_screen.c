@@ -7,10 +7,11 @@
 #include "../functions.h"
 #include "start_screen.h"
 
-void initSettingsScreen(SettingsScreen** settings_screen, SDL_Renderer* renderer, const UserData* user_data,
-        const int prev_screen) {
+void initSettingsScreen(SettingsScreen** settings_screen, const UserData* user_data, const int prev_screen) {
     *settings_screen = malloc(sizeof(SettingsScreen));
-    setSettingsScreenBackground(*settings_screen, renderer);
+    (*settings_screen)->surfaces = malloc(sizeof(SettingsScreenSurfaces));
+    (*settings_screen)->textures = malloc(sizeof(SettingsScreenTextures));
+    setSettingsScreenSurfaces(*settings_screen);
     setSettingsScreenLabels(*settings_screen, user_data);
     setSettingsScreenButtons(*settings_screen, user_data);
     setSettingsScreenRects(*settings_screen);
@@ -22,6 +23,18 @@ void initSettingsScreen(SettingsScreen** settings_screen, SDL_Renderer* renderer
     (*settings_screen)->right_background_rect = (SDL_FRect) {.x = 2.0f * WINDOW_WIDTH / 3, .y = 0,
         .w = WINDOW_WIDTH, .h = WINDOW_HEIGHT};
     (*settings_screen)->prev_screen = prev_screen;
+}
+
+void setSettingsScreenTextures(const SettingsScreen* settings_screen, SDL_Renderer* renderer) {
+    settings_screen->textures->left_background_texture =
+        SDL_CreateTextureFromSurface(renderer, settings_screen->surfaces->left_background_surface);
+    SDL_DestroySurface(settings_screen->surfaces->left_background_surface);
+    settings_screen->surfaces->left_background_surface = NULL;
+
+    settings_screen->textures->right_background_texture =
+        SDL_CreateTextureFromSurface(renderer, settings_screen->surfaces->right_background_surface);
+    SDL_DestroySurface(settings_screen->surfaces->right_background_surface);
+    settings_screen->surfaces->right_background_surface = NULL;
 }
 
 void resetSettingsScreen(SettingsScreen* settings_screen, const UserData* user_data) {
@@ -43,8 +56,10 @@ void destroySettingsScreen(SettingsScreen** settings_screen) {
     destroyButton((*settings_screen)->back_button);
     destroyButton((*settings_screen)->reset_button);
     destroyButton((*settings_screen)->save_button);
-    SDL_DestroyTexture((*settings_screen)->left_background_texture);
-    SDL_DestroyTexture((*settings_screen)->right_background_texture);
+    SDL_DestroyTexture((*settings_screen)->textures->left_background_texture);
+    SDL_DestroyTexture((*settings_screen)->textures->right_background_texture);
+    free((*settings_screen)->surfaces);
+    free((*settings_screen)->textures);
     free(*settings_screen);
     *settings_screen = NULL;
 }
@@ -101,9 +116,9 @@ int paintSettingsScreen(SettingsScreen* settings_screen, SDL_Renderer* renderer)
      * drawing background
      */
 
-    SDL_RenderTexture(renderer, settings_screen->left_background_texture, NULL,
+    SDL_RenderTexture(renderer, settings_screen->textures->left_background_texture, NULL,
         &settings_screen->left_background_rect);
-    SDL_RenderTexture(renderer, settings_screen->right_background_texture, NULL,
+    SDL_RenderTexture(renderer, settings_screen->textures->right_background_texture, NULL,
         &settings_screen->right_background_rect);
 
     /*
@@ -253,15 +268,15 @@ void settingsScreenMouseDragged(SettingsScreen* settings_screen, const SDL_FPoin
  * Helper functions
  */
 
-static void setSettingsScreenBackground(SettingsScreen* settings_screen, SDL_Renderer* renderer) {
-    settings_screen->left_background_texture =
-        IMG_LoadTexture(renderer, "../game_data/textures/settings_screen/background_left.png");
-    if (!settings_screen->left_background_texture) {
+static void setSettingsScreenSurfaces(const SettingsScreen* settings_screen) {
+    settings_screen->surfaces->left_background_surface =
+        IMG_Load("../game_data/textures/settings_screen/background_left.png");
+    if (!settings_screen->surfaces->left_background_surface) {
         SDL_Log("Failed to load image: %s", SDL_GetError());
     }
-    settings_screen->right_background_texture =
-        IMG_LoadTexture(renderer, "../game_data/textures/settings_screen/background_right.png");
-    if (!settings_screen->right_background_texture) {
+    settings_screen->surfaces->right_background_surface =
+        IMG_Load("../game_data/textures/settings_screen/background_right.png");
+    if (!settings_screen->surfaces->right_background_surface) {
         SDL_Log("Failed to load image: %s", SDL_GetError());
     }
 }
