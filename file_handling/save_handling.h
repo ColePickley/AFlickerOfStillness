@@ -6,7 +6,7 @@ enum {
     FILE_SECTION_SAVE_MAP_GRID, FILE_SECTION_NUM_CHECKPOINTS_HIT, FILE_SECTION_SAVE_ENTITIES, FILE_SECTION_SAVE_PLAYER
 };
 
-bool loadSave(GameData* gameData);
+bool loadSave(GameData* game_data);
 
 int getLevelIndex(uint8_t save_index);
 
@@ -20,7 +20,7 @@ static void setSaveEntities(GameData* game_data, char line[500], int* file_secti
 
 static void setSavePlayer(GameData* game_data, char line[500], int* file_section);
 
-void writeSave(const GameData* gameData);
+void writeSave(const GameData* game_data);
 
 static void setNewSaveText(char* save_text, size_t save_text_size);
 

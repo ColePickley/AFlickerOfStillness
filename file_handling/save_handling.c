@@ -4,10 +4,15 @@
 #include <time.h>
 
 bool loadSave(GameData* game_data) {
-    char file_path[24] = "../user_data/saves/save";
+    const char* base_path = SDL_GetBasePath();
+    if (!base_path) {
+        SDL_Log("Could not determine base path: %s", SDL_GetError());
+        return -1;
+    }
+    char file_path[24] = "user_data/saves/save";
     char file_type[5] = ".csv";
-    char full_path[29];
-    snprintf(full_path, sizeof(full_path), "%s%d%s", file_path, game_data->save_index, file_type);
+    char full_path[512];
+    snprintf(full_path, sizeof(full_path), "%s%s%d%s", base_path, file_path, game_data->save_index, file_type);
     FILE *file = fopen(full_path, "r");
     if (file == NULL) {
         perror("Error opening file");
@@ -57,10 +62,15 @@ bool loadSave(GameData* game_data) {
 }
 
 int getLevelIndex(const uint8_t save_index) {
-    char file_path[24] = "../user_data/saves/save";
+    const char* base_path = SDL_GetBasePath();
+    if (!base_path) {
+        SDL_Log("Could not determine base path: %s", SDL_GetError());
+        return -1;
+    }
+    char file_path[24] = "user_data/saves/save";
     char file_type[5] = ".csv";
-    char full_path[29];
-    snprintf(full_path, sizeof(full_path), "%s%d%s", file_path, save_index, file_type);
+    char full_path[512];
+    snprintf(full_path, sizeof(full_path), "%s%s%d%s", base_path, file_path, save_index, file_type);
     FILE *file = fopen(full_path, "r");
     if (file == NULL) {
         perror("Error opening file");
@@ -78,10 +88,15 @@ int getLevelIndex(const uint8_t save_index) {
 }
 
 void setSaveText(char* save_text, const size_t save_text_size, const uint8_t save_index) {
-    char file_path[24] = "../user_data/saves/save";
+    const char* base_path = SDL_GetBasePath();
+    if (!base_path) {
+        SDL_Log("Could not determine base path: %s", SDL_GetError());
+        return;
+    }
+    char file_path[24] = "user_data/saves/save";
     char file_type[5] = ".csv";
-    char full_path[29];
-    snprintf(full_path, sizeof(full_path), "%s%d%s", file_path, save_index, file_type);
+    char full_path[512];
+    snprintf(full_path, sizeof(full_path), "%s%s%d%s", base_path, file_path, save_index, file_type);
     FILE *file = fopen(full_path, "r");
     if (file == NULL) {
         const char* new_save_text = "EMPTY";
@@ -237,10 +252,15 @@ static void setSavePlayer(GameData* game_data, char line[500], int* file_section
 }
 
 void writeSave(const GameData* game_data) {
-    char file_path[24] = "../user_data/saves/save";
+    const char* base_path = SDL_GetBasePath();
+    if (!base_path) {
+        SDL_Log("Could not determine base path: %s", SDL_GetError());
+        return;
+    }
+    char file_path[24] = "user_data/saves/save";
     char file_type[5] = ".csv";
-    char full_path[29];
-    snprintf(full_path, sizeof(full_path), "%s%d%s", file_path, game_data->save_index, file_type);
+    char full_path[512];
+    snprintf(full_path, sizeof(full_path), "%s%s%d%s", base_path, file_path, game_data->save_index, file_type);
     FILE *file = fopen(full_path, "w");
     if (file == NULL) {
         perror("Error opening save file");
