@@ -20,13 +20,6 @@ inner-workings of the specific implementation that I created for this game engin
 - Toolchain Requirements
   - **CMake**: Version **3.20** or higher.
   - **C Compiler**: A standard C compiler supporting **C99**.
-- External Libraries
-  - **SDL3** (Development Libraries)
-  - **SDL3_image** (Development Libraries)
-
-*Note for Windows: Within CMakeList.txt, you will see the file paths I used for both SDL3 and SDL3_image. If your SDL 
-libraries exist at a different location on your computer, make sure to change these! (It also tells you where to do so 
-in the CMakeList.txt file)*
 
 ## Build Instructions
 
@@ -49,7 +42,7 @@ in the CMakeList.txt file)*
    - Windows (matching default paths)
 
     ```bash
-    cmake -B build
+    cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
     ```
 
    - Linux / macOS / Custom Path setups
