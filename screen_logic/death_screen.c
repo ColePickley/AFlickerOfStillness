@@ -1,6 +1,5 @@
 #include "death_screen.h"
 
-#include <stdio.h>
 #include "../functions.h"
 
 void initDeathScreen(DeathScreen** death_screen) {
@@ -43,7 +42,7 @@ int paintDeathScreen(DeathScreen* death_screen, SDL_Renderer* renderer) {
         death_screen->last_paint_time = SDL_GetTicks();
         death_screen->do_entrance_animation = true;
         death_screen->animation_speed = 0.0001f;
-        death_screen->sceen_alpha = 1.0f;
+        death_screen->screen_alpha = 1.0f;
         SDL_SetRenderDrawBlendMode(death_screen->background_renderer, SDL_BLENDMODE_BLEND);
     }
 
@@ -51,24 +50,24 @@ int paintDeathScreen(DeathScreen* death_screen, SDL_Renderer* renderer) {
      * Draw background
      */
 
-    SDL_SetRenderDrawColor(renderer, 100, 100, 100, (int) death_screen->sceen_alpha);
+    SDL_SetRenderDrawColor(renderer, 100, 100, 100, (int) death_screen->screen_alpha);
     SDL_RenderFillRect(renderer, &(SDL_FRect) {.x = 0, .y = 0, .w = WINDOW_WIDTH, .h = WINDOW_HEIGHT});
 
     int iterations = 1;
     if (death_screen->do_entrance_animation) {
         iterations = 10;
         const uint64_t time_elapsed = SDL_GetTicks() - death_screen->last_paint_time;
-        death_screen->sceen_alpha += (double) time_elapsed * death_screen->animation_speed;
-        if (death_screen->sceen_alpha > 255) {
-            death_screen->sceen_alpha = 255;
+        death_screen->screen_alpha += (double) time_elapsed * death_screen->animation_speed;
+        if (death_screen->screen_alpha > 255) {
+            death_screen->screen_alpha = 255;
             death_screen->do_entrance_animation = false;
         }
     } else if (death_screen->do_exit_animation) {
         iterations = 10;
         const uint64_t time_elapsed = SDL_GetTicks() - death_screen->last_paint_time;
-        death_screen->sceen_alpha -= (double) time_elapsed * death_screen->animation_speed;
-        if (death_screen->sceen_alpha < 0) {
-            death_screen->sceen_alpha = 0;
+        death_screen->screen_alpha -= (double) time_elapsed * death_screen->animation_speed;
+        if (death_screen->screen_alpha < 0) {
+            death_screen->screen_alpha = 0;
         }
     }
     if (!death_screen->do_exit_animation) {
@@ -98,7 +97,7 @@ int paintDeathScreen(DeathScreen* death_screen, SDL_Renderer* renderer) {
         paintLabel(renderer, death_screen->exit_button->label);
     }
 
-    if (death_screen->do_exit_animation && death_screen->sceen_alpha == 0.0f) {
+    if (death_screen->do_exit_animation && death_screen->screen_alpha == 0.0f) {
         death_screen->do_exit_animation = false;
         death_screen->last_paint_time = 0;
         screen_change = death_screen->next_screen;
@@ -121,13 +120,13 @@ void doPrimaryAnimation(DeathScreen* death_screen) {
      * Layer 1
      */
 
-    const uint8_t color_component = random() % 200 + 50;
+    const uint8_t color_component = randInt() % 200 + 50;
     SDL_SetRenderDrawColor(death_screen->background_renderer,
         color_component, color_component, color_component, 50);
     for (int i = 0; i < iterations; i++) {
         for (int pt_index = 0; pt_index < 4; pt_index++) {
             float direction = 1.0f;
-            if (random() % 2 == 0) {
+            if (randInt() % 2 == 0) {
                 direction = -direction;
             }
             SDL_FPoint new_point = {
@@ -146,12 +145,12 @@ void doPrimaryAnimation(DeathScreen* death_screen) {
      * layer 2
      */
 
-    const uint8_t red = random() % 100 + 25;
+    const uint8_t red = randInt() % 100 + 25;
     SDL_SetRenderDrawColor(death_screen->background_renderer, red, 0, 0, 50);
     for (int i = 0; i < iterations; i++) {
         for (int pt_index = 0; pt_index < 4; pt_index++) {
             float direction = 1.0f;
-            if (random() % 2 == 0) {
+            if (randInt() % 2 == 0) {
                 direction = -direction;
             }
             SDL_FPoint new_point = {
@@ -173,18 +172,18 @@ void doExitAnimation(DeathScreen* death_screen) {
         for (int j = 0; j < 4; j++) {
             float x_direction = 1.0f;
             float y_direction = 1.0f;
-            if (random() % 2 == 0) {
+            if (randInt() % 2 == 0) {
                 x_direction = -x_direction;
             }
-            if (random() % 2 == 0) {
+            if (randInt() % 2 == 0) {
                 y_direction = -y_direction;
             }
             SDL_FPoint new_point = {
                 .x = death_screen->last_points_1[j].x,
                 .y = death_screen->last_points_1[j].y
             };
-            new_point.x = max(-50, min(WINDOW_WIDTH + 50, new_point.x + (float) (random() % 50) * x_direction));
-            new_point.y = max(-50, min(WINDOW_HEIGHT + 50, new_point.y + (float) (random() % 50) * y_direction));
+            new_point.x = max(-50, min(WINDOW_WIDTH + 50, new_point.x + (float) (randInt() % 50) * x_direction));
+            new_point.y = max(-50, min(WINDOW_HEIGHT + 50, new_point.y + (float) (randInt() % 50) * y_direction));
             SDL_RenderLine(death_screen->background_renderer, new_point.x, new_point.y,
                 death_screen->last_points_1[j].x, death_screen->last_points_1[j].y);
             death_screen->last_points_1[j] = new_point;
@@ -231,6 +230,10 @@ void deathScreenMouseDragged(const DeathScreen* death_screen, const SDL_FPoint m
     buttonMouseDragCheck(death_screen->exit_button, mouse_pos);
 }
 
+void deathScreenMouseMoved(const DeathScreen* death_screen, SDL_FPoint mouse_pos) {
+
+}
+
 /*
  * Helper functions
  */
@@ -238,20 +241,20 @@ void deathScreenMouseDragged(const DeathScreen* death_screen, const SDL_FPoint m
 static void setLayer1NewPoint(SDL_FPoint* new_point, const uint8_t pt_index, const float direction) {
     switch (pt_index) {
         case 0:
-            new_point->x = max(-50, min(WINDOW_WIDTH + 50, new_point->x + (float) (random() % 50) * direction));
-            new_point->y = max(-50, min(WINDOW_HEIGHT + 50, new_point->y + (float) (random() % 50) * direction));
+            new_point->x = max(-50, min(WINDOW_WIDTH + 50, new_point->x + (float) (randInt() % 50) * direction));
+            new_point->y = max(-50, min(WINDOW_HEIGHT + 50, new_point->y + (float) (randInt() % 50) * direction));
             break;
         case 1:
-            new_point->x = max(-50, min(WINDOW_WIDTH + 50, new_point->x - (float) (random() % 50) * direction));
-            new_point->y = max(-50, min(WINDOW_HEIGHT + 50, new_point->y + (float) (random() % 50) * direction));
+            new_point->x = max(-50, min(WINDOW_WIDTH + 50, new_point->x - (float) (randInt() % 50) * direction));
+            new_point->y = max(-50, min(WINDOW_HEIGHT + 50, new_point->y + (float) (randInt() % 50) * direction));
             break;
         case 2:
-            new_point->x = max(-50, min(WINDOW_WIDTH + 50, new_point->x - (float) (random() % 50) * direction));
-            new_point->y = max(-50, min(WINDOW_HEIGHT + 50, new_point->y - (float) (random() % 50) * direction));
+            new_point->x = max(-50, min(WINDOW_WIDTH + 50, new_point->x - (float) (randInt() % 50) * direction));
+            new_point->y = max(-50, min(WINDOW_HEIGHT + 50, new_point->y - (float) (randInt() % 50) * direction));
             break;
         case 3:
-            new_point->x = max(-50, min(WINDOW_WIDTH + 50, new_point->x + (float) (random() % 50) * direction));
-            new_point->y = max(-50, min(WINDOW_HEIGHT + 50, new_point->y - (float) (random() % 50) * direction));
+            new_point->x = max(-50, min(WINDOW_WIDTH + 50, new_point->x + (float) (randInt() % 50) * direction));
+            new_point->y = max(-50, min(WINDOW_HEIGHT + 50, new_point->y - (float) (randInt() % 50) * direction));
             break;
         default:
             break;
@@ -263,26 +266,26 @@ static void setLayer2NewPoint(SDL_FPoint* new_point, const uint8_t pt_index, con
     const float slope2 = (float) -WINDOW_HEIGHT / WINDOW_WIDTH;
     switch (pt_index) {
         case 0:
-            new_point->x = max(0, min(WINDOW_WIDTH, new_point->x + (float) (random() % 50) * direction));
+            new_point->x = max(0, min(WINDOW_WIDTH, new_point->x + (float) (randInt() % 50) * direction));
             new_point->y = max(slope1 * new_point->x - 50,
-                min(slope1 * new_point->x + 50, new_point->y + (float) (random() % 50) * direction));
+                min(slope1 * new_point->x + 50, new_point->y + (float) (randInt() % 50) * direction));
             break;
         case 1:
-            new_point->x = max(0, min(WINDOW_WIDTH, new_point->x - (float) (random() % 50) * direction));
+            new_point->x = max(0, min(WINDOW_WIDTH, new_point->x - (float) (randInt() % 50) * direction));
             new_point->y = max(slope2 * new_point->x + WINDOW_HEIGHT - 50,
                 min(slope2 * new_point->x + WINDOW_HEIGHT + 50,
-                new_point->y + (float) (random() % 50) * direction));
+                new_point->y + (float) (randInt() % 50) * direction));
             break;
         case 2:
-            new_point->x = max(0, min(WINDOW_WIDTH, new_point->x - (float) (random() % 50) * direction));
+            new_point->x = max(0, min(WINDOW_WIDTH, new_point->x - (float) (randInt() % 50) * direction));
             new_point->y = max(slope1 * new_point->x - 50,
-                min(slope1 * new_point->x + 50, new_point->y - (float) (random() % 50) * direction));
+                min(slope1 * new_point->x + 50, new_point->y - (float) (randInt() % 50) * direction));
             break;
         case 3:
-            new_point->x = max(0, min(WINDOW_WIDTH, new_point->x + (float) (random() % 50) * direction));
+            new_point->x = max(0, min(WINDOW_WIDTH, new_point->x + (float) (randInt() % 50) * direction));
             new_point->y = max(slope2 * new_point->x + WINDOW_HEIGHT - 50,
                 min(slope2 * new_point->x + WINDOW_HEIGHT + 50,
-                new_point->y - (float) (random() % 50) * direction));
+                new_point->y - (float) (randInt() % 50) * direction));
             break;
         default:
             break;

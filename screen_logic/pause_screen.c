@@ -42,7 +42,7 @@ void destroyPauseScreen(PauseScreen** pause_screen) {
 
 void shuffleBackgroundTextures(SDL_Texture* (*textures)[24]) {
     for (int i = 23; i > 0; i--) {
-        const size_t j = random() % (i + 1);
+        const size_t j = randInt() % (i + 1);
         SDL_Texture* temp = (*textures)[i];
         (*textures)[i] = (*textures)[j];
         (*textures)[j] = temp;
@@ -51,7 +51,7 @@ void shuffleBackgroundTextures(SDL_Texture* (*textures)[24]) {
 
 void shuffleTextureSet(SDL_Texture* (*textures)[12]) {
     for (int i = 11; i > 0; i--) {
-        const size_t j = random() % (i + 1);
+        const size_t j = randInt() % (i + 1);
         SDL_Texture* temp = (*textures)[i];
         (*textures)[i] = (*textures)[j];
         (*textures)[j] = temp;
@@ -198,6 +198,10 @@ void pauseScreenMouseDragged(const PauseScreen* pause_screen, const SDL_FPoint m
     buttonMouseDragCheck(pause_screen->restart_level_button, mouse_pos);
     buttonMouseDragCheck(pause_screen->settings_button, mouse_pos);
     buttonMouseDragCheck(pause_screen->exit_button, mouse_pos);
+}
+
+void pauseScreenMouseMoved(const PauseScreen* pause_screen, const SDL_FPoint mouse_pos) {
+
 }
 
 /*

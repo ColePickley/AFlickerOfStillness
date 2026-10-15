@@ -55,6 +55,8 @@ int pauseScreenMouseReleased(PauseScreen* pause_screen, SDL_FPoint mouse_pos, Ga
 
 void pauseScreenMouseDragged(const PauseScreen* pause_screen, SDL_FPoint mouse_pos);
 
+void pauseScreenMouseMoved(const PauseScreen* pause_screen, SDL_FPoint mouse_pos);
+
 /*
  * Helper functions
  */

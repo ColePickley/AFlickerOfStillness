@@ -1,6 +1,4 @@
-#include "screen_data.h"
-
-#include <stdio.h>
+#include "screen_logic.h"
 
 void initScreenData(ScreenData** screen_data, SDL_Renderer* renderer, const UserData* user_data) {
     *screen_data = malloc(sizeof(ScreenData));
@@ -24,7 +22,6 @@ void initScreenData(ScreenData** screen_data, SDL_Renderer* renderer, const User
 void destroyScreenData(ScreenData** screen_data) {
     if (*screen_data == NULL) return;
 
-    // Safely block and await background completion if closing down during an active screen transition
     if ((*screen_data)->is_loading_in_background && (*screen_data)->bg_thread) {
         SDL_WaitThread((*screen_data)->bg_thread, NULL);
         if ((*screen_data)->active_async_task) {
@@ -300,7 +297,7 @@ void mouseClicked(const ScreenData* screen_data, const SDL_FPoint pt) {
 
 }
 
-void mouseDragged(const ScreenData* screen_data, const SDL_FPoint pt, double prev_mouse_x, const bool mouse_down,
+void mouseDragged(const ScreenData* screen_data, const SDL_FPoint pt, const double prev_mouse_x,
         const GameData* game_data, UserData* user_data) {
     switch (screen_data->current_screen) {
         case START_SCREEN:
@@ -310,7 +307,7 @@ void mouseDragged(const ScreenData* screen_data, const SDL_FPoint pt, double pre
             savesScreenMouseDragged(screen_data->saves_screen, pt);
             break;
         case GAME_SCREEN:
-            gameScreenMouseMoved(screen_data->game_screen, pt, prev_mouse_x, mouse_down, game_data, user_data);
+            gameScreenMouseDragged(screen_data->game_screen, pt, prev_mouse_x, game_data, user_data);
             break;
         case PAUSE_SCREEN:
             pauseScreenMouseDragged(screen_data->pause_screen, pt);
@@ -320,6 +317,32 @@ void mouseDragged(const ScreenData* screen_data, const SDL_FPoint pt, double pre
             break;
         case DEATH_SCREEN:
             deathScreenMouseDragged(screen_data->death_screen, pt);
+            break;
+        default:
+            break;
+    }
+}
+
+void mouseMoved(const ScreenData* screen_data, const SDL_FPoint pt, const double prev_mouse_x,
+        const GameData* game_data, const UserData* user_data) {
+    switch (screen_data->current_screen) {
+        case START_SCREEN:
+            startScreenMouseMoved(screen_data->start_screen, pt);
+            break;
+        case SAVES_SCREEN:
+            savesScreenMouseMoved(screen_data->saves_screen, pt);
+            break;
+        case GAME_SCREEN:
+            gameScreenMouseMoved(screen_data->game_screen, pt, prev_mouse_x, game_data, user_data);
+            break;
+        case PAUSE_SCREEN:
+            pauseScreenMouseMoved(screen_data->pause_screen, pt);
+            break;
+        case SETTINGS_SCREEN:
+            settingsScreenMouseMoved(screen_data->settings_screen, pt);
+            break;
+        case DEATH_SCREEN:
+            deathScreenMouseMoved(screen_data->death_screen, pt);
             break;
         default:
             break;

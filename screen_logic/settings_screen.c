@@ -264,6 +264,10 @@ void settingsScreenMouseDragged(SettingsScreen* settings_screen, const SDL_FPoin
     buttonMouseDragCheck(settings_screen->save_button, mouse_pos);
 }
 
+void settingsScreenMouseMoved(SettingsScreen* settings_screen, const SDL_FPoint mouse_pos) {
+
+}
+
 /*
  * Helper functions
  */

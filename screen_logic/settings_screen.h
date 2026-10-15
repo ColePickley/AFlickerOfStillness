@@ -60,6 +60,8 @@ int settingsScreenMouseReleased(SettingsScreen* settings_screen, SDL_FPoint mous
 
 void settingsScreenMouseDragged(SettingsScreen* settings_screen, SDL_FPoint mouse_pos, UserData* user_data);
 
+void settingsScreenMouseMoved(SettingsScreen* settings_screen, SDL_FPoint mouse_pos);
+
 /*
  * Helper Functions
  */

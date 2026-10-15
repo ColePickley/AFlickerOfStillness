@@ -1,5 +1,5 @@
-#ifndef AFLICKEROFSTILLNESS_SCREEN_DATA_H
-#define AFLICKEROFSTILLNESS_SCREEN_DATA_H
+#ifndef AFLICKEROFSTILLNESS_SCREEN_LOGIC_H
+#define AFLICKEROFSTILLNESS_SCREEN_LOGIC_H
 #include "death_screen.h"
 #include "game_screen.h"
 #include "saves_screen.h"
@@ -55,8 +55,11 @@ void mouseReleased(ScreenData* screen_data, SDL_FPoint pt, SDL_Renderer* rendere
 
 void mouseClicked(const ScreenData* screen_data, SDL_FPoint pt);
 
-void mouseDragged(const ScreenData* screen_data, SDL_FPoint pt, double prev_mouse_x, bool mouse_down,
-    const GameData* game_data, UserData* user_data);
+void mouseDragged(const ScreenData* screen_data, SDL_FPoint pt, double prev_mouse_x, const GameData* game_data,
+    UserData* user_data);
+
+void mouseMoved(const ScreenData* screen_data, SDL_FPoint pt, double prev_mouse_x, const GameData* game_data,
+    const UserData* user_data);
 
 void keyPressed(const ScreenData* screen_data, SDL_Keycode keycode, const GameData* game_data);
 
@@ -64,4 +67,4 @@ void keyReleased(const ScreenData* screen_data, SDL_Keycode keycode, const GameD
 
 void keyClicked(ScreenData* screen_data, SDL_Keycode keycode, SDL_Renderer* renderer, const UserData* user_data);
 
-#endif //AFLICKEROFSTILLNESS_SCREEN_DATA_H
+#endif //AFLICKEROFSTILLNESS_SCREEN_LOGIC_H

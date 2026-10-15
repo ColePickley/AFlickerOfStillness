@@ -16,7 +16,7 @@ static double toDegrees(const double radians) {
 
 static uint32_t x_state = 2463534242UL;
 
-static uint32_t random(void) {
+static uint32_t randInt(void) {
     uint32_t x = x_state;
     x ^= x << 13;
     x ^= x >> 17;

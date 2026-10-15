@@ -50,7 +50,10 @@ void gameScreenMousePressed(GameScreen* game_screen, SDL_FPoint mouse_pos);
 
 int gameScreenMouseReleased(GameScreen* game_screen, SDL_FPoint mouse_pos);
 
-void gameScreenMouseMoved(GameScreen* game_screen, SDL_FPoint mouse_pos, double prev_mouse_x, bool mouse_down,
+void gameScreenMouseDragged(GameScreen* game_screen, SDL_FPoint mouse_pos, double prev_mouse_x,
+    const GameData* game_data, const UserData* user_data);
+
+void gameScreenMouseMoved(GameScreen* game_screen, SDL_FPoint mouse_pos, double prev_mouse_x,
     const GameData* game_data, const UserData* user_data);
 
 void gameScreenKeyPressed(SDL_Keycode keycode, const GameData* game_data);

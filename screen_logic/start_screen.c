@@ -98,6 +98,10 @@ void startScreenMouseDragged(const StartScreen* start_screen, const SDL_FPoint m
     buttonMouseDragCheck(start_screen->exit_button, mouse_pos);
 }
 
+void startScreenMouseMoved(const StartScreen* start_screen, SDL_FPoint mouse_pos) {
+
+}
+
 /*
  * Helper functions
  */

@@ -49,6 +49,8 @@ int startScreenMouseReleased(const StartScreen* start_screen, SDL_FPoint mouse_p
 
 void startScreenMouseDragged(const StartScreen* start_screen, SDL_FPoint mouse_pos);
 
+void startScreenMouseMoved(const StartScreen* start_screen, SDL_FPoint mouse_pos);
+
 /*
  * Helper Functions
  */

@@ -199,6 +199,10 @@ void savesScreenMouseDragged(const SavesScreen* saves_screen, const SDL_FPoint m
     buttonMouseDragCheck(saves_screen->delete_save_button, mouse_pos);
 }
 
+void savesScreenMouseMoved(const SavesScreen* saves_screen, SDL_FPoint mouse_pos) {
+
+}
+
 /*
  * Helper functions
  */

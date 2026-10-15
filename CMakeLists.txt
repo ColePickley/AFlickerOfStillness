@@ -9,19 +9,23 @@ Find and collect files
 ]]
 
 # Find SDL3 and SDL3_image
-##### Make sure to copy the correct file paths for loading SDL before compiling!!!! #####
-set(SDL3_DIR "C:/dev/SDL3/SDL3-devel-3.4.16-mingw/SDL3-3.4.16/x86_64-w64-mingw32/lib/cmake/SDL3"
-        CACHE PATH "Path to SDL3 Config" FORCE)
-set(SDL3_image_DIR "C:/dev/SDL3/SDL3_image-devel-3.4.4-mingw/SDL3_image-3.4.4/x86_64-w64-mingw32/lib/cmake/SDL3_image"
-        CACHE PATH "Path to SDL3_image Config" FORCE)
-set(CMAKE_PREFIX_PATH
-        "C:/dev/SDL3/SDL3-devel-3.4.16-mingw/SDL3-3.4.16/x86_64-w64-mingw32"
-        "C:/dev/SDL3/SDL3_image-devel-3.4.4-mingw/SDL3_image-3.4.4/x86_64-w64-mingw32"
-        CACHE STRING "Global Prefixes" FORCE
-)
-find_package(SDL3 REQUIRED CONFIG COMPONENTS SDL3-shared)
-find_package(SDL3_image REQUIRED CONFIG)
-
+##### For Windows: Make sure to copy the correct file paths for loading SDL before compiling!!!! #####
+if (WIN32)
+    set(SDL3_DIR "C:/dev/SDL3/SDL3-devel-3.4.16-mingw/SDL3-3.4.16/x86_64-w64-mingw32/lib/cmake/SDL3"
+            CACHE PATH "Path to SDL3 Config" FORCE)
+    set(SDL3_image_DIR "C:/dev/SDL3/SDL3_image-devel-3.4.4-mingw/SDL3_image-3.4.4/x86_64-w64-mingw32/lib/cmake/SDL3_image"
+            CACHE PATH "Path to SDL3_image Config" FORCE)
+    set(CMAKE_PREFIX_PATH
+            "C:/dev/SDL3/SDL3-devel-3.4.16-mingw/SDL3-3.4.16/x86_64-w64-mingw32"
+            "C:/dev/SDL3/SDL3_image-devel-3.4.4-mingw/SDL3_image-3.4.4/x86_64-w64-mingw32"
+            CACHE STRING "Global Prefixes" FORCE
+    )
+    find_package(SDL3 REQUIRED CONFIG COMPONENTS SDL3-shared)
+    find_package(SDL3_image REQUIRED CONFIG)
+elseif (APPLE OR LINUX)
+    find_package(SDL3 REQUIRED)
+    find_package(SDL3_image REQUIRED)
+endif()
 # Find all source and header files
 file(GLOB SOURCE_FILES_ROOT
         "${CMAKE_CURRENT_SOURCE_DIR}/*.c"

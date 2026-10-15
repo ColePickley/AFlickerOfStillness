@@ -4,7 +4,7 @@
 #include <dirent.h>
 #include <SDL3_image/SDL_image.h>
 
-#include "screen_data.h"
+#include "screen_logic.h"
 #include "../constants.h"
 #include "../functions.h"
 #include "../program_data.h"
@@ -226,11 +226,14 @@ int gameScreenMouseReleased(GameScreen* game_screen, SDL_FPoint mouse_pos) {
     return -1;
 }
 
+void gameScreenMouseDragged(GameScreen* game_screen, const SDL_FPoint mouse_pos, const double prev_mouse_x,
+        const GameData* game_data, const UserData* user_data) {
+    rotatePlayer(game_data->player, user_data->sensitivity, mouse_pos.x - prev_mouse_x);
+}
+
 void gameScreenMouseMoved(GameScreen* game_screen, const SDL_FPoint mouse_pos, const double prev_mouse_x,
-        const bool mouse_down, const GameData* game_data, const UserData* user_data) {
-    if (mouse_down) {
-        rotatePlayer(game_data->player, user_data->sensitivity, mouse_pos.x - prev_mouse_x);
-    }
+        const GameData* game_data, const UserData* user_data) {
+
 }
 
 void gameScreenKeyPressed(const SDL_Keycode keycode, const GameData* game_data) {

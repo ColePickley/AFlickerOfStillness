@@ -53,6 +53,8 @@ int savesScreenMouseReleased(SavesScreen* saves_screen, SDL_FPoint mouse_pos, Ga
 
 void savesScreenMouseDragged(const SavesScreen* saves_screen, SDL_FPoint mouse_pos);
 
+void savesScreenMouseMoved(const SavesScreen* saves_screen, SDL_FPoint mouse_pos);
+
 /*
  * Helper functions
  */

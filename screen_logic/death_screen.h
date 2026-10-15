@@ -13,7 +13,7 @@ typedef struct {
     Button* exit_button;
     uint8_t next_screen;
     uint8_t last_paint_time;
-    double sceen_alpha;
+    double screen_alpha;
     float animation_speed;
     SDL_Surface* background_surface;
     SDL_Renderer* background_renderer;
@@ -40,6 +40,8 @@ void deathScreenMousePressed(const DeathScreen* death_screen, SDL_FPoint mouse_p
 int deathScreenMouseReleased(DeathScreen* death_screen, SDL_FPoint mouse_pos, GameData** game_data);
 
 void deathScreenMouseDragged(const DeathScreen* death_screen, SDL_FPoint mouse_pos);
+
+void deathScreenMouseMoved(const DeathScreen* death_screen, SDL_FPoint mouse_pos);
 
 /*
  * Helper functions

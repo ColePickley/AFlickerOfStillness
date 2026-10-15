@@ -5,7 +5,7 @@
 #include <SDL3/SDL.h>
 #include "constants.h"
 #include "program_data.h"
-#include "screen_logic/screen_data.h"
+#include "screen_logic/screen_logic.h"
 
 typedef struct {
     bool mouse_down;
@@ -162,8 +162,9 @@ static void handleEvents(ScreenData* screen_data, SDL_Renderer* renderer, GameDa
             const SDL_FPoint motion_pt = { .x = event.motion.x, .y = event.motion.y };
             const bool motion_in_bounds = motion_pt.x >= 0 && motion_pt.y >= 0 &&
                 motion_pt.x <= WINDOW_WIDTH && motion_pt.y <= WINDOW_HEIGHT;
+            // mouseMoved(screen_data, pt, event_data->prev_mouse_x, *game_data, user_data);
             if (event_data->mouse_down && motion_in_bounds) {
-                mouseDragged(screen_data, pt, event_data->prev_mouse_x, event_data->mouse_down, *game_data, user_data);
+                mouseDragged(screen_data, pt, event_data->prev_mouse_x, *game_data, user_data);
                 event_data->prev_mouse_x = pt.x;
             }
         } else if (event.type == SDL_EVENT_KEY_DOWN) {
