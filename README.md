@@ -17,9 +17,12 @@ inner-workings of the specific implementation that I created for this game engin
   - [Settings File](#Settings-File)
 
 ## Prerequisites
-- Toolchain Requirements
-  - **CMake**: Version **3.20** or higher.
-  - **C Compiler**: A standard C compiler supporting **C99**.
+- **CMake**: Version 3.20 or higher.
+- **C Compiler**: A 64 bit standard C compiler that supports C99.
+  - If the compiler you're currently using is not working, I suggest going to this [link](https://www.msys2.org/) and 
+  following the instructions provided.
+- **Ninja**: Ninja isn't *absolutely* necessary; however, for the build instructions below you will need it.
+  - If you don't have Ninja installed, use this [link](https://ninja-build.org/) and download the appropriate file.
 
 ## Build Instructions
 
@@ -62,13 +65,13 @@ inner-workings of the specific implementation that I created for this game engin
    - Windows
 
     ````bash
-    ./build/A Flicker of Stillness.exe
+    ./build/AFlickerOfStillness.exe
     ````
 
     - Linux / macOS
 
     ````bash
-    ./build/A Flicker of Stillness
+    ./build/AFlickerOfStillness
     ````
 
 ## Files
