@@ -4,29 +4,48 @@ project(AFlickerOfStillness C)
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
-#[[
-Find and collect files
-]]
-
-# Find SDL3 and SDL3_image
-##### For Windows: Make sure to copy the correct file paths for loading SDL before compiling!!!! #####
-if (WIN32)
-    set(SDL3_DIR "C:/dev/SDL3/SDL3-devel-3.4.16-mingw/SDL3-3.4.16/x86_64-w64-mingw32/lib/cmake/SDL3"
-            CACHE PATH "Path to SDL3 Config" FORCE)
-    set(SDL3_image_DIR "C:/dev/SDL3/SDL3_image-devel-3.4.4-mingw/SDL3_image-3.4.4/x86_64-w64-mingw32/lib/cmake/SDL3_image"
-            CACHE PATH "Path to SDL3_image Config" FORCE)
-    set(CMAKE_PREFIX_PATH
-            "C:/dev/SDL3/SDL3-devel-3.4.16-mingw/SDL3-3.4.16/x86_64-w64-mingw32"
-            "C:/dev/SDL3/SDL3_image-devel-3.4.4-mingw/SDL3_image-3.4.4/x86_64-w64-mingw32"
-            CACHE STRING "Global Prefixes" FORCE
-    )
-    find_package(SDL3 REQUIRED CONFIG COMPONENTS SDL3-shared)
-    find_package(SDL3_image REQUIRED CONFIG)
-elseif (APPLE OR LINUX)
-    find_package(SDL3 REQUIRED)
-    find_package(SDL3_image REQUIRED)
+if(POLICY CMP0135)
+    cmake_policy(SET CMP0135 NEW)
 endif()
-# Find all source and header files
+
+# -----------------------------------------------------------------------------
+# 1. Load Local SDL3 Archive
+# -----------------------------------------------------------------------------
+include(FetchContent)
+
+FetchContent_Declare(
+        sdl3
+        URL "${CMAKE_CURRENT_SOURCE_DIR}/third_party/SDL-main.zip"
+)
+
+set(SDL_SHARED ON CACHE BOOL "Build shared SDL library" FORCE)
+set(SDL_STATIC OFF CACHE BOOL "Build static SDL library" FORCE)
+set(SDL_TEST OFF CACHE BOOL "Disable SDL test binaries" FORCE)
+
+FetchContent_MakeAvailable(sdl3)
+
+# -----------------------------------------------------------------------------
+# 2. Load Local SDL3_image Archive (FIXED VARIABLES)
+# -----------------------------------------------------------------------------
+FetchContent_Declare(
+        sdl3_image
+        URL "${CMAKE_CURRENT_SOURCE_DIR}/third_party/SDL_image-main.zip"
+)
+
+# FIX: Disable vendoring so it doesn't look for the missing external/ folders
+set(SDLIMAGE_VENDORED OFF CACHE BOOL "Use system packages instead of missing vendored submodules" FORCE)
+set(SDLIMAGE_SAMPLES OFF CACHE BOOL "Disable SDL_image sample programs" FORCE)
+
+# Optional: Disable advanced formats that require heavy external submodules
+set(SDLIMAGE_AVIF OFF CACHE BOOL "Disable AVIF to avoid submodule dependencies" FORCE)
+set(SDLIMAGE_WEBP OFF CACHE BOOL "Disable WebP to avoid submodule dependencies" FORCE)
+set(SDLIMAGE_JXL OFF CACHE BOOL "Disable JXL to avoid submodule dependencies" FORCE)
+
+FetchContent_MakeAvailable(sdl3_image)
+
+# -----------------------------------------------------------------------------
+# 3. Find and Collect Source Files
+# -----------------------------------------------------------------------------
 file(GLOB SOURCE_FILES_ROOT
         "${CMAKE_CURRENT_SOURCE_DIR}/*.c"
         "${CMAKE_CURRENT_SOURCE_DIR}/*.h"
@@ -40,38 +59,35 @@ file(GLOB_RECURSE SOURCE_FILES_FILE_HANDLING
         "${CMAKE_CURRENT_SOURCE_DIR}/file_handling/*.h"
 )
 
-# Combine all source and header files into a single list
 set(SOURCE_FILES ${SOURCE_FILES_ROOT} ${SOURCE_FILES_SCREEN_LOGIC} ${SOURCE_FILES_FILE_HANDLING})
 
-#[[
-Define project executable
-]]
+# -----------------------------------------------------------------------------
+# 4. Define Project Executable
+# -----------------------------------------------------------------------------
+if(WIN32)
+    add_executable(${PROJECT_NAME} WIN32 ${SOURCE_FILES})
+else()
+    add_executable(${PROJECT_NAME} ${SOURCE_FILES})
+endif()
 
-add_executable(${PROJECT_NAME} ${SOURCE_FILES})
-
-#[[
-Link SDL3 and SDL3_image libraries
-]]
-
+# -----------------------------------------------------------------------------
+# 5. Link SDL3 Source Targets
+# -----------------------------------------------------------------------------
 target_link_libraries(${PROJECT_NAME} PRIVATE
-        SDL3::SDL3-shared
-        SDL3_image::SDL3_image
+        SDL3-shared
+        SDL3_image-shared
 )
 
-#[[
-Copy files to run folder
-]]
-
-# Copy your fonts folder to the build target directory
+# -----------------------------------------------------------------------------
+# 6. Post-Build Actions: Asset Tracking and Dynamic Runtime Linking
+# -----------------------------------------------------------------------------
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory
         "${CMAKE_CURRENT_SOURCE_DIR}/fonts"
         "$<TARGET_FILE_DIR:${PROJECT_NAME}>/fonts"
 )
 
-# Copy game_data folder run folder
 file(GLOB_RECURSE GAME_DATA_FILES "${CMAKE_CURRENT_SOURCE_DIR}/game_data/*")
-set_property(SOURCE main.c PROPERTY OBJECT_DEPENDS "${GAME_DATA_FILES}")
 foreach(DATA_FILE_PATH ${GAME_DATA_FILES})
     file(RELATIVE_PATH REL_PATH "${CMAKE_CURRENT_SOURCE_DIR}/game_data" "${DATA_FILE_PATH}")
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
@@ -81,10 +97,8 @@ foreach(DATA_FILE_PATH ${GAME_DATA_FILES})
     )
 endforeach()
 
-# Copy user_data folder to run folder
-file(GLOB_RECURSE GAME_DATA_FILES "${CMAKE_CURRENT_SOURCE_DIR}/user_data/*")
-set_property(SOURCE main.c PROPERTY OBJECT_DEPENDS "${GAME_DATA_FILES}")
-foreach(DATA_FILE_PATH ${GAME_DATA_FILES})
+file(GLOB_RECURSE USER_DATA_FILES "${CMAKE_CURRENT_SOURCE_DIR}/user_data/*")
+foreach(DATA_FILE_PATH ${USER_DATA_FILES})
     file(RELATIVE_PATH REL_PATH "${CMAKE_CURRENT_SOURCE_DIR}/user_data" "${DATA_FILE_PATH}")
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_if_different
@@ -93,16 +107,16 @@ foreach(DATA_FILE_PATH ${GAME_DATA_FILES})
     )
 endforeach()
 
-# Copy SDL3.dll to run folder
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "$<TARGET_FILE:SDL3::SDL3-shared>"
-        "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
-)
+if(WIN32)
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "$<TARGET_FILE:SDL3-shared>"
+            "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
+    )
 
-# Copy SDL3_image.dll to run folder
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "$<TARGET_FILE:SDL3_image::SDL3_image>"
-        "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
-)
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "$<TARGET_FILE:SDL3_image-shared>"
+            "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
+    )
+endif()
