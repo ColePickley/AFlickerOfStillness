@@ -1,5 +1,6 @@
 #ifndef AFLICKEROFSTILLNESS_SCREEN_DATA_H
 #define AFLICKEROFSTILLNESS_SCREEN_DATA_H
+#include "death_screen.h"
 #include "game_screen.h"
 #include "saves_screen.h"
 #include "start_screen.h"
@@ -23,6 +24,7 @@ struct ScreenData {
     GameScreen* game_screen;
     PauseScreen* pause_screen;
     SettingsScreen* settings_screen;
+    DeathScreen* death_screen;
 
     bool is_loading_in_background;
     ThreadLoadArgs* active_async_task;

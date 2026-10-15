@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdint.h>
+#include <math.h>
 #include <time.h>
 #include <SDL3/SDL.h>
 #include "constants.h"
@@ -16,6 +17,8 @@ typedef struct {
 
 static void handleEvents(ScreenData* screen_data, SDL_Renderer* renderer, GameData** game_data, bool* program_running,
     EventData* event_data, UserData* user_data, SDL_Window* window);
+
+static int updateGame(GameData* game_data);
 
 static void printGameData(const GameData* game_data);
 
@@ -82,9 +85,13 @@ int main() {
         const uint64_t start_time = SDL_GetPerformanceCounter();
         // paint screen
         paintScreen(screen_data->current_screen, screen_data, renderer, game_data, user_data);
-        // update player
+        // update game
+        int screen_change = -1;
         if (screen_data->current_screen == GAME_SCREEN) {
-            movePlayer(game_data->player, &game_data->map_grid);
+            screen_change = updateGame(game_data);
+        }
+        if (screen_change != -1) {
+            changeScreen(screen_data, screen_change, renderer, user_data);
         }
         // event handling
         handleEvents(screen_data, renderer, &game_data, &program_running, &event_data, user_data, window);
@@ -175,6 +182,17 @@ static void handleEvents(ScreenData* screen_data, SDL_Renderer* renderer, GameDa
             }
         }
     }
+}
+
+static int updateGame(GameData* game_data) {
+    movePlayer(game_data->player, &game_data->map_grid);
+    for (int i = 0; i < game_data->num_entities; i++) {
+        if (fabs(game_data->entities[i]->x - game_data->player->x) < 10 &&
+                fabs(game_data->entities[i]->y - game_data->player->y) < 10) {
+            return DEATH_SCREEN;
+        }
+    }
+    return -1;
 }
 
 static void printGameData(const GameData* game_data) {

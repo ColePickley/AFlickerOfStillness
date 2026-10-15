@@ -1,5 +1,7 @@
 #include "screen_data.h"
 
+#include <stdio.h>
+
 void initScreenData(ScreenData** screen_data, SDL_Renderer* renderer, const UserData* user_data) {
     *screen_data = malloc(sizeof(ScreenData));
     (*screen_data)->current_screen = START_SCREEN;
@@ -12,6 +14,7 @@ void initScreenData(ScreenData** screen_data, SDL_Renderer* renderer, const User
     setSettingsScreenTextures((*screen_data)->settings_screen, renderer);
     (*screen_data)->pause_screen = NULL;
     (*screen_data)->game_screen = NULL;
+    (*screen_data)->death_screen = NULL;
 
     (*screen_data)->is_loading_in_background = false;
     (*screen_data)->active_async_task = NULL;
@@ -34,6 +37,7 @@ void destroyScreenData(ScreenData** screen_data) {
     destroyGameScreen(&(*screen_data)->game_screen);
     destroyPauseScreen(&(*screen_data)->pause_screen);
     destroySettingsScreen(&(*screen_data)->settings_screen);
+    destroyDeathScreen(&(*screen_data)->death_screen);
     free(*screen_data);
     *screen_data = NULL;
 }
@@ -48,6 +52,7 @@ static int asyncScreenChange(void* data) {
         if (args->screen_id == START_SCREEN) {
             initSettingsScreen(&args->screen_data->settings_screen, args->user_data, args->screen_data->current_screen);
         } else if (args->screen_id == GAME_SCREEN) {
+            initDeathScreen(&args->screen_data->death_screen);
             initPauseScreen(&args->screen_data->pause_screen);
         }
     } else if (args->screen_data->prev_screen == SETTINGS_SCREEN) {
@@ -56,13 +61,21 @@ static int asyncScreenChange(void* data) {
         } else if (args->screen_id == PAUSE_SCREEN) {
             initGameScreen(&args->screen_data->game_screen);
             initStartScreen(&args->screen_data->start_screen);
+        } else if (args->screen_id == DEATH_SCREEN) {
+            initStartScreen(&args->screen_data->start_screen);
         }
     } else if (args->screen_data->prev_screen == GAME_SCREEN) {
-        if (args->screen_id == PAUSE_SCREEN) {
+        if (args->screen_id == PAUSE_SCREEN || args->screen_id == DEATH_SCREEN) {
             initSettingsScreen(&args->screen_data->settings_screen, args->user_data, args->screen_data->current_screen);
             initStartScreen(&args->screen_data->start_screen);
         }
     } else if (args->screen_data->prev_screen == PAUSE_SCREEN) {
+        if (args->screen_id == START_SCREEN) {
+            initSavesScreen(&args->screen_data->saves_screen);
+        } else if (args->screen_id == GAME_SCREEN) {
+            initDeathScreen(&args->screen_data->death_screen);
+        }
+    } else if (args->screen_data->prev_screen == DEATH_SCREEN) {
         if (args->screen_id == START_SCREEN) {
             initSavesScreen(&args->screen_data->saves_screen);
         }
@@ -115,9 +128,16 @@ void loadScreenTextures(ScreenData* screen_data, SDL_Renderer* renderer, const i
         } else if (screen_id == PAUSE_SCREEN) {
             setGameScreenTextures(screen_data->game_screen, renderer);
             setStartScreenTextures(screen_data->start_screen, renderer);
+        } else if (screen_id == DEATH_SCREEN) {
+            setStartScreenTextures(screen_data->start_screen, renderer);
         }
     } else if (screen_data->prev_screen == GAME_SCREEN) {
         if (screen_id == PAUSE_SCREEN) {
+            destroyDeathScreen(&screen_data->death_screen);
+            setSettingsScreenTextures(screen_data->settings_screen, renderer);
+            setStartScreenTextures(screen_data->start_screen, renderer);
+        } else if (screen_id == DEATH_SCREEN) {
+            destroyPauseScreen(&screen_data->pause_screen);
             setSettingsScreenTextures(screen_data->settings_screen, renderer);
             setStartScreenTextures(screen_data->start_screen, renderer);
         }
@@ -130,6 +150,18 @@ void loadScreenTextures(ScreenData* screen_data, SDL_Renderer* renderer, const i
             destroyStartScreen(&screen_data->start_screen);
         } else if (screen_id == START_SCREEN) {
             destroyPauseScreen(&screen_data->pause_screen);
+            destroyGameScreen(&screen_data->game_screen);
+            setSavesScreenTextures(screen_data->saves_screen, renderer);
+            screen_data->settings_screen->prev_screen = START_SCREEN;
+        }
+    } else if (screen_data->prev_screen == DEATH_SCREEN) {
+        if (screen_id == GAME_SCREEN) {
+            destroySettingsScreen(&screen_data->settings_screen);
+            destroyStartScreen(&screen_data->start_screen);
+        } else if (screen_id == SETTINGS_SCREEN) {
+            destroyStartScreen(&screen_data->start_screen);
+        } else if (screen_id == START_SCREEN) {
+            destroyDeathScreen(&screen_data->death_screen);
             destroyGameScreen(&screen_data->game_screen);
             setSavesScreenTextures(screen_data->saves_screen, renderer);
             screen_data->settings_screen->prev_screen = START_SCREEN;
@@ -194,6 +226,13 @@ void paintScreen(const int screen_id, ScreenData* screen_data, SDL_Renderer* ren
                 paintScreen(screen_data->settings_screen->prev_screen, screen_data, renderer, game_data, user_data);
             screen_change = paintSettingsScreen(screen_data->settings_screen, renderer);
             break;
+        case DEATH_SCREEN:
+            if (screen_data->death_screen == NULL) return;
+            if (screen_data->death_screen->do_entrance_animation)
+                paintScreen(GAME_SCREEN, screen_data, renderer, game_data, user_data);
+            if (screen_data->death_screen->do_exit_animation)
+                paintScreen(START_SCREEN, screen_data, renderer, game_data, user_data);
+            screen_change = paintDeathScreen(screen_data->death_screen, renderer);
         default:
             break;
     }
@@ -221,6 +260,9 @@ void mousePressed(const ScreenData* screen_data, const SDL_FPoint pt) {
         case SETTINGS_SCREEN:
             settingsScreenMousePressed(screen_data->settings_screen, pt);
             break;
+        case DEATH_SCREEN:
+            deathScreenMousePressed(screen_data->death_screen, pt);
+            break;
         default:
             break;
     }
@@ -244,6 +286,9 @@ void mouseReleased(ScreenData* screen_data, const SDL_FPoint pt, SDL_Renderer* r
             break;
         case SETTINGS_SCREEN:
             screen_change = settingsScreenMouseReleased(screen_data->settings_screen, pt, user_data, window);
+            break;
+        case DEATH_SCREEN:
+            screen_change = deathScreenMouseReleased(screen_data->death_screen, pt, game_data);
             break;
         default:
             break;
@@ -272,6 +317,9 @@ void mouseDragged(const ScreenData* screen_data, const SDL_FPoint pt, double pre
             break;
         case SETTINGS_SCREEN:
             settingsScreenMouseDragged(screen_data->settings_screen, pt, user_data);
+            break;
+        case DEATH_SCREEN:
+            deathScreenMouseDragged(screen_data->death_screen, pt);
             break;
         default:
             break;
