@@ -140,7 +140,7 @@ int paintPauseScreen(PauseScreen* pause_screen, SDL_Renderer* renderer) {
         }
     }
 
-    if (pause_screen->animation_state >= 2169.0f) {
+    if (pause_screen->animation_state >= 2169.0f + 50.0f) {
         pause_screen->do_exit_animation = false;
         pause_screen->last_paint_time = 0;
         screen_change = pause_screen->next_screen;
