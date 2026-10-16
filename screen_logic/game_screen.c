@@ -422,7 +422,7 @@ static int setMapSurfaces(GameScreen* game_screen) {
     char target_dir[512];
     SDL_snprintf(target_dir, sizeof(target_dir), "%sgame_data/textures/surfaces/", base_path);
     int num_files = 0;
-    char** files = SDL_GlobDirectory("../game_data/textures/surfaces/", NULL, SDL_GLOB_CASEINSENSITIVE,
+    char** files = SDL_GlobDirectory(target_dir, NULL, SDL_GLOB_CASEINSENSITIVE,
         &num_files);
     if (files == NULL) {
         SDL_Log("Failed to list directory: %s", SDL_GetError());
