@@ -18,11 +18,13 @@ inner-workings of the specific implementation that I created for this game engin
 
 ## Prerequisites
 - **CMake**: Version 3.20 or higher.
+  - If you don't have CMake installed, use this [link](https://cmake.org/download/), and scroll till you find the 
+  *Binary distributions* section. Then just download the appropriate file for your OS.
 - **C Compiler**: A 64 bit standard C compiler that supports C99.
-  - If the compiler you're currently using is not working, I suggest going to this [link](https://www.msys2.org/) and 
+  - If the compiler you're currently using is not working, I suggest going to this [link](https://www.msys2.org/), and 
   following the instructions provided.
 - **Ninja**: Ninja isn't *absolutely* necessary; however, for the build instructions below you will need it.
-  - If you don't have Ninja installed, use this [link](https://ninja-build.org/) and download the appropriate file.
+  - If you don't have Ninja installed, use this [link](https://ninja-build.org/), and download the appropriate file.
 
 ## Build Instructions
 
