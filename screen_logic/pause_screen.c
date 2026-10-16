@@ -210,7 +210,7 @@ void pauseScreenMouseMoved(const PauseScreen* pause_screen, const SDL_FPoint mou
 
 static void setPauseScreenSurfaces(const PauseScreen* pause_screen) {
     for (int i = 0; i < 24; i++) {
-        char file_path[50] = "../game_data/textures/pause_screen/background_img";
+        char file_path[50] = "game_data/textures/pause_screen/background_img";
         char file_type[5] = ".png";
         char full_path[56];
         snprintf(full_path, sizeof(full_path), "%s%d%s", file_path, i + 1, file_type);

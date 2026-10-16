@@ -274,12 +274,12 @@ void settingsScreenMouseMoved(SettingsScreen* settings_screen, const SDL_FPoint 
 
 static void setSettingsScreenSurfaces(const SettingsScreen* settings_screen) {
     settings_screen->surfaces->left_background_surface =
-        IMG_Load("../game_data/textures/settings_screen/background_left.png");
+        IMG_Load("game_data/textures/settings_screen/background_left.png");
     if (!settings_screen->surfaces->left_background_surface) {
         SDL_Log("Failed to load image: %s", SDL_GetError());
     }
     settings_screen->surfaces->right_background_surface =
-        IMG_Load("../game_data/textures/settings_screen/background_right.png");
+        IMG_Load("game_data/textures/settings_screen/background_right.png");
     if (!settings_screen->surfaces->right_background_surface) {
         SDL_Log("Failed to load image: %s", SDL_GetError());
     }
