@@ -47,15 +47,15 @@ void initCheckpoint(Checkpoint** checkpoint, const int x, const int y, Checkpoin
     (*checkpoint)->start_page = start_page;
 }
 
-void destroyCheckpoint(Checkpoint* checkpoint) {
-    CheckpointPage* current_page = checkpoint->start_page;
+void destroyCheckpoint(Checkpoint** checkpoint) {
+    CheckpointPage* current_page = (*checkpoint)->start_page;
     while (current_page != NULL) {
         CheckpointPage* next_page = current_page->next_page;
         destroyCheckpointPage(current_page);
         current_page = next_page;
     }
-    free(checkpoint);
-    checkpoint = NULL;
+    free(*checkpoint);
+    *checkpoint = NULL;
 }
 
 void initCheckpointQueue(CheckpointQueue** checkpoint_queue) {
@@ -65,12 +65,13 @@ void initCheckpointQueue(CheckpointQueue** checkpoint_queue) {
     (*checkpoint_queue)->num_checkpoints = 0;
 }
 
-void destroyCheckpointQueue(CheckpointQueue* checkpoint_queue) {
-    while (!isEmptyCheckpointQueue(checkpoint_queue)) {
-        dequeueCheckpoint(checkpoint_queue);
+void destroyCheckpointQueue(CheckpointQueue** checkpoint_queue) {
+    while (!isEmptyCheckpointQueue(*checkpoint_queue)) {
+        Checkpoint* checkpoint = dequeueCheckpoint(*checkpoint_queue);
+        destroyCheckpoint(&checkpoint);
     }
-    free(checkpoint_queue);
-    checkpoint_queue = NULL;
+    free(*checkpoint_queue);
+    *checkpoint_queue = NULL;
 }
 
 void enqueueCheckpoint(CheckpointQueue* queue, Checkpoint* checkpoint) {

@@ -32,6 +32,10 @@ void initGameData(GameData** game_data) {
 
 void destroyGameData(GameData** game_data) {
     if (*game_data == NULL) return;
+    destroyCheckpointQueue(&(*game_data)->checkpoint_queue);
+    if ((*game_data)->player != NULL) {
+        destroyPlayer(&(*game_data)->player);
+    }
     free(*game_data);
     *game_data = NULL;
 }

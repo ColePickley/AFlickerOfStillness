@@ -13,10 +13,7 @@ endif()
 # -----------------------------------------------------------------------------
 include(FetchContent)
 
-FetchContent_Declare(
-        sdl3
-        URL "${CMAKE_CURRENT_SOURCE_DIR}/third_party/SDL-main.zip"
-)
+FetchContent_Declare(sdl3 URL "${CMAKE_CURRENT_SOURCE_DIR}/third_party/SDL-main.zip")
 
 set(SDL_SHARED ON CACHE BOOL "Build shared SDL library" FORCE)
 set(SDL_STATIC OFF CACHE BOOL "Build static SDL library" FORCE)
@@ -65,7 +62,7 @@ set(SOURCE_FILES ${SOURCE_FILES_ROOT} ${SOURCE_FILES_SCREEN_LOGIC} ${SOURCE_FILE
 # 4. Define Project Executable
 # -----------------------------------------------------------------------------
 if(WIN32)
-    add_executable(${PROJECT_NAME} WIN32 ${SOURCE_FILES})
+    add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 else()
     add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 endif()
@@ -120,3 +117,8 @@ if(WIN32)
             "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
     )
 endif()
+
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:${PROJECT_NAME}>/user_data/saves"
+        COMMENT "Forcing creation of empty save directories in build folder"
+)

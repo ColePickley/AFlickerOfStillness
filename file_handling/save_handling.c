@@ -22,6 +22,7 @@ bool loadSave(GameData* game_data) {
     }
     game_data->num_entities = 0;
     for (int i = 0; i < MAX_NUM_ENTITIES; i++) {
+        destroyEntity(game_data->entities[i]);
         game_data->entities[i] = NULL;
     }
 
@@ -191,7 +192,7 @@ static void setSaveEntities(GameData* game_data, char line[500], int* file_secti
 }
 
 static void setSavePlayer(GameData* game_data, char line[500], int* file_section) {
-    destroyPlayer(game_data->player);
+    destroyPlayer(&game_data->player);
     initPlayer(&game_data->player);
     const char *token = strtok(line, ",");
     if (token[0] == '"') {

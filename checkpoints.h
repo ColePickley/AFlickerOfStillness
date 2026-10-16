@@ -45,11 +45,11 @@ void destroyCheckpointPage(CheckpointPage* checkpoint_page);
 
 void initCheckpoint(Checkpoint** checkpoint, int x, int y, CheckpointPage* start_page);
 
-void destroyCheckpoint(Checkpoint* checkpoint);
+void destroyCheckpoint(Checkpoint** checkpoint);
 
 void initCheckpointQueue(CheckpointQueue** checkpoint_queue);
 
-void destroyCheckpointQueue(CheckpointQueue* checkpoint_queue);
+void destroyCheckpointQueue(CheckpointQueue** checkpoint_queue);
 
 void enqueueCheckpoint(CheckpointQueue* queue, Checkpoint* checkpoint);
 

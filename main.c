@@ -23,6 +23,7 @@ static int updateGame(GameData* game_data);
 static void printGameData(const GameData* game_data);
 
 int main() {
+    printf("Game Started\n");
     SDL_SetHint(SDL_HINT_RENDER_DRIVER, "opengl");
     srand((unsigned int)time(NULL));
     EventData event_data =
@@ -106,10 +107,16 @@ int main() {
             SDL_Delay(delay_ms);
         }
         frame_count++;
-        if (frame_count >= 30) {
+        if (frame_count >= 15) {
             end_time = SDL_GetPerformanceCounter();
             time_elapsed = (double) (end_time - start_time) / (double) SDL_GetPerformanceFrequency();
-            printf("\rFPS: %.2f", 1.0 / time_elapsed);
+            printf("\rFPS: %.2f | ", 1.0 / time_elapsed);
+            printf("Start Screen: %s | ", screen_data->start_screen != NULL ? "Loaded" : "Unloaded");
+            printf("Saves Screen: %s | ", screen_data->saves_screen != NULL ? "Loaded" : "Unloaded");
+            printf("Game Screen: %s | ", screen_data->game_screen != NULL ? "Loaded" : "Unloaded");
+            printf("Pause Screen: %s | ", screen_data->pause_screen != NULL ? "Loaded" : "Unloaded");
+            printf("Death Screen: %s | ", screen_data->death_screen != NULL ? "Loaded" : "Unloaded");
+            printf("Settings Screen: %s | ", screen_data->settings_screen != NULL ? "Loaded" : "Unloaded");
             fflush(stdout);
             frame_count = 0;
         }

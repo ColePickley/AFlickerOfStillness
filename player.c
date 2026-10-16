@@ -27,13 +27,13 @@ void initPlayer(Player** player) {
     }
 }
 
-void destroyPlayer(Player* player) {
+void destroyPlayer(Player** player) {
     for (int i = 0; i < NUM_RAYS; i++) {
-        free(player->rays[i]);
-        player->rays[i] = NULL;
+        free((*player)->rays[i]);
+        (*player)->rays[i] = NULL;
     }
-    free(player);
-    player = NULL;
+    free(*player);
+    *player = NULL;
 }
 
 void movePlayer(Player* player, int (*map_grid)[MAX_MAP_SIZE][MAX_MAP_SIZE]) {
