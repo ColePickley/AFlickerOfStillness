@@ -15,6 +15,7 @@ bool loadSave(GameData* game_data) {
     snprintf(full_path, sizeof(full_path), "%s%s%d%s", base_path, file_path, game_data->save_index, file_type);
     FILE* file = fopen(full_path, "r");
     if (file == NULL) {
+        printf("Path: %s | ", full_path);
         perror("Error loading save file");
         return false;
     }
@@ -74,6 +75,7 @@ int getLevelIndex(const uint8_t save_index) {
     snprintf(full_path, sizeof(full_path), "%s%s%d%s", base_path, file_path, save_index, file_type);
     FILE* file = fopen(full_path, "r");
     if (file == NULL) {
+        printf("Path: %s | ", full_path);
         perror("Error opening save file");
         return 0;
     }
@@ -317,6 +319,7 @@ void deleteSave(const uint8_t save_index) {
     if (remove(full_path) == 0) {
         printf("Save %d cleared successfully.\n", save_index);
     } else {
+        printf("Path: %s | ", full_path);
         printf("Error clearing save %d.\n", save_index);
     }
 }
