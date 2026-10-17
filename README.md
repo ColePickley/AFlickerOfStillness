@@ -18,16 +18,48 @@ inner-workings of the specific implementation that I created for this game engin
 
 ## Prerequisites
 - **CMake**: Version 3.20 or higher.
-  - If you don't have CMake installed, use this [link](https://cmake.org/download/), and scroll till you find the 
-  *Binary distributions* section. Then just download the appropriate file for your OS.
 - **C Compiler**: A 64 bit standard C compiler that supports C99.
-  - If the compiler you're currently using is not working, I suggest going to this [link](https://www.msys2.org/), and 
-  following the instructions provided.
-- **Ninja**: Ninja isn't *absolutely* necessary; however, for the build instructions below you will need it.
-  - If you don't have Ninja installed, use this [link](https://github.com/ninja-build/ninja/releases), and download the 
-  appropriate file.
+- **Ninja**: The build system required to successfully build the application.
 
-*Note: Make sure when you download Ninja to include it in your system's path environment variable.*
+Installation:
+- **Windows (WinGet):**
+  - CMake: Run the following command in PowerShell, and make sure that the option to add it to your system PATH is 
+  selected during setup.
+      ```bash
+      winget install Kitware.CMake
+      ```
+  - C Compiler: I recommend downloading MinGW using the MYSYS2 build environment. Further instructions can be found 
+  [here](https://www.msys2.org/).
+  - Ninja: Run the following command in PowerShell, extract the .zip file, and add it to your system PATH.
+      ```bash
+      winget install Ninja-build.Ninja
+      ```
+- **macOS (Homebrew):**
+  - CMake:
+      ```bash
+      brew install cmake
+      ```
+  - C Compiler:
+      ```bash
+      brew install mingw-w64
+      ```
+  - Ninja:
+      ```bash
+      brew install ninja
+      ```
+- **Linux (Sudo):**
+  - CMake:
+      ```bash
+      sudo apt update && sudo apt install cmake
+      ```
+  - C Compiler:
+      ```bash
+      sudo apt install mingw-w6
+      ```
+  - Ninja:
+      ```bash
+      sudo apt install ninja-build
+      ```
 
 ## Build Instructions
 
