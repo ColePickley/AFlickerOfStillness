@@ -24,25 +24,36 @@ inner-workings of the specific implementation that I created for this game engin
   - If the compiler you're currently using is not working, I suggest going to this [link](https://www.msys2.org/), and 
   following the instructions provided.
 - **Ninja**: Ninja isn't *absolutely* necessary; however, for the build instructions below you will need it.
-  - If you don't have Ninja installed, use this [link](https://ninja-build.org/), and download the appropriate file.
+  - If you don't have Ninja installed, use this [link](https://github.com/ninja-build/ninja/releases), and download the 
+  appropriate file.
+
+*Note: Make sure when you download Ninja to include it in your system's path environment variable.*
 
 ## Build Instructions
 
 ### Building via Command Line
 
-1. **Clone the repository and navigate to the project directory:**
+1. **Make sure to check all of your prerequisites are properly installed:**
+
+    ```bash
+    cmake --version
+    gcc --version
+    ninja --version
+    ```
+
+2. **Clone the repository and navigate to the project directory:**
 
     ```bash
     git clone https://github.com/ColePickley/AFlickerOfStillness
     ```
 
-2. **Navigate to the project directory:**
+3. **Navigate to the project directory:**
 
     ```bash
     cd your_file_path/AFlickerOfStillness
     ```
 
-3. **Generate build configuration files:**
+4. **Generate build configuration files:**
 
    - Windows (matching default paths)
 
@@ -56,13 +67,13 @@ inner-workings of the specific implementation that I created for this game engin
     cmake -B build -DCMAKE_PREFIX_PATH="/usr/local;/opt/homebrew"
     ```
 
-4. **Compile the executable:**
+5. **Compile the executable:**
 
     ```bash
     cmake --build build
     ```
 
-5. **Run the video game:**
+6. **Run the video game:**
 
    - Windows
 
