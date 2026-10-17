@@ -61,12 +61,6 @@ inner-workings of the specific implementation that I created for this game engin
     cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
     ```
 
-   - Linux / macOS / Custom Path setups
-
-    ```bash
-    cmake -B build -DCMAKE_PREFIX_PATH="/usr/local;/opt/homebrew"
-    ```
-
 5. **Compile the executable:**
 
     ```bash
