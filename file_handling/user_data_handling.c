@@ -5,9 +5,16 @@
 #include <string.h>
 
 void loadUserData(UserData* user_data) {
-    FILE* file = fopen("user_data/settings/settings.csv", "r");
+    const char* base_path = SDL_GetBasePath();
+    if (!base_path) {
+        SDL_Log("Could not determine base path: %s", SDL_GetError());
+        return;
+    }
+    char target_dir[512];
+    SDL_snprintf(target_dir, sizeof(target_dir), "%suser_data/settings/settings.csv", base_path);
+    FILE* file = fopen(target_dir, "r");
     if (file == NULL) {
-        perror("Error opening file");
+        perror("Error loading settings file");
         return;
     }
     char line[500];
@@ -42,9 +49,16 @@ void loadUserData(UserData* user_data) {
 }
 
 void saveUserData(const UserData* user_data) {
-    FILE* file = fopen("user_data/settings/settings.csv", "w");
+    const char* base_path = SDL_GetBasePath();
+    if (!base_path) {
+        SDL_Log("Could not determine base path: %s", SDL_GetError());
+        return;
+    }
+    char target_dir[512];
+    SDL_snprintf(target_dir, sizeof(target_dir), "%suser_data/settings/settings.csv", base_path);
+    FILE* file = fopen(target_dir, "w");
     if (file == NULL) {
-        perror("Error opening file");
+        perror("Error writing settings file");
         return;
     }
     fprintf(file, "%d,%d,%d,%d\n", user_data->frame_rate_cap, user_data->fullscreen, user_data->graphics_quality,
