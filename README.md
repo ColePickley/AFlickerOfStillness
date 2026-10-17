@@ -33,7 +33,7 @@ inner-workings of the specific implementation that I created for this game engin
 
 ### Building via Command Line
 
-1. **Make sure to check all of your prerequisites are properly installed:**
+1. **Check to make sure all of your prerequisites are properly installed:**
 
     ```bash
     cmake --version
