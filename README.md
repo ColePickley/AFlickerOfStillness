@@ -55,8 +55,6 @@ inner-workings of the specific implementation that I created for this game engin
 
 4. **Generate build configuration files:**
 
-   - Windows (matching default paths)
-
     ```bash
     cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
     ```
