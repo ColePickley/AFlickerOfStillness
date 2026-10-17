@@ -8,9 +8,9 @@ bool loadSave(GameData* game_data) {
     char file_type[5] = ".csv";
     char full_path[26];
     snprintf(full_path, sizeof(full_path), "%s%d%s", file_path, game_data->save_index, file_type);
-    FILE *file = fopen(full_path, "r");
+    FILE* file = fopen(full_path, "r");
     if (file == NULL) {
-        perror("Error opening file");
+        perror("Error loading save file");
         return false;
     }
 
@@ -62,9 +62,9 @@ int getLevelIndex(const uint8_t save_index) {
     char file_type[5] = ".csv";
     char full_path[26];
     snprintf(full_path, sizeof(full_path), "%s%d%s", file_path, save_index, file_type);
-    FILE *file = fopen(full_path, "r");
+    FILE* file = fopen(full_path, "r");
     if (file == NULL) {
-        perror("Error opening file");
+        perror("Error opening save file");
         return 0;
     }
     char line[500];
@@ -72,7 +72,7 @@ int getLevelIndex(const uint8_t save_index) {
         return 0;
     }
     line[strcspn(line, "\r\n")] = '\0';
-    const char *token = strtok(line, ",");
+    const char* token = strtok(line, ",");
     char* end_token;
     return strtol(token, &end_token, 10);
     fclose(file);
@@ -83,7 +83,7 @@ void setSaveText(char* save_text, const size_t save_text_size, const uint8_t sav
     char file_type[5] = ".csv";
     char full_path[26];
     snprintf(full_path, sizeof(full_path), "%s%d%s", file_path, save_index, file_type);
-    FILE *file = fopen(full_path, "r");
+    FILE* file = fopen(full_path, "r");
     if (file == NULL) {
         const char* new_save_text = "EMPTY";
         snprintf(save_text, save_text_size, "%s", new_save_text);
@@ -102,7 +102,7 @@ void setSaveText(char* save_text, const size_t save_text_size, const uint8_t sav
 }
 
 static void setSaveMapGrid(GameData* game_data, char line[500], const int line_num, int* file_section) {
-    const char *token = strtok(line, ",");
+    const char* token = strtok(line, ",");
     if (token[0] == '"') {
         *file_section += 1;
         return;
@@ -118,7 +118,7 @@ static void setSaveMapGrid(GameData* game_data, char line[500], const int line_n
 }
 
 static void dequeHitCheckpoints(const GameData* game_data, char line[500], int* file_section) {
-    const char *token = strtok(line, ",");
+    const char* token = strtok(line, ",");
     if (token[0] == '"') {
         *file_section += 1;
         return;
@@ -194,7 +194,7 @@ static void setSaveEntities(GameData* game_data, char line[500], int* file_secti
 static void setSavePlayer(GameData* game_data, char line[500], int* file_section) {
     destroyPlayer(&game_data->player);
     initPlayer(&game_data->player);
-    const char *token = strtok(line, ",");
+    const char* token = strtok(line, ",");
     if (token[0] == '"') {
         *file_section += 1;
         return;
@@ -242,9 +242,9 @@ void writeSave(const GameData* game_data) {
     char file_type[5] = ".csv";
     char full_path[26];
     snprintf(full_path, sizeof(full_path), "%s%d%s", file_path, game_data->save_index, file_type);
-    FILE *file = fopen(full_path, "w");
+    FILE* file = fopen(full_path, "w");
     if (file == NULL) {
-        perror("Error opening save file");
+        perror("Error writing to save file");
         return;
     }
     fprintf(file, "%d\n\"\"\n", game_data->save_index);
@@ -274,7 +274,7 @@ void writeSave(const GameData* game_data) {
 
 static void setNewSaveText(char* save_text, const size_t save_text_size) {
     const time_t raw_time = time(NULL);
-    const struct tm *lt = localtime(&raw_time);
+    const struct tm* lt = localtime(&raw_time);
     const int year  = lt->tm_year + 1900;
     const int month = lt->tm_mon + 1;
     const int day   = lt->tm_mday;
