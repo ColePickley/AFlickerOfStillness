@@ -23,93 +23,79 @@ inner-workings of the specific implementation that I created for this game engin
 
 Installation:
 - **Windows (WinGet):**
-  - CMake: Run the following command in PowerShell, and make sure that the option to add it to your system PATH is 
-  selected during setup.
-      ```bash
-      winget install Kitware.CMake
-      ```
-  - C Compiler: I recommend downloading MinGW using the MYSYS2 build environment. Further instructions can be found 
-  [here](https://www.msys2.org/).
-  - Ninja: Run the following command in PowerShell, extract the .zip file, and add it to your system PATH.
-      ```bash
-      winget install Ninja-build.Ninja
-      ```
+    - CMake: Run the following command in PowerShell, and make sure that the option to add it to your system PATH is 
+    selected during setup.
+        ```bash
+        winget install Kitware.CMake
+        ```
+    - C Compiler: I recommend downloading MinGW using the MYSYS2 build environment. Further instructions can be found 
+    [here](https://www.msys2.org/).
+    - Ninja: Run the following command in PowerShell, extract the .zip file, and add it to your system PATH.
+        ```bash
+        winget install Ninja-build.Ninja
+        ```
 - **macOS (Homebrew):**
-  - CMake:
-      ```bash
-      brew install cmake
-      ```
-  - C Compiler:
-      ```bash
-      brew install mingw-w64
-      ```
-  - Ninja:
-      ```bash
-      brew install ninja
-      ```
+    - CMake:
+        ```bash
+        brew install cmake
+        ```
+    - C Compiler:
+        ```bash
+        brew install mingw-w64
+        ```
+    - Ninja:
+        ```bash
+        brew install ninja
+        ```
 - **Linux (Sudo):**
-  - CMake:
-      ```bash
-      sudo apt update && sudo apt install cmake
-      ```
-  - C Compiler:
-      ```bash
-      sudo apt install mingw-w6
-      ```
-  - Ninja:
-      ```bash
-      sudo apt install ninja-build
-      ```
+    - CMake:
+        ```bash
+        sudo apt update && sudo apt install cmake
+        ```
+    - C Compiler:
+        ```bash
+        sudo apt install mingw-w6
+        ```
+    - Ninja:
+        ```bash
+        sudo apt install ninja-build
+        ```
 
 ## Build Instructions
 
 ### Building via Command Line
 
 1. **Check to make sure all of your prerequisites are properly installed:**
-
     ```bash
     cmake --version
     gcc --version
     ninja --version
     ```
-
 2. **Clone the repository and navigate to the project directory:**
-
     ```bash
     git clone https://github.com/ColePickley/AFlickerOfStillness
     ```
-
 3. **Navigate to the project directory:**
-
     ```bash
     cd your_file_path/AFlickerOfStillness
     ```
-
 4. **Generate build configuration files:**
-
     ```bash
     cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
     ```
-
 5. **Compile the executable:**
-
     ```bash
     cmake --build build
     ```
-
 6. **Run the video game:**
-
-   - Windows
-
-    ````bash
-    ./build/AFlickerOfStillness.exe
-    ````
-
-    - Linux / macOS
-
-    ````bash
-    ./build/AFlickerOfStillness
-    ````
+    - Windows:
+        ```bash
+        ./build/AFlickerOfStillness.exe
+        ```
+    - Linux / macOS:
+        ```bash
+        ./build/AFlickerOfStillness
+        ```
 
 ## Files
 
