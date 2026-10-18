@@ -16,52 +16,38 @@ void initGameScreen(GameScreen** game_screen) {
     (*game_screen)->num_entity_textures = setEntitySurfaces(*game_screen);
 }
 
-void setGameScreenTextures(const GameScreen* game_screen, SDL_Renderer* renderer) {
+void setGameScreenTextures(GameScreen* game_screen, SDL_Renderer* renderer) {
     for (int i = 0; i < game_screen->num_map_textures; i++) {
-        for (int j = 0; j < TEXTURE_RESOLUTION; j++) {
-            SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, game_screen->map_textures[i]->surface[j]);
-            if (!texture) {
-                SDL_Log("Failed to create texture from slice: %s", SDL_GetError());
-                return;
-            }
-            SDL_SetTextureScaleMode(texture, SDL_SCALEMODE_NEAREST);
-            SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND);
-            game_screen->map_textures[i]->texture[j] = texture;
+        SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, game_screen->map_surfaces[i]);
+        if (!texture) {
+            SDL_Log("Failed to create texture: %s", SDL_GetError());
+            return;
         }
+        SDL_SetTextureScaleMode(texture, SDL_SCALEMODE_NEAREST);
+        SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND);
+        game_screen->map_textures[i] = texture;
     }
     for (int i = 0; i < game_screen->num_entity_textures; i++) {
-        for (int j = 0; j < TEXTURE_RESOLUTION; j++) {
-            SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, game_screen->entity_textures[i]->surface[j]);
-            if (!texture) {
-                SDL_Log("Failed to create texture from slice: %s", SDL_GetError());
-                return;
-            }
-            SDL_SetTextureScaleMode(texture, SDL_SCALEMODE_NEAREST);
-            SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND);
-            game_screen->entity_textures[i]->texture[j] = texture;
+        SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, game_screen->entity_surfaces[i]);
+        if (!texture) {
+            SDL_Log("Failed to create texture: %s", SDL_GetError());
+            return;
         }
+        SDL_SetTextureScaleMode(texture, SDL_SCALEMODE_NEAREST);
+        SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND);
+        game_screen->entity_textures[i] = texture;
     }
 }
 
 void destroyGameScreen(GameScreen** game_screen) {
     if (*game_screen == NULL) return;
     for (int i = 0; i < (*game_screen)->num_map_textures; i++) {
-        for (int j = 0; j < TEXTURE_RESOLUTION; j++) {
-            SDL_DestroyTexture((*game_screen)->map_textures[i]->texture[j]);
-            SDL_DestroySurface((*game_screen)->map_textures[i]->surface[j]);
-            (*game_screen)->map_textures[i]->texture[j] = NULL;
-        }
-        free((*game_screen)->map_textures[i]);
-        (*game_screen)->map_textures[i] = NULL;
+        SDL_DestroyTexture((*game_screen)->map_textures[i]);
+        SDL_DestroySurface((*game_screen)->map_surfaces[i]);
     }
     for (int i = 0; i < (*game_screen)->num_entity_textures; i++) {
-        for (int j = 0; j < TEXTURE_RESOLUTION; j++) {
-            SDL_DestroyTexture((*game_screen)->entity_textures[i]->texture[j]);
-            SDL_DestroySurface((*game_screen)->entity_textures[i]->surface[j]);
-            (*game_screen)->entity_textures[i]->texture[j] = NULL;
-        }
-        free((*game_screen)->entity_textures[i]);
-        (*game_screen)->entity_textures[i] = NULL;
+        SDL_DestroyTexture((*game_screen)->entity_textures[i]);
+        SDL_DestroySurface((*game_screen)->entity_surfaces[i]);
     }
     free(*game_screen);
     *game_screen = NULL;
@@ -117,7 +103,7 @@ static void drawCeilingLine(const GameScreen* game_screen, SDL_Renderer* rendere
         const int texture_index = game_data->texture_locations[ceiling_y][ceiling_x][4];
         if (texture_index == 0) continue;
         SDL_Color color;
-        setSurfacePixelColor(game_screen->map_textures[texture_index]->surface[texture_x], 0, texture_y, &color);
+        setSurfacePixelColor(game_screen->map_surfaces[texture_index], texture_x, texture_y, &color);
         SDL_FRect rect = {.x = (float) (ray_num * LINE_WIDTH), .y = (float) y, .w = LINE_WIDTH, .h = (float) vert_res};
         SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
         SDL_RenderFillRect(renderer, &rect);
@@ -138,7 +124,7 @@ static void drawFloorLine(const GameScreen* game_screen, SDL_Renderer* renderer,
         floor_y = max(0, min(game_data->num_map_rows - 1, floor_y / GRID_SIZE));
         const int texture_index = game_data->texture_locations[floor_y][floor_x][5];
         SDL_Color color;
-        setSurfacePixelColor(game_screen->map_textures[texture_index]->surface[texture_x], 0, texture_y, &color);
+        setSurfacePixelColor(game_screen->map_surfaces[texture_index], texture_x, texture_y, &color);
         SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
         SDL_FRect rect = {.x = (float) (ray_num * LINE_WIDTH), .y = (float) y, .w = LINE_WIDTH, .h = (float) vert_res};
         SDL_RenderFillRect(renderer, &rect);
@@ -149,20 +135,20 @@ static void drawWallLine(const GameScreen* game_screen, SDL_Renderer* renderer, 
         const double angle, const Ray ray, const float line_length, const int x, const int y) {
     // get texture
     const int side = getTextureSide(angle, ray);
-    const SlicedTexture* sliced_texture = getWallTexture(game_screen, game_data, angle, ray, side);
-    int img_x;
+    SDL_Texture* texture = getWallTexture(game_screen, game_data, angle, ray, side);
+    float img_x;
     if (ray.vert_collision) {
-        img_x = (int) round(GRID_SIZE - (int) ray.y % GRID_SIZE);
+        img_x = (float) round(GRID_SIZE - (int) ray.y % GRID_SIZE);
     } else {
-        img_x = (int) round(GRID_SIZE - (int) ray.x % GRID_SIZE);
+        img_x = (float) round(GRID_SIZE - (int) ray.x % GRID_SIZE);
     }
     img_x = min(GRID_SIZE - 1, max(0, img_x));
     if (side <= 1) {
         img_x = GRID_SIZE - 1 - img_x;
     }
-    SDL_Texture* texture = sliced_texture->texture[img_x];
-    const SDL_FRect rect = {.x = (float) x, .y = (float) y, .w = LINE_WIDTH, .h = line_length + LINE_WIDTH};
-    SDL_RenderTexture(renderer, texture, NULL, &rect);
+    const SDL_FRect src_rect = {.x = img_x, .y = 0, .w = 1, .h = TEXTURE_RESOLUTION};
+    const SDL_FRect dst_rect = {.x = (float) x, .y = (float) y, .w = LINE_WIDTH, .h = line_length + LINE_WIDTH};
+    SDL_RenderTexture(renderer, texture, &src_rect, &dst_rect);
     // transform and draw texture
     // if (line_length - WINDOW_HEIGHT > 0) {
         // img = pygame.transform.scale(img, (3, line_length))
@@ -196,20 +182,26 @@ static void drawEntities(const GameScreen* game_screen, SDL_Renderer* renderer, 
         const int end_ray = (start_x + entity_size) / LINE_WIDTH;
         for (int ray_num = max(0, start_ray); ray_num < min(NUM_RAYS, end_ray); ray_num++) {
             if (game_data->player->rays[ray_num]->length < entity->vect_mag) continue;
-            int texture_index = (int) round((ray_num - start_ray) / ((end_ray - start_ray) / 64.0));
-            texture_index = min(63, max(0, texture_index));
+            float texture_x = (float) round((ray_num - start_ray) / ((end_ray - start_ray) / 64.0));
+            texture_x = min(63, max(0, texture_x));
             const int start_y = (int) ((WINDOW_HEIGHT - entity_height_adjustment) / 2.0);
             if (WINDOW_WIDTH / 2 - 10 <= ray_num * LINE_WIDTH && ray_num * LINE_WIDTH <= WINDOW_WIDTH / 2 + 10) {
                 entity->in_scope = true;
             }
-            SDL_Texture* texture = game_screen->entity_textures[entity->type_index]->texture[texture_index];
-            SDL_FRect rect = {
+            SDL_Texture* texture = game_screen->entity_textures[entity->type_index];
+            SDL_FRect src_rect = {
+                .x = texture_x,
+                .y = 0,
+                .w = 1,
+                .h = TEXTURE_RESOLUTION
+            };
+            SDL_FRect dst_rect = {
                 .x = (float) (ray_num * LINE_WIDTH),
                 .y = (float) start_y + LINE_WIDTH / 2.0f,
                 .w = LINE_WIDTH,
                 .h = (float) entity_size
             };
-            SDL_RenderTexture(renderer, texture, NULL, &rect);
+            SDL_RenderTexture(renderer, texture, &src_rect, &dst_rect);
         }
     }
 }
@@ -346,7 +338,7 @@ static int getTextureSide(const double angle, const Ray ray) {
     return 2;
 }
 
-static SlicedTexture* getWallTexture(const GameScreen* game_screen, const GameData* game_data, const double angle,
+static SDL_Texture* getWallTexture(const GameScreen* game_screen, const GameData* game_data, const double angle,
         const Ray ray, const int side) {
     const int x = getWallTextureIndexX(game_data, angle, ray);
     const int y = getWallTextureIndexY(game_data, angle, ray);
@@ -445,7 +437,7 @@ static int setMapSurfaces(GameScreen* game_screen) {
             SDL_free(files);
             return -1;
         }
-        // resize image
+        // resize and format image
         SDL_Surface* resized_surface = SDL_ScaleSurface(surface, TEXTURE_RESOLUTION, TEXTURE_RESOLUTION,
             SDL_SCALEMODE_LINEAR);
         if (!resized_surface) {
@@ -453,23 +445,14 @@ static int setMapSurfaces(GameScreen* game_screen) {
             SDL_free(files);
             return -1;
         }
-        // slice image
-        for (int j = 0; j < TEXTURE_RESOLUTION; j++) {
-            SDL_Surface* slice_surface = SDL_CreateSurface(1, TEXTURE_RESOLUTION, resized_surface->format);
-            if (!slice_surface) {
-                SDL_Log("Failed to create slice surface: %s", SDL_GetError());
-                return -1;
-            }
-            SDL_Rect src_rect = {.x = j, .y = 0, .w = 1, .h = TEXTURE_RESOLUTION};
-            SDL_BlitSurface(resized_surface, &src_rect, slice_surface, NULL);
-            SDL_Surface* optimized_surface = SDL_ConvertSurface(slice_surface, SDL_PIXELFORMAT_RGBA8888);
-            if (!optimized_surface) {
-                SDL_Log("Failed to convert surface: %s", SDL_GetError());
-                return -1;
-            }
-            game_screen->map_textures[surface_index]->surface[j] = optimized_surface;
-            SDL_DestroySurface(slice_surface);
+        SDL_Surface* formatted_surface = SDL_ConvertSurface(resized_surface, SDL_PIXELFORMAT_RGBA8888);
+        if (!formatted_surface) {
+            SDL_Log("Failed to format surface: %s", SDL_GetError());
+            SDL_free(files);
+            return -1;
         }
+        // storing and destroying
+        game_screen->map_surfaces[surface_index] = formatted_surface;
         SDL_DestroySurface(surface);
         SDL_DestroySurface(resized_surface);
     }
@@ -516,23 +499,14 @@ static int setEntitySurfaces(GameScreen* game_screen) {
             SDL_free(files);
             return -1;
         }
-        // slice image
-        for (int j = 0; j < TEXTURE_RESOLUTION; j++) {
-            SDL_Surface* slice_surface = SDL_CreateSurface(1, TEXTURE_RESOLUTION, resized_surface->format);
-            if (!slice_surface) {
-                SDL_Log("Failed to create slice surface: %s", SDL_GetError());
-                return -1;
-            }
-            SDL_Rect src_rect = {.x = j, .y = 0, .w = 1, .h = TEXTURE_RESOLUTION};
-            SDL_BlitSurface(resized_surface, &src_rect, slice_surface, NULL);
-            SDL_Surface* optimized_surface = SDL_ConvertSurface(slice_surface, SDL_PIXELFORMAT_RGBA8888);
-            if (!optimized_surface) {
-                SDL_Log("Failed to convert surface: %s", SDL_GetError());
-                return -1;
-            }
-            game_screen->entity_textures[surface_index]->surface[j] = optimized_surface;
-            SDL_DestroySurface(slice_surface);
+        SDL_Surface* formatted_surface = SDL_ConvertSurface(resized_surface, SDL_PIXELFORMAT_RGBA8888);
+        if (!formatted_surface) {
+            SDL_Log("Failed to format surface: %s", SDL_GetError());
+            SDL_free(files);
+            return -1;
         }
+        // storing and destroying
+        game_screen->entity_surfaces[surface_index] = formatted_surface;
         SDL_DestroySurface(surface);
         SDL_DestroySurface(resized_surface);
     }

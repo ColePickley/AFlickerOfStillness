@@ -7,20 +7,17 @@
 #include "../constants.h"
 
 typedef struct {
-    SDL_Texture* texture[TEXTURE_RESOLUTION];
-    SDL_Surface* surface[TEXTURE_RESOLUTION];
-}SlicedTexture;
-
-typedef struct {
     int num_map_textures;
     int num_entity_textures;
-    SlicedTexture* map_textures[MAX_NUM_TEXTURES];
-    SlicedTexture* entity_textures[MAX_NUM_TEXTURES];
+    SDL_Surface* map_surfaces[MAX_NUM_TEXTURES];
+    SDL_Texture* map_textures[MAX_NUM_TEXTURES];
+    SDL_Surface* entity_surfaces[MAX_NUM_TEXTURES];
+    SDL_Texture* entity_textures[MAX_NUM_TEXTURES];
 }GameScreen;
 
 void initGameScreen(GameScreen** game_screen);
 
-void setGameScreenTextures(const GameScreen* game_screen, SDL_Renderer* renderer);
+void setGameScreenTextures(GameScreen* game_screen, SDL_Renderer* renderer);
 
 void destroyGameScreen(GameScreen** game_screen);
 
@@ -76,7 +73,7 @@ static double getEntityAngle(const Entity* entity, double player_vect_x, double 
 
 static int getTextureSide(double angle, Ray ray);
 
-static SlicedTexture* getWallTexture(const GameScreen* game_screen, const GameData* game_data, double angle, Ray ray,
+static SDL_Texture* getWallTexture(const GameScreen* game_screen, const GameData* game_data, double angle, Ray ray,
     int side);
 
 static int getWallTextureIndexX(const GameData* game_data, double angle, Ray ray);
