@@ -1,5 +1,7 @@
 #include "pause_screen.h"
 
+#include <stdio.h>
+
 #include "../functions.h"
 #include <stdlib.h>
 #include <SDL3_image/SDL_image.h>
