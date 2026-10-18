@@ -23,7 +23,7 @@ void readMap(GameData* game_data) {
     snprintf(full_path, sizeof(full_path), "%s%s", file_path, files[game_data->level_index]);
     FILE *file = fopen(full_path, "r");
     if (file == NULL) {
-        perror("Error opening file");
+        perror("Error opening map file");
         return;
     }
 

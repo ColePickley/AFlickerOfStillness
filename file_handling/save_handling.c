@@ -10,7 +10,7 @@ bool loadSave(GameData* game_data) {
         SDL_Log("Could not determine base path: %s", SDL_GetError());
         return false;
     }
-    char file_path[21] = "user_data\\saves\\save";
+    char file_path[21] = "user_data/saves/save";
     char file_type[5] = ".csv";
     char full_path[512];
     snprintf(full_path, sizeof(full_path), "%s%s%d%s", base_path, file_path, game_data->save_index, file_type);
@@ -70,7 +70,7 @@ int getLevelIndex(const uint8_t save_index) {
         SDL_Log("Could not determine base path: %s", SDL_GetError());
         return 0;
     }
-    char file_path[21] = "user_data\\saves\\save";
+    char file_path[21] = "user_data/saves/save";
     char file_type[5] = ".csv";
     char full_path[512];
     snprintf(full_path, sizeof(full_path), "%s%s%d%s", base_path, file_path, save_index, file_type);
@@ -97,7 +97,7 @@ void setSaveText(char* save_text, const size_t save_text_size, const uint8_t sav
         SDL_Log("Could not determine base path: %s", SDL_GetError());
         return;
     }
-    char file_path[21] = "user_data\\saves\\save";
+    char file_path[21] = "user_data/saves/save";
     char file_type[5] = ".csv";
     char full_path[512];
     snprintf(full_path, sizeof(full_path), "%s%s%d%s", base_path, file_path, save_index, file_type);
@@ -261,7 +261,7 @@ void writeSave(const GameData* game_data) {
         SDL_Log("Could not determine base path: %s", SDL_GetError());
         return;
     }
-    char file_path[21] = "user_data\\saves\\save";
+    char file_path[21] = "user_data/saves/save";
     char file_type[5] = ".csv";
     char full_path[512];
     snprintf(full_path, sizeof(full_path), "%s%s%d%s", base_path, file_path, game_data->save_index, file_type);
@@ -313,7 +313,7 @@ void deleteSave(const uint8_t save_index) {
         SDL_Log("Could not determine base path: %s", SDL_GetError());
         return;
     }
-    char file_path[21] = "user_data\\saves\\save";
+    char file_path[21] = "user_data/saves/save";
     char file_type[5] = ".csv";
     char full_path[512];
     snprintf(full_path, sizeof(full_path), "%s%s%d%s", base_path, file_path, save_index, file_type);
