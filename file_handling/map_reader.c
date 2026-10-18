@@ -327,12 +327,12 @@ static void setSkyTexture(GameData* game_data, char line[500], int* file_section
 }
 
 static void setPlayer(GameData* game_data, char line[500], int* file_section) {
-    initPlayer(&game_data->player);
     const char *token = strtok(line, ",");
     if (token[0] == '"') {
         *file_section += 1;
         return;
     }
+    initPlayer(&game_data->player);
     int token_num = 0;
     while (token != NULL && token_num < 3) {
         char* end_token;
