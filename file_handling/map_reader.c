@@ -333,6 +333,10 @@ static void setPlayer(GameData* game_data, char line[500], int* file_section) {
         return;
     }
     initPlayer(&game_data->player);
+    if (game_data->player == NULL) {
+        perror("Failed to allocate memory for player");
+        return;
+    }
     int token_num = 0;
     while (token != NULL && token_num < 3) {
         char* end_token;
