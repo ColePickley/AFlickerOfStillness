@@ -5,6 +5,9 @@
 
 void initGameData(GameData** game_data) {
     *game_data = malloc(sizeof(GameData));
+    if (*game_data == NULL) {
+        printf("Failed to allocate game data.\n");
+    }
     (*game_data)->level_index = 0;
     (*game_data)->save_index = 0;
     (*game_data)->num_checkpoints_hit = 0;
@@ -22,11 +25,17 @@ void initGameData(GameData** game_data) {
     (*game_data)->num_entities = 0;
     for (int i = 0; i < MAX_NUM_ENTITIES; i++) {
         (*game_data)->entities[i] = malloc(sizeof(Entity));
+        if ((*game_data)->entities[i] == NULL) {
+            printf("Failed to allocate entity %d.\n", i);
+        }
     }
     CheckpointQueue* checkpoint_stack;
     initCheckpointQueue(&checkpoint_stack);
     (*game_data)->checkpoint_queue = checkpoint_stack;
     (*game_data)->player = malloc(sizeof(Player));
+    if ((*game_data)->player == NULL) {
+        printf("Failed to allocate player.\n");
+    }
 }
 
 void destroyGameData(GameData** game_data) {

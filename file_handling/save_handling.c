@@ -281,9 +281,15 @@ void writeSave(const GameData* game_data) {
     }
     fprintf(file, "\"\"\n%d\n\"\"\n", game_data->num_checkpoints_hit);
     for (int i = 0; i < game_data->num_entities; i++) {
+        if (game_data->entities[i] == NULL) {
+            perror("entity is null");
+        }
         const Entity* entity = game_data->entities[i];
         fprintf(file, "%lf,%lf,%d,%d,%d,%d,%d,%d\n", entity->x, entity->y, entity->type_index, entity->health,
             entity->melee_cool_down, entity->projectile_cool_down, entity->ammo_count, entity->mag_count);
+    }
+    if (game_data->player == NULL) {
+        perror("player is null");
     }
     fprintf(file, "\"\"\n%lf,%lf,%lf,%d,%d,%d,%d,%d", game_data->player->x, game_data->player->y,
         game_data->player->rotation, game_data->player->health, game_data->player->primary_weapon_index,
