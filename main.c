@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <math.h>
 #include <stdlib.h>
+#include <time.h>
 #include <SDL3/SDL.h>
 #include "constants.h"
 #include "program_data.h"
@@ -24,7 +25,7 @@ static void printGameData(const GameData* game_data);
 
 int main() {
     SDL_SetHint(SDL_HINT_RENDER_DRIVER, "opengl");
-    srand((unsigned int)time(NULL));
+    srand((unsigned int) time(NULL));
     EventData event_data =
         {.mouse_down = false, .mouse_down_time = 0, .key_press_time = 0, .prev_mouse_x = 0, .current_keycode = 0};
     UserData* user_data;
