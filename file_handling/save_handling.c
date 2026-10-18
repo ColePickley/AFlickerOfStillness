@@ -12,7 +12,7 @@ bool loadSave(GameData* game_data) {
     }
     char file_path[21] = "user_data/saves/save";
     char file_type[5] = ".csv";
-    char full_path[512];
+    char full_path[512] = {'\0'};
     snprintf(full_path, sizeof(full_path), "%s%s%d%s", base_path, file_path, game_data->save_index, file_type);
     FILE* file = fopen(full_path, "r");
     if (file == NULL) {
@@ -69,7 +69,7 @@ int getLevelIndex(const uint8_t save_index) {
     }
     char file_path[21] = "user_data/saves/save";
     char file_type[5] = ".csv";
-    char full_path[512];
+    char full_path[512] = {'\0'};
     snprintf(full_path, sizeof(full_path), "%s%s%d%s", base_path, file_path, save_index, file_type);
     FILE* file = fopen(full_path, "r");
     if (file == NULL) {
@@ -96,7 +96,7 @@ void setSaveText(char* save_text, const size_t save_text_size, const uint8_t sav
     }
     char file_path[21] = "user_data/saves/save";
     char file_type[5] = ".csv";
-    char full_path[512];
+    char full_path[512] = {'\0'};
     snprintf(full_path, sizeof(full_path), "%s%s%d%s", base_path, file_path, save_index, file_type);
     FILE* file = fopen(full_path, "r");
     if (file == NULL) {
@@ -259,7 +259,7 @@ void writeSave(const GameData* game_data) {
     }
     char file_path[21] = "user_data/saves/save";
     char file_type[5] = ".csv";
-    char full_path[512];
+    char full_path[512] = {'\0'};
     snprintf(full_path, sizeof(full_path), "%s%s%d%s", base_path, file_path, game_data->save_index, file_type);
     FILE* file = fopen(full_path, "w");
     if (file == NULL) {
@@ -317,7 +317,7 @@ void deleteSave(const uint8_t save_index) {
     }
     char file_path[21] = "user_data/saves/save";
     char file_type[5] = ".csv";
-    char full_path[512];
+    char full_path[512] = {'\0'};
     snprintf(full_path, sizeof(full_path), "%s%s%d%s", base_path, file_path, save_index, file_type);
     if (remove(full_path) == 0) {
         printf("Save %d cleared successfully.\n", save_index);

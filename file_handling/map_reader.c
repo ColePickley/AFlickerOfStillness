@@ -10,7 +10,7 @@ void readMap(GameData* game_data) {
         SDL_Log("Could not determine base path: %s", SDL_GetError());
         return;
     }
-    char target_dir[512];
+    char target_dir[512] = {'\0'};
     SDL_snprintf(target_dir, sizeof(target_dir), "%sgame_data/levels/", base_path);
     int num_files = 0;
     char** files = SDL_GlobDirectory(target_dir, NULL, SDL_GLOB_CASEINSENSITIVE, &num_files);
@@ -18,16 +18,15 @@ void readMap(GameData* game_data) {
         SDL_Log("Failed to list directory: %s", SDL_GetError());
         return;
     }
-    char file_path[24] = "../game_data/levels/";
-    char full_path[100];
-    snprintf(full_path, sizeof(full_path), "%s%s", file_path, files[game_data->level_index]);
+    char full_path[512] = {'\0'};
+    snprintf(full_path, sizeof(full_path), "%s%s", target_dir, files[game_data->level_index]);
     FILE *file = fopen(full_path, "r");
     if (file == NULL) {
         perror("Error opening map file");
         return;
     }
 
-    char line[500];
+    char line[500] = {'\0'};
     int file_section = 0;
     int line_num = 0;
     while (fgets(line, sizeof(line), file) != NULL) {

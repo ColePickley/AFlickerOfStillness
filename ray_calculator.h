@@ -2,7 +2,7 @@
 #define AFLICKEROFSTILLNESS_RAY_CALCULATOR_H
 #include "program_data.h"
 
-void setPlayerRays(const Player* player, int rows, int cols, const int map_grid[MAX_MAP_SIZE][MAX_MAP_SIZE]);
+void setPlayerRays(Player* player, int rows, int cols, const int map_grid[MAX_MAP_SIZE][MAX_MAP_SIZE]);
 
 void setRay(double start_x, double start_y, double rotation, Ray* ray, int rows, int cols, const int map_grid[MAX_MAP_SIZE][MAX_MAP_SIZE]);
 

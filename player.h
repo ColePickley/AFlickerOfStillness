@@ -28,7 +28,7 @@ typedef struct {
     int ammo_count;
     int mag_count;
     int secondary_weapon_index;
-    Ray* rays[NUM_RAYS];
+    Ray rays[NUM_RAYS];
 }Player;
 
 void initPlayer(Player* player);

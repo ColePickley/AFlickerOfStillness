@@ -19,18 +19,20 @@ void initPlayer(Player* player) {
     player->y = 0;
     player->rotation = 0;
     for (int i = 0; i < NUM_RAYS; i++) {
-        player->rays[i] = malloc(sizeof(Ray));
-        player->rays[i]->x = 0.0;
-        player->rays[i]->y = 0.0;
-        player->rays[i]->degree = 0.25 * i - 30.0;
+        // player->rays[i] = malloc(sizeof(Ray));
+        player->rays[i].x = 0.0;
+        player->rays[i].y = 0.0;
+        player->rays[i].degree = 0.25 * i - 30.0;
     }
 }
 
 void destroyPlayer(Player* player) {
-    for (int i = 0; i < NUM_RAYS; i++) {
-        free(player->rays[i]);
-        player->rays[i] = NULL;
-    }
+    // for (int i = 0; i < NUM_RAYS; i++) {
+    //     if (player->rays[i] != NULL) {
+    //         free(player->rays[i]);
+    //         player->rays[i] = NULL;
+    //     }
+    // }
 }
 
 void movePlayer(Player* player, int (*map_grid)[MAX_MAP_SIZE][MAX_MAP_SIZE]) {

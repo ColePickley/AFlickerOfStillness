@@ -6,9 +6,9 @@
 #include "constants.h"
 #include "functions.h"
 
-void setPlayerRays(const Player* player, const int rows, const int cols, const int map_grid[MAX_MAP_SIZE][MAX_MAP_SIZE]) {
+void setPlayerRays(Player* player, const int rows, const int cols, const int map_grid[MAX_MAP_SIZE][MAX_MAP_SIZE]) {
     for (int i = 0; i < NUM_RAYS; i++) {
-        setRay(player->x, player->y, player->rotation, player->rays[i], rows, cols, map_grid);
+        setRay(player->x, player->y, player->rotation, &player->rays[i], rows, cols, map_grid);
     }
 }
 

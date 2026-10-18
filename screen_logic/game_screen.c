@@ -65,16 +65,16 @@ int paintGameScreen(const GameScreen* game_screen, SDL_Renderer* renderer, GameD
     // screen.blit(config.sky_textures[config.sky_texture_index], (skyX, 0))
     // screen.blit(config.sky_textures[config.sky_texture_index], (skyX - GAME_WIDTH, 0))
     for (int i = 0; i < NUM_RAYS; i++) {
-        const double ray_length = game_data->player->rays[i]->length;
-        const double ray_degree = toRadians(game_data->player->rays[i]->degree);
+        const double ray_length = game_data->player->rays[i].length;
+        const double ray_degree = toRadians(game_data->player->rays[i].degree);
         const double adjusted_ray_length = max(0.0001, ray_length * cos(ray_degree));
         const float line_length = GRID_SIZE * WINDOW_HEIGHT / adjusted_ray_length;
 
         const int y = (WINDOW_HEIGHT - (int) line_length) / 2;
         const int x = i * LINE_WIDTH;
-        const double angle = getRayAngle(game_data->player->rays[i]->degree, game_data->player->rotation);
+        const double angle = getRayAngle(game_data->player->rays[i].degree, game_data->player->rotation);
         const double pre_adjustment = (double) WINDOW_HEIGHT / 2.0 * (double) GRID_SIZE /
-            cos(toRadians(game_data->player->rays[i]->degree));
+            cos(toRadians(game_data->player->rays[i].degree));
         int vert_res = LINE_WIDTH;
         if (user_data->graphics_quality == GRAPHICS_QUALITY_MEDIUM) {
             vert_res = LINE_WIDTH / 2;
@@ -83,7 +83,7 @@ int paintGameScreen(const GameScreen* game_screen, SDL_Renderer* renderer, GameD
         }
         drawCeilingLine(game_screen, renderer, game_data, vert_res, i, y, angle, pre_adjustment);
         drawFloorLine(game_screen, renderer, game_data, vert_res, i, line_length, y, angle, pre_adjustment);
-        drawWallLine(game_screen, renderer, game_data, angle, *game_data->player->rays[i], line_length, x, y);
+        drawWallLine(game_screen, renderer, game_data, angle, game_data->player->rays[i], line_length, x, y);
     }
     drawEntities(game_screen, renderer, game_data);
     return -1;
@@ -181,7 +181,7 @@ static void drawEntities(const GameScreen* game_screen, SDL_Renderer* renderer, 
         const int start_ray = start_x / LINE_WIDTH;
         const int end_ray = (start_x + entity_size) / LINE_WIDTH;
         for (int ray_num = max(0, start_ray); ray_num < min(NUM_RAYS, end_ray); ray_num++) {
-            if (game_data->player->rays[ray_num]->length < entity->vect_mag) continue;
+            if (game_data->player->rays[ray_num].length < entity->vect_mag) continue;
             float texture_x = (float) round((ray_num - start_ray) / ((end_ray - start_ray) / 64.0));
             texture_x = min(63, max(0, texture_x));
             const int start_y = (int) ((WINDOW_HEIGHT - entity_height_adjustment) / 2.0);
