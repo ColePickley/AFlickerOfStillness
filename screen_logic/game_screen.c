@@ -1,6 +1,7 @@
 #include "game_screen.h"
 
 #include <math.h>
+#include <stdlib.h>
 #include <SDL3_image/SDL_image.h>
 
 #include "screen_logic.h"

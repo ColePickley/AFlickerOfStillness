@@ -1,5 +1,7 @@
 #include "screen_logic.h"
 
+#include <stdlib.h>
+
 void initScreenData(ScreenData** screen_data, SDL_Renderer* renderer, const UserData* user_data) {
     *screen_data = malloc(sizeof(ScreenData));
     (*screen_data)->current_screen = START_SCREEN;

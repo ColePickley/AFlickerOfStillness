@@ -1,4 +1,6 @@
 #include "button.h"
+
+#include <stdlib.h>
 #include "label.h"
 
 void initButton(Button** button, Label* label, const ButtonColorData color_data) {

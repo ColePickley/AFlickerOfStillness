@@ -1,7 +1,7 @@
 #include "settings_screen.h"
 
 #include <math.h>
-#include <stdio.h>
+#include <stdlib.h>
 #include <SDL3_image/SDL_image.h>
 #include "../constants.h"
 #include "../functions.h"

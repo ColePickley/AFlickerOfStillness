@@ -1,5 +1,6 @@
 #include "saves_screen.h"
 
+#include <stdlib.h>
 #include <SDL3_image/SDL_image.h>
 #include "../constants.h"
 #include "../file_handling/save_handling.h"

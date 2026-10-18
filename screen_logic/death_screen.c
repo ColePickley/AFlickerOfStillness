@@ -1,5 +1,7 @@
 #include "death_screen.h"
 
+#include <stdlib.h>
+
 #include "../functions.h"
 
 void initDeathScreen(DeathScreen** death_screen) {
