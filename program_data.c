@@ -1,5 +1,7 @@
 #include "program_data.h"
 
+#include <stdio.h>
+
 #include "constants.h"
 #include <stdlib.h>
 
@@ -29,9 +31,9 @@ void initGameData(GameData** game_data) {
             printf("Failed to allocate entity %d.\n", i);
         }
     }
-    CheckpointQueue* checkpoint_stack;
-    initCheckpointQueue(&checkpoint_stack);
-    (*game_data)->checkpoint_queue = checkpoint_stack;
+    CheckpointQueue* checkpoint_queue;
+    initCheckpointQueue(&checkpoint_queue);
+    (*game_data)->checkpoint_queue = checkpoint_queue;
     (*game_data)->player = malloc(sizeof(Player));
     if ((*game_data)->player == NULL) {
         printf("Failed to allocate player.\n");
