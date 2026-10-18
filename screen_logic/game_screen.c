@@ -431,7 +431,11 @@ static int setMapSurfaces(GameScreen* game_screen) {
     }
     // slice image
     for (int i = 0; i < num_files; i++) {
-        game_screen->map_textures[i] = malloc(sizeof(SlicedTexture));
+        char surface_index_str[3];
+        strncpy(surface_index_str, files[i], 2);
+        char* end_ptr;
+        const uint8_t surface_index = (int) strtol(surface_index_str, &end_ptr, 10);
+        game_screen->map_textures[surface_index] = malloc(sizeof(SlicedTexture));
         // load image
         char full_file_path[1024];
         SDL_snprintf(full_file_path, sizeof(full_file_path), "%s%s", target_dir, files[i]);
@@ -463,7 +467,7 @@ static int setMapSurfaces(GameScreen* game_screen) {
                 SDL_Log("Failed to convert surface: %s", SDL_GetError());
                 return -1;
             }
-            game_screen->map_textures[i]->surface[j] = optimized_surface;
+            game_screen->map_textures[surface_index]->surface[j] = optimized_surface;
             SDL_DestroySurface(slice_surface);
         }
         SDL_DestroySurface(surface);
@@ -490,7 +494,11 @@ static int setEntitySurfaces(GameScreen* game_screen) {
     }
     // slice image
     for (int i = 0; i < num_files; i++) {
-        game_screen->entity_textures[i] = malloc(sizeof(SlicedTexture));
+        char surface_index_str[3];
+        strncpy(surface_index_str, files[i], 2);
+        char* end_ptr;
+        const uint8_t surface_index = (int) strtol(surface_index_str, &end_ptr, 10);
+        game_screen->entity_textures[surface_index] = malloc(sizeof(SlicedTexture));
         // load image
         char full_file_path[1024];
         SDL_snprintf(full_file_path, sizeof(full_file_path), "%s%s", target_dir, files[i]);
@@ -522,7 +530,7 @@ static int setEntitySurfaces(GameScreen* game_screen) {
                 SDL_Log("Failed to convert surface: %s", SDL_GetError());
                 return -1;
             }
-            game_screen->entity_textures[i]->surface[j] = optimized_surface;
+            game_screen->entity_textures[surface_index]->surface[j] = optimized_surface;
             SDL_DestroySurface(slice_surface);
         }
         SDL_DestroySurface(surface);
