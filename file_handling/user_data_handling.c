@@ -24,7 +24,7 @@ void loadUserData(UserData* user_data) {
         int token_num = 0;
         while (token != NULL) {
             char* end_token;
-            const int token_as_int = strtol(token, &end_token, 10);
+            const int token_as_int = (int) strtol(token, &end_token, 10);
             switch (token_num) {
                 case 0:
                     user_data->frame_rate_cap = token_as_int;

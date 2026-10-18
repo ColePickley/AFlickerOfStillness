@@ -1,6 +1,7 @@
 #include "save_handling.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <time.h>
 
 bool loadSave(GameData* game_data) {
@@ -86,7 +87,7 @@ int getLevelIndex(const uint8_t save_index) {
     line[strcspn(line, "\r\n")] = '\0';
     const char* token = strtok(line, ",");
     char* end_token;
-    return strtol(token, &end_token, 10);
+    return (int) strtol(token, &end_token, 10);
     fclose(file);
 }
 
@@ -127,7 +128,7 @@ static void setSaveMapGrid(GameData* game_data, char line[500], const int line_n
     int token_num = 0;
     while (token != NULL) {
         char* end_token;
-        const int token_as_int = strtol(token, &end_token, 10);
+        const int token_as_int = (int) strtol(token, &end_token, 10);
         game_data->map_grid[line_num - 4][token_num] = token_as_int;
         token = strtok(NULL, ",");
         token_num += 1;
@@ -141,7 +142,7 @@ static void dequeHitCheckpoints(const GameData* game_data, char line[500], int* 
         return;
     }
     char* end_token;
-    const int token_as_int = strtol(token, &end_token, 10);
+    const int token_as_int = (int) strtol(token, &end_token, 10);
     for (int i = 0; i < token_as_int; i++) {
         dequeueCheckpoint(game_data->checkpoint_queue);
     }
@@ -164,7 +165,7 @@ static void setSaveEntities(GameData* game_data, char line[500], int* file_secti
     int mag_count = -1;
     while (token != NULL && token_num < 8) {
         char* end_token;
-        const int token_as_int = strtol(token, &end_token, 10);
+        const int token_as_int = (int) strtol(token, &end_token, 10);
         const double token_as_double = strtod(token, &end_token);
         switch (token_num) {
             case 0:
@@ -220,7 +221,7 @@ static void setSavePlayer(GameData* game_data, char line[500], int* file_section
     while (token != NULL && token_num < 8) {
         char* end_token;
         const double token_as_double = strtod(token, &end_token);
-        const int token_as_int = strtol(token, &end_token, 10);
+        const int token_as_int = (int) strtol(token, &end_token, 10);
         switch (token_num) {
             case 0:
                 game_data->player->x = token_as_double;

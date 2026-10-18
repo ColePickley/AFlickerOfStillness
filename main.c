@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <math.h>
-#include <time.h>
+#include <stdlib.h>
 #include <SDL3/SDL.h>
 #include "constants.h"
 #include "program_data.h"

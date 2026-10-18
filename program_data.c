@@ -1,7 +1,6 @@
 #include "program_data.h"
 
 #include "constants.h"
-#include "screen_logic/label.h"
 #include <stdlib.h>
 
 void initGameData(GameData** game_data) {

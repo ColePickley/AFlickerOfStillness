@@ -76,7 +76,7 @@ static void setMapGrid(GameData* game_data, char line[500], const int line_num, 
     int token_num = 0;
     while (token != NULL) {
         char* end_token;
-        const int token_as_int = strtol(token, &end_token, 10);
+        const int token_as_int = (int) strtol(token, &end_token, 10);
         if (do_num_cols_count) {
             game_data->num_map_cols += 1;
         }
@@ -96,7 +96,7 @@ static void setChunkGrid(GameData* game_data, char line[500], const int line_num
     const int adjusted_line_num = line_num - game_data->num_map_rows - *file_section;
     while (token != NULL) {
         char* end_token;
-        const int token_as_int = strtol(token, &end_token, 10);
+        const int token_as_int = (int) strtol(token, &end_token, 10);
         game_data->chunk_grid[adjusted_line_num][token_num] = token_as_int;
         token = strtok(NULL, ",");
         token_num += 1;
@@ -115,7 +115,7 @@ static void setTextureLocations(GameData* game_data, char line[500], int* file_s
     int side = -1;
     while (token != NULL) {
         char* end_token;
-        const int token_as_int = strtol(token, &end_token, 10);
+        const int token_as_int = (int) strtol(token, &end_token, 10);
         switch (token_num) {
             case 0:
                 map_row = token_as_int;
@@ -163,7 +163,7 @@ static void setCheckpoint(const GameData* game_data, char line[500], int* file_s
     SDL_Color color = {.r = 0, .g = 0, .b = 0, .a = 255};
     while (token != NULL && page_num < num_pages) {
         char* end_token;
-        const int token_as_int = strtol(token, &end_token, 10);
+        const int token_as_int = (int) strtol(token, &end_token, 10);
         switch (token_num) {
             case 0:
                 x = token_as_int;
@@ -291,7 +291,7 @@ static void setEntities(GameData* game_data, char line[500], int* file_section) 
     double y = -1;
     while (token != NULL && token_num < 4) {
         char* end_token;
-        const int token_as_int = strtol(token, &end_token, 10);
+        const int token_as_int = (int) strtol(token, &end_token, 10);
         const double token_as_double = strtod(token, &end_token);
         switch (token_num) {
             case 0:
@@ -322,7 +322,7 @@ static void setSkyTexture(GameData* game_data, char line[500], int* file_section
         return;
     }
     char* end_token;
-    const int token_as_int = strtol(token, &end_token, 10);
+    const int token_as_int = (int) strtol(token, &end_token, 10);
     game_data->sky_texture_index = token_as_int;
 }
 
