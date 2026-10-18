@@ -1,6 +1,7 @@
 #include "checkpoints.h"
 
 #include "constants.h"
+#include <stdlib.h>
 
 void initDialogueBox(DialogueBox* dialogue_box, const SDL_FRect rect, const char* text, const int alignment,
                      const SDL_Color color) {
