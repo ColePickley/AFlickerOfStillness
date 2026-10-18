@@ -31,9 +31,9 @@ typedef struct {
     Ray* rays[NUM_RAYS];
 }Player;
 
-void initPlayer(Player** player);
+void initPlayer(Player* player);
 
-void destroyPlayer(Player** player);
+void destroyPlayer(Player* player);
 
 void movePlayer(Player* player, int (*map_grid)[MAX_MAP_SIZE][MAX_MAP_SIZE]);
 

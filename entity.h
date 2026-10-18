@@ -12,9 +12,7 @@ typedef struct {
     bool in_range, in_scope;
 }Entity;
 
-void initDefaultEntity(Entity** entity, int type_index, double x, double y);
-
-void destroyEntity(Entity* entity);
+void initDefaultEntity(Entity* entity, int type_index, double x, double y);
 
 static void setEntityData(Entity* entity);
 

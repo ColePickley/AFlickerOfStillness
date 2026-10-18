@@ -4,23 +4,17 @@
 #include <stdlib.h>
 #include <string.h>
 
-void initDefaultEntity(Entity** entity, const int type_index, const double x, const double y) {
-    *entity = malloc(sizeof(Entity));
-    (*entity)->type_index = type_index;
-    (*entity)->x = x;
-    (*entity)->y = y;
-    (*entity)->vect_x = 0.0;
-    (*entity)->vect_y = 0.0;
-    (*entity)->vect_mag = 0.0;
-    (*entity)->in_range = false;
-    (*entity)->in_scope = false;
-    setEntityData(*entity);
-    (*entity)->ammo_count = 0;
-}
-
-void destroyEntity(Entity* entity) {
-    free(entity);
-    entity = NULL;
+void initDefaultEntity(Entity* entity, const int type_index, const double x, const double y) {
+    entity->type_index = type_index;
+    entity->x = x;
+    entity->y = y;
+    entity->vect_x = 0.0;
+    entity->vect_y = 0.0;
+    entity->vect_mag = 0.0;
+    entity->in_range = false;
+    entity->in_scope = false;
+    setEntityData(entity);
+    entity->ammo_count = 0;
 }
 
 static void setEntityData(Entity* entity) {
@@ -37,7 +31,7 @@ static void setEntityData(Entity* entity) {
         int token_num = 0;
         while (token != NULL) {
             char* end_token;
-            const int token_as_int = strtol(token, &end_token, 10);
+            const int token_as_int = (int) strtol(token, &end_token, 10);
             if (token_num == 0 && entity->type_index != token_as_int) {
                 break;
             }

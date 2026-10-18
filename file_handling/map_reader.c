@@ -309,9 +309,9 @@ static void setEntities(GameData* game_data, char line[500], int* file_section) 
         token = strtok(NULL, ",");
         token_num++;
     }
-    Entity* entity;
+    Entity entity;
     initDefaultEntity(&entity, type_index, x, y);
-    game_data->entities[game_data->num_entities] = entity;
+    *game_data->entities[game_data->num_entities] = entity;
     game_data->num_entities++;
 }
 
@@ -326,17 +326,17 @@ static void setSkyTexture(GameData* game_data, char line[500], int* file_section
     game_data->sky_texture_index = token_as_int;
 }
 
-static void setPlayer(GameData* game_data, char line[500], int* file_section) {
+static void setPlayer(const GameData* game_data, char line[500], int* file_section) {
     const char *token = strtok(line, ",");
     if (token[0] == '"') {
         *file_section += 1;
         return;
     }
-    initPlayer(&game_data->player);
     if (game_data->player == NULL) {
         perror("Failed to allocate memory for player");
         return;
     }
+    initPlayer(game_data->player);
     int token_num = 0;
     while (token != NULL && token_num < 3) {
         char* end_token;

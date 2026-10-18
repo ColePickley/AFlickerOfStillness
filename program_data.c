@@ -21,19 +21,23 @@ void initGameData(GameData** game_data) {
     }
     (*game_data)->num_entities = 0;
     for (int i = 0; i < MAX_NUM_ENTITIES; i++) {
-        (*game_data)->entities[i] = NULL;
+        (*game_data)->entities[i] = malloc(sizeof(Entity));
     }
     CheckpointQueue* checkpoint_stack;
     initCheckpointQueue(&checkpoint_stack);
     (*game_data)->checkpoint_queue = checkpoint_stack;
-    (*game_data)->player = NULL;
+    (*game_data)->player = malloc(sizeof(Player));
 }
 
 void destroyGameData(GameData** game_data) {
     if (*game_data == NULL) return;
     destroyCheckpointQueue(&(*game_data)->checkpoint_queue);
     if ((*game_data)->player != NULL) {
-        destroyPlayer(&(*game_data)->player);
+        destroyPlayer((*game_data)->player);
+        free((*game_data)->player);
+    }
+    for (int i = 0; i < MAX_NUM_ENTITIES; i++) {
+        free((*game_data)->entities[i]);
     }
     free(*game_data);
     *game_data = NULL;

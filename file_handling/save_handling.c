@@ -28,10 +28,7 @@ bool loadSave(GameData* game_data) {
         }
     }
     game_data->num_entities = 0;
-    for (int i = 0; i < MAX_NUM_ENTITIES; i++) {
-        destroyEntity(game_data->entities[i]);
-        game_data->entities[i] = NULL;
-    }
+    destroyPlayer(game_data->player);
 
     char line[500];
     int file_section = 0;
@@ -198,9 +195,9 @@ static void setSaveEntities(GameData* game_data, char line[500], int* file_secti
         token = strtok(NULL, ",");
         token_num++;
     }
-    Entity* entity;
+    Entity entity;
     initDefaultEntity(&entity, type_index, x, y);
-    game_data->entities[game_data->num_entities] = entity;
+    *game_data->entities[game_data->num_entities] = entity;
     game_data->entities[game_data->num_entities]->health = health;
     game_data->entities[game_data->num_entities]->melee_cool_down = melee_cool_down_state;
     game_data->entities[game_data->num_entities]->projectile_cool_down = projectile_cool_down_state;
@@ -209,14 +206,13 @@ static void setSaveEntities(GameData* game_data, char line[500], int* file_secti
     game_data->num_entities++;
 }
 
-static void setSavePlayer(GameData* game_data, char line[500], int* file_section) {
-    destroyPlayer(&game_data->player);
-    initPlayer(&game_data->player);
+static void setSavePlayer(const GameData* game_data, char line[500], int* file_section) {
     const char* token = strtok(line, ",");
     if (token[0] == '"') {
         *file_section += 1;
         return;
     }
+    initPlayer(game_data->player);
     int token_num = 0;
     while (token != NULL && token_num < 8) {
         char* end_token;

@@ -7,33 +7,30 @@
 #include "functions.h"
 #include "program_data.h"
 
-void initPlayer(Player** player) {
-    *player = malloc(sizeof(Player));
-    (*player)->w_pressed = false;
-    (*player)->a_pressed = false;
-    (*player)->s_pressed = false;
-    (*player)->d_pressed = false;
-    (*player)->last_update_time = -1;
-    (*player)->x_velocity = 0;
-    (*player)->y_velocity = 0;
-    (*player)->x = 0;
-    (*player)->y = 0;
-    (*player)->rotation = 0;
+void initPlayer(Player* player) {
+    player->w_pressed = false;
+    player->a_pressed = false;
+    player->s_pressed = false;
+    player->d_pressed = false;
+    player->last_update_time = -1;
+    player->x_velocity = 0;
+    player->y_velocity = 0;
+    player->x = 0;
+    player->y = 0;
+    player->rotation = 0;
     for (int i = 0; i < NUM_RAYS; i++) {
-        (*player)->rays[i] = malloc(sizeof(Ray));
-        (*player)->rays[i]->x = 0.0;
-        (*player)->rays[i]->y = 0.0;
-        (*player)->rays[i]->degree = 0.25 * i - 30.0;
+        player->rays[i] = malloc(sizeof(Ray));
+        player->rays[i]->x = 0.0;
+        player->rays[i]->y = 0.0;
+        player->rays[i]->degree = 0.25 * i - 30.0;
     }
 }
 
-void destroyPlayer(Player** player) {
+void destroyPlayer(Player* player) {
     for (int i = 0; i < NUM_RAYS; i++) {
-        free((*player)->rays[i]);
-        (*player)->rays[i] = NULL;
+        free(player->rays[i]);
+        player->rays[i] = NULL;
     }
-    free(*player);
-    *player = NULL;
 }
 
 void movePlayer(Player* player, int (*map_grid)[MAX_MAP_SIZE][MAX_MAP_SIZE]) {
