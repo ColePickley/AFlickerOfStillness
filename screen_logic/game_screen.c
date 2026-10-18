@@ -427,7 +427,7 @@ static int setMapSurfaces(GameScreen* game_screen) {
         strncpy(surface_index_str, files[i], 2);
         char* end_ptr;
         const uint8_t surface_index = (int) strtol(surface_index_str, &end_ptr, 10);
-        game_screen->map_textures[surface_index] = malloc(sizeof(SlicedTexture));
+        game_screen->map_textures[surface_index] = malloc(sizeof(SDL_Texture));
         // load image
         char full_file_path[1024];
         SDL_snprintf(full_file_path, sizeof(full_file_path), "%s%s", target_dir, files[i]);
@@ -481,7 +481,7 @@ static int setEntitySurfaces(GameScreen* game_screen) {
         strncpy(surface_index_str, files[i], 2);
         char* end_ptr;
         const uint8_t surface_index = (int) strtol(surface_index_str, &end_ptr, 10);
-        game_screen->entity_textures[surface_index] = malloc(sizeof(SlicedTexture));
+        game_screen->entity_textures[surface_index] = malloc(sizeof(SDL_Texture));
         // load image
         char full_file_path[1024];
         SDL_snprintf(full_file_path, sizeof(full_file_path), "%s%s", target_dir, files[i]);
