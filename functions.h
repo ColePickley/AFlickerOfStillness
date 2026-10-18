@@ -1,6 +1,7 @@
 #ifndef AFLICKEROFSTILLNESS_FUNCTIONS_H
 #define AFLICKEROFSTILLNESS_FUNCTIONS_H
 #include <stdint.h>
+#include "constants.h"
 
 #define max(a,b) ((a) > (b) ? (a) : (b))
 #define min(a,b) ((a) < (b) ? (a) : (b))
@@ -24,5 +25,14 @@ static uint32_t randInt(void) {
     return x_state = x;
 }
 
+static void normalizePath(char* path) {
+    if (path == NULL) return;
+
+    for (int i = 0; path[i] != '\0'; i++) {
+        if (path[i] == WRONG_SEP) {
+            path[i] = TARGET_SEP;
+        }
+    }
+}
 
 #endif //AFLICKEROFSTILLNESS_FUNCTIONS_H

@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <time.h>
 
+#include "../functions.h"
+
 bool loadSave(GameData* game_data) {
     const char* base_path = SDL_GetBasePath();
     if (!base_path) {
@@ -14,6 +16,7 @@ bool loadSave(GameData* game_data) {
     char file_type[5] = ".csv";
     char full_path[512] = {'\0'};
     snprintf(full_path, sizeof(full_path), "%s%s%d%s", base_path, file_path, game_data->save_index, file_type);
+    normalizePath(full_path);
     FILE* file = fopen(full_path, "r");
     if (file == NULL) {
         printf("Path: %s | ", full_path);
@@ -71,6 +74,7 @@ int getLevelIndex(const uint8_t save_index) {
     char file_type[5] = ".csv";
     char full_path[512] = {'\0'};
     snprintf(full_path, sizeof(full_path), "%s%s%d%s", base_path, file_path, save_index, file_type);
+    normalizePath(full_path);
     FILE* file = fopen(full_path, "r");
     if (file == NULL) {
         printf("Path: %s | ", full_path);
@@ -98,6 +102,7 @@ void setSaveText(char* save_text, const size_t save_text_size, const uint8_t sav
     char file_type[5] = ".csv";
     char full_path[512] = {'\0'};
     snprintf(full_path, sizeof(full_path), "%s%s%d%s", base_path, file_path, save_index, file_type);
+    normalizePath(full_path);
     FILE* file = fopen(full_path, "r");
     if (file == NULL) {
         const char* new_save_text = "EMPTY";
@@ -261,6 +266,7 @@ void writeSave(const GameData* game_data) {
     char file_type[5] = ".csv";
     char full_path[512] = {'\0'};
     snprintf(full_path, sizeof(full_path), "%s%s%d%s", base_path, file_path, game_data->save_index, file_type);
+    normalizePath(full_path);
     FILE* file = fopen(full_path, "w");
     if (file == NULL) {
         perror("Error writing to save file");
@@ -319,9 +325,8 @@ void deleteSave(const uint8_t save_index) {
     char file_type[5] = ".csv";
     char full_path[512] = {'\0'};
     snprintf(full_path, sizeof(full_path), "%s%s%d%s", base_path, file_path, save_index, file_type);
-    if (remove(full_path) == 0) {
-        printf("Save %d cleared successfully.\n", save_index);
-    } else {
+    normalizePath(full_path);
+    if (remove(full_path) != 0) {
         printf("Path: %s | ", full_path);
         printf("Error clearing save %d.\n", save_index);
     }

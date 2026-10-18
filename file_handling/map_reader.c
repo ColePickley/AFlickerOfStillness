@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "../program_data.h"
+#include "../functions.h"
 
 void readMap(GameData* game_data) {
     const char* base_path = SDL_GetBasePath();
@@ -12,6 +13,7 @@ void readMap(GameData* game_data) {
     }
     char target_dir[512] = {'\0'};
     SDL_snprintf(target_dir, sizeof(target_dir), "%sgame_data/levels/", base_path);
+    normalizePath(target_dir);
     int num_files = 0;
     char** files = SDL_GlobDirectory(target_dir, NULL, SDL_GLOB_CASEINSENSITIVE, &num_files);
     if (files == NULL) {

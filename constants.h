@@ -5,6 +5,14 @@ enum {
     START_SCREEN, SAVES_SCREEN, GAME_SCREEN, PAUSE_SCREEN, SETTINGS_SCREEN, DEATH_SCREEN
 };
 
+#if defined(_WIN32) || defined(_WIN64)
+    #define TARGET_SEP '\\'
+    #define WRONG_SEP '/'
+#else
+    #define TARGET_SEP '/'
+    #define WRONG_SEP '\\'
+#endif
+
 #define EPSILON 1e-9
 #define PI 3.14159265358979323846
 #define WINDOW_WIDTH 1446
