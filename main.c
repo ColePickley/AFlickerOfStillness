@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <time.h>
 #include <SDL3/SDL.h>
+
+#include "astar.h"
 #include "constants.h"
 #include "program_data.h"
 #include "screen_logic/screen_logic.h"
@@ -90,6 +92,12 @@ int main() {
         int screen_change = -1;
         if (screen_data->current_screen == GAME_SCREEN) {
             screen_change = updateGame(game_data);
+            for (int i = 0; i < game_data->num_entities; i++) {
+                if (getEntityType(game_data->entities[i]) == ENTITY_TYPE_ENEMY) {
+                    setEntityDirection(game_data->entities[i], game_data);
+                    moveEntity(game_data->entities[i], &game_data->map_grid, game_data->entities, game_data->num_entities);
+                }
+            }
         }
         if (screen_change != -1) {
             changeScreen(screen_data, screen_change, renderer, user_data);
@@ -256,7 +264,7 @@ static void printGameData(const GameData* game_data) {
     printf("\t Entities:\n");
     for (int i = 0; i < game_data->num_entities; i++) {
         printf("\t\t Entity %d:\n", i);
-        printf("\t\t\t Type Index: %d\n", game_data->entities[i]->type_index);
+        printf("\t\t\t Type Index: %d\n", game_data->entities[i]->subtype_id);
         printf("\t\t\t X: %lf\n", game_data->entities[i]->x);
         printf("\t\t\t Y: %lf\n", game_data->entities[i]->y);
     }

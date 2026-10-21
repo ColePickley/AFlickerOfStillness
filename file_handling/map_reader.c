@@ -287,7 +287,7 @@ static void setEntities(GameData* game_data, char line[500], int* file_section) 
         return;
     }
     int token_num = 0;
-    int type_index = -1;
+    int texture_id = -1;
     double x = -1;
     double y = -1;
     while (token != NULL && token_num < 4) {
@@ -302,7 +302,7 @@ static void setEntities(GameData* game_data, char line[500], int* file_section) 
                 y = token_as_double * GRID_SIZE + GRID_SIZE / 2.0;
                 break;
             case 2:
-                type_index = token_as_int;
+                texture_id = token_as_int;
                 break;
             default:
                 break;
@@ -310,9 +310,9 @@ static void setEntities(GameData* game_data, char line[500], int* file_section) 
         token = strtok(NULL, ",");
         token_num++;
     }
-    Entity entity;
-    initDefaultEntity(&entity, type_index, x, y);
-    *game_data->entities[game_data->num_entities] = entity;
+    Entity* entity;
+    initDefaultEntity(&entity, texture_id, x, y);
+    game_data->entities[game_data->num_entities] = entity;
     game_data->num_entities++;
 }
 

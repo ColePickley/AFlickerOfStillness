@@ -1,6 +1,7 @@
 #ifndef AFLICKEROFSTILLNESS_FUNCTIONS_H
 #define AFLICKEROFSTILLNESS_FUNCTIONS_H
 #include <stdint.h>
+#include <SDL3/SDL.h>
 #include "constants.h"
 
 #define max(a,b) ((a) > (b) ? (a) : (b))
@@ -33,6 +34,44 @@ static void normalizePath(char* path) {
             path[i] = TARGET_SEP;
         }
     }
+}
+
+static bool isXCollision(const SDL_FPoint pos, int (*map_grid)[MAX_MAP_SIZE][MAX_MAP_SIZE], const double delta_x,
+        const int padding) {
+    double adjusted_delta_x = delta_x;
+    if (delta_x < 0) {
+        adjusted_delta_x -= padding;
+    } else if (delta_x > 0) {
+        adjusted_delta_x += padding;
+    }
+    const int grid_x = (int) ((pos.x + adjusted_delta_x) / 64);
+    const int grid_y = (int) (pos.y / 64);
+    if ((*map_grid)[grid_y][grid_x] == 1) {
+        return true;
+    }
+    if ((*map_grid)[grid_y][grid_x] == 2) {
+        (*map_grid)[grid_y][grid_x] = -2;
+    }
+    return false;
+}
+
+static bool isYCollision(const SDL_FPoint pos, int (*map_grid)[MAX_MAP_SIZE][MAX_MAP_SIZE], const double delta_y,
+        const int padding) {
+    double adjusted_delta_y = delta_y;
+    if (delta_y < 0) {
+        adjusted_delta_y -= padding;
+    } else if (delta_y > 0) {
+        adjusted_delta_y += padding;
+    }
+    const int grid_x = (int) (pos.x / 64);
+    const int grid_y = (int) ((pos.y + adjusted_delta_y) / 64);
+    if ((*map_grid)[grid_y][grid_x] == 1) {
+        return true;
+    }
+    if ((*map_grid)[grid_y][grid_x] == 2) {
+        (*map_grid)[grid_y][grid_x] = -2;
+    }
+    return false;
 }
 
 #endif //AFLICKEROFSTILLNESS_FUNCTIONS_H

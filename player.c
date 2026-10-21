@@ -44,10 +44,10 @@ void movePlayer(Player* player, int (*map_grid)[MAX_MAP_SIZE][MAX_MAP_SIZE]) {
     const double speed = (double) time_elapsed / 15.0;
     const double delta_x = player->x_velocity * speed;
     const double delta_y = player->y_velocity * speed;
-    if (!isXCollision(player, map_grid, delta_x)) {
+    if (!isXCollision((SDL_FPoint) {.x = (float) player->x, .y = (float) player->y}, map_grid, delta_x, 5)) {
         player->x += delta_x;
     }
-    if (!isYCollision(player, map_grid, delta_y)) {
+    if (!isYCollision((SDL_FPoint) {.x = (float) player->x, .y = (float) player->y}, map_grid, delta_y, 5)) {
         player->y += delta_y;
     }
     player->last_update_time = SDL_GetTicks();
@@ -96,40 +96,4 @@ static void setPlayerVelocity(Player* player) {
         player->x_velocity = sin(toRadians(player->rotation + 90));
         player->y_velocity = cos(toRadians(player->rotation + 90));
     }
-}
-
-static bool isXCollision(const Player* player, int (*map_grid)[MAX_MAP_SIZE][MAX_MAP_SIZE], const double delta_x) {
-    double adjusted_delta_x = delta_x;
-    if (delta_x < 0) {
-        adjusted_delta_x -= 5;
-    } else if (delta_x > 0) {
-        adjusted_delta_x += 5;
-    }
-    const int grid_x = (int) ((player->x + adjusted_delta_x) / 64);
-    const int grid_y = (int) (player->y / 64);
-    if ((*map_grid)[grid_y][grid_x] == 1) {
-        return true;
-    }
-    if ((*map_grid)[grid_y][grid_x] == 2) {
-        (*map_grid)[grid_y][grid_x] = -2;
-    }
-    return false;
-}
-
-static bool isYCollision(const Player* player, int (*map_grid)[MAX_MAP_SIZE][MAX_MAP_SIZE], const double delta_y) {
-    double adjusted_delta_y = delta_y;
-    if (delta_y < 0) {
-        adjusted_delta_y -= 5;
-    } else if (delta_y > 0) {
-        adjusted_delta_y += 5;
-    }
-    const int grid_x = (int) (player->x / 64);
-    const int grid_y = (int) ((player->y + adjusted_delta_y) / 64);
-    if ((*map_grid)[grid_y][grid_x] == 1) {
-        return true;
-    }
-    if ((*map_grid)[grid_y][grid_x] == 2) {
-        (*map_grid)[grid_y][grid_x] = -2;
-    }
-    return false;
 }

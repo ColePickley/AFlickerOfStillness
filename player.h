@@ -41,8 +41,4 @@ void rotatePlayer(Player* player, int sensitivity, double mouse_delta_x);
 
 static void setPlayerVelocity(Player* player);
 
-static bool isXCollision(const Player* player, int (*map_grid)[MAX_MAP_SIZE][MAX_MAP_SIZE], double delta_x);
-
-static bool isYCollision(const Player* player, int (*map_grid)[MAX_MAP_SIZE][MAX_MAP_SIZE], double delta_y);
-
 #endif //AFLICKEROFSTILLNESS_PLAYER_H

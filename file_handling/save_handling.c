@@ -30,8 +30,11 @@ bool loadSave(GameData* game_data) {
             game_data->map_grid[i][j] = 0;
         }
     }
-    game_data->num_entities = 0;
     destroyPlayer(game_data->player);
+    for (int i = 0; i < game_data->num_entities; i++) {
+        destroyEntity(&game_data->entities[i]);
+    }
+    game_data->num_entities = 0;
 
     char line[500];
     int file_section = 0;
@@ -159,7 +162,7 @@ static void setSaveEntities(GameData* game_data, char line[500], int* file_secti
     int token_num = 0;
     double x = -1;
     double y = -1;
-    int type_index = -1;
+    int texture_id = -1;
     int health = -1;
     int melee_cool_down_state = -1;
     int projectile_cool_down_state = -1;
@@ -177,7 +180,7 @@ static void setSaveEntities(GameData* game_data, char line[500], int* file_secti
                 y = token_as_double;
                 break;
             case 2:
-                type_index = token_as_int;
+                texture_id = token_as_int;
                 break;
             case 3:
                 health = token_as_int;
@@ -200,9 +203,9 @@ static void setSaveEntities(GameData* game_data, char line[500], int* file_secti
         token = strtok(NULL, ",");
         token_num++;
     }
-    Entity entity;
-    initDefaultEntity(&entity, type_index, x, y);
-    *game_data->entities[game_data->num_entities] = entity;
+    Entity* entity;
+    initDefaultEntity(&entity, texture_id, x, y);
+    game_data->entities[game_data->num_entities] = entity;
     game_data->entities[game_data->num_entities]->health = health;
     game_data->entities[game_data->num_entities]->melee_cool_down = melee_cool_down_state;
     game_data->entities[game_data->num_entities]->projectile_cool_down = projectile_cool_down_state;
@@ -291,7 +294,7 @@ void writeSave(const GameData* game_data) {
             perror("entity is null");
         }
         const Entity* entity = game_data->entities[i];
-        fprintf(file, "%lf,%lf,%d,%d,%d,%d,%d,%d\n", entity->x, entity->y, entity->type_index, entity->health,
+        fprintf(file, "%lf,%lf,%d,%d,%d,%d,%d,%d\n", entity->x, entity->y, entity->texture_id, entity->health,
             entity->melee_cool_down, entity->projectile_cool_down, entity->ammo_count, entity->mag_count);
     }
     if (game_data->player == NULL) {

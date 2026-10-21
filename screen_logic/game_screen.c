@@ -188,7 +188,7 @@ static void drawEntities(const GameScreen* game_screen, SDL_Renderer* renderer, 
             if (WINDOW_WIDTH / 2 - 10 <= ray_num * LINE_WIDTH && ray_num * LINE_WIDTH <= WINDOW_WIDTH / 2 + 10) {
                 entity->in_scope = true;
             }
-            SDL_Texture* texture = game_screen->entity_textures[entity->type_index];
+            SDL_Texture* texture = game_screen->entity_textures[entity->texture_id];
             SDL_FRect src_rect = {
                 .x = texture_x,
                 .y = 0,
@@ -477,7 +477,7 @@ static int setEntitySurfaces(GameScreen* game_screen) {
     }
     // slice image
     for (int i = 0; i < num_files; i++) {
-        char surface_index_str[3];
+        char surface_index_str[2];
         strncpy(surface_index_str, files[i], 2);
         char* end_ptr;
         const uint8_t surface_index = (int) strtol(surface_index_str, &end_ptr, 10);

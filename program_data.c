@@ -1,8 +1,6 @@
 #include "program_data.h"
 
 #include <stdio.h>
-
-#include "constants.h"
 #include <stdlib.h>
 
 void initGameData(GameData** game_data) {
@@ -26,10 +24,7 @@ void initGameData(GameData** game_data) {
     }
     (*game_data)->num_entities = 0;
     for (int i = 0; i < MAX_NUM_ENTITIES; i++) {
-        (*game_data)->entities[i] = malloc(sizeof(Entity));
-        if ((*game_data)->entities[i] == NULL) {
-            printf("Failed to allocate entity %d.\n", i);
-        }
+        (*game_data)->entities[i] = NULL;
     }
     CheckpointQueue* checkpoint_queue;
     initCheckpointQueue(&checkpoint_queue);

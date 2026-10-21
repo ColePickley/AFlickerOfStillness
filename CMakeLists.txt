@@ -56,7 +56,9 @@ file(GLOB_RECURSE SOURCE_FILES_FILE_HANDLING
         "${CMAKE_CURRENT_SOURCE_DIR}/file_handling/*.h"
 )
 
-set(SOURCE_FILES ${SOURCE_FILES_ROOT} ${SOURCE_FILES_SCREEN_LOGIC} ${SOURCE_FILES_FILE_HANDLING})
+set(SOURCE_FILES ${SOURCE_FILES_ROOT} ${SOURCE_FILES_SCREEN_LOGIC} ${SOURCE_FILES_FILE_HANDLING}
+        AStar.c
+        astar.h)
 
 # -----------------------------------------------------------------------------
 # 4. Define Project Executable
