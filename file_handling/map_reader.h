@@ -27,7 +27,7 @@ static SDL_FRect getDialogueBoxRect(DialogueBox* box, DialogueBox* page_dialogue
 
 static void setEntities(GameData* game_data, char line[500], int* file_section);
 
-static void setSkyTexture(GameData* game_data, char line[500], int* file_section);
+static void setSkyTextureIndex(GameData* game_data, char line[500], int* file_section);
 
 static void setPlayer(const GameData* game_data, char line[500], int* file_section);
 

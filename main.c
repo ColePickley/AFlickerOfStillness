@@ -100,7 +100,7 @@ int main() {
             }
         }
         if (screen_change != -1) {
-            changeScreen(screen_data, screen_change, renderer, user_data);
+            changeScreen(screen_data, screen_change, renderer, game_data, user_data);
         }
         // event handling
         handleEvents(screen_data, renderer, &game_data, &program_running, &event_data, user_data, window);
@@ -118,7 +118,7 @@ int main() {
         if (frame_count >= 15) {
             end_time = SDL_GetPerformanceCounter();
             time_elapsed = (double) (end_time - start_time) / (double) SDL_GetPerformanceFrequency();
-            // printf("\rFPS: %.2f | ", 1.0 / time_elapsed);
+            printf("\rFPS: %.2f | ", 1.0 / time_elapsed);
             // printf("Start Screen: %s | ", screen_data->start_screen != NULL ? "Loaded" : "Unloaded");
             // printf("Saves Screen: %s | ", screen_data->saves_screen != NULL ? "Loaded" : "Unloaded");
             // printf("Game Screen: %s | ", screen_data->game_screen != NULL ? "Loaded" : "Unloaded");
@@ -193,7 +193,7 @@ static void handleEvents(ScreenData* screen_data, SDL_Renderer* renderer, GameDa
                 const double time_elapsed = (double) (key_up_time - event_data->mouse_down_time) /
                     (double) SDL_GetPerformanceFrequency();
                 if (time_elapsed < 100) {
-                    keyClicked(screen_data, event_data->current_keycode, renderer, user_data);
+                    keyClicked(screen_data, event_data->current_keycode, renderer, *game_data, user_data);
                 }
             }
         }

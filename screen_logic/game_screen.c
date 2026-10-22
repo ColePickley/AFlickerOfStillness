@@ -1,6 +1,7 @@
 #include "game_screen.h"
 
 #include <math.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <SDL3_image/SDL_image.h>
 
@@ -10,10 +11,11 @@
 #include "../program_data.h"
 #include "../ray_calculator.h"
 
-void initGameScreen(GameScreen** game_screen) {
+void initGameScreen(GameScreen** game_screen, const GameData* game_data) {
     *game_screen = malloc(sizeof(GameScreen));
     (*game_screen)->num_map_textures = setMapSurfaces(*game_screen);
     (*game_screen)->num_entity_textures = setEntitySurfaces(*game_screen);
+    setSkySurface(*game_screen, game_data->sky_texture_index);
 }
 
 void setGameScreenTextures(GameScreen* game_screen, SDL_Renderer* renderer) {
@@ -37,6 +39,14 @@ void setGameScreenTextures(GameScreen* game_screen, SDL_Renderer* renderer) {
         SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND);
         game_screen->entity_textures[i] = texture;
     }
+    SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, game_screen->sky_surface);
+    if (!texture) {
+        SDL_Log("Failed to create texture: %s", SDL_GetError());
+        return;
+    }
+    SDL_SetTextureScaleMode(texture, SDL_SCALEMODE_NEAREST);
+    SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND);
+    game_screen->sky_texture = texture;
 }
 
 void destroyGameScreen(GameScreen** game_screen) {
@@ -59,11 +69,8 @@ void destroyGameScreen(GameScreen** game_screen) {
 
 int paintGameScreen(const GameScreen* game_screen, SDL_Renderer* renderer, GameData* game_data,
         const UserData* user_data) {
+    drawSky(game_screen, renderer, game_data);
     setPlayerRays(game_data->player, game_data->num_map_rows, game_data->num_map_cols, game_data->map_grid);
-    // int skyX = (int) ((double) WINDOW_WIDTH / 360.0 * (360.0 - player->rotation) * 3.0);
-    // skyX -= skyX / WINDOW_WIDTH * WINDOW_WIDTH;
-    // screen.blit(config.sky_textures[config.sky_texture_index], (skyX, 0))
-    // screen.blit(config.sky_textures[config.sky_texture_index], (skyX - GAME_WIDTH, 0))
     for (int i = 0; i < NUM_RAYS; i++) {
         const double ray_length = game_data->player->rays[i].length;
         const double ray_degree = toRadians(game_data->player->rays[i].degree);
@@ -89,9 +96,26 @@ int paintGameScreen(const GameScreen* game_screen, SDL_Renderer* renderer, GameD
     return -1;
 }
 
+static void drawSky(const GameScreen* game_screen, SDL_Renderer* renderer, const GameData* game_data) {
+    const SDL_FRect dst_rect1 = {
+        .x = (float) game_data->player->rotation * -24.0f,
+        .y = 0.0f,
+        .w = WINDOW_WIDTH * LINE_WIDTH,
+        .h = WINDOW_HEIGHT / 2.0f
+    };
+    SDL_RenderTexture(renderer, game_screen->sky_texture, NULL, &dst_rect1);
+    const SDL_FRect dst_rect2 = {
+        .x = (float) game_data->player->rotation * -24.0f + WINDOW_WIDTH * LINE_WIDTH,
+        .y = 0.0f,
+        .w = WINDOW_WIDTH * LINE_WIDTH,
+        .h = WINDOW_HEIGHT / 2.0f
+    };
+    SDL_RenderTexture(renderer, game_screen->sky_texture, NULL, &dst_rect2);
+}
+
 static void drawCeilingLine(const GameScreen* game_screen, SDL_Renderer* renderer, const GameData* game_data,
         const int vert_res, const int ray_num, const int start_y, const double angle, const double pre_adjustment) {
-    for (int y = start_y; y >= 0; y -= vert_res) {
+    for (int y = start_y; y >= -LINE_WIDTH; y -= vert_res) {
         const double dy = (double) WINDOW_HEIGHT / 2.0 - (double) y;
         const double post_adjustment = pre_adjustment / dy;
         int ceiling_x = getFloorX(game_data, angle, post_adjustment);
@@ -421,7 +445,7 @@ static int setMapSurfaces(GameScreen* game_screen) {
         SDL_Log("Failed to list directory: %s", SDL_GetError());
         return -1;
     }
-    // slice image
+    // store images
     for (int i = 0; i < num_files; i++) {
         char surface_index_str[3];
         strncpy(surface_index_str, files[i], 2);
@@ -475,7 +499,7 @@ static int setEntitySurfaces(GameScreen* game_screen) {
         SDL_Log("Failed to list directory: %s", SDL_GetError());
         return -1;
     }
-    // slice image
+    // store images
     for (int i = 0; i < num_files; i++) {
         char surface_index_str[2];
         strncpy(surface_index_str, files[i], 2);
@@ -512,4 +536,55 @@ static int setEntitySurfaces(GameScreen* game_screen) {
     }
     SDL_free(files);
     return num_files;
+}
+
+static void setSkySurface(GameScreen* game_screen, const int sky_texture_index) {
+    // get directory
+    const char* base_path = SDL_GetBasePath();
+    if (!base_path) {
+        SDL_Log("Could not determine base path: %s", SDL_GetError());
+        return;
+    }
+    char target_dir[512];
+    SDL_snprintf(target_dir, sizeof(target_dir), "%sgame_data/textures/skies/", base_path);
+    int num_files = 0;
+    char** files = SDL_GlobDirectory(target_dir, NULL, SDL_GLOB_CASEINSENSITIVE, &num_files);
+    if (files == NULL) {
+        SDL_Log("Failed to list directory: %s", SDL_GetError());
+        return;
+    }
+    // store image
+    char surface_index_str[2];
+    strncpy(surface_index_str, files[sky_texture_index], 2);
+    char* end_ptr;
+    const uint8_t surface_index = (int) strtol(surface_index_str, &end_ptr, 10);
+    game_screen->sky_texture = malloc(sizeof(SDL_Texture));
+    // load image
+    char full_file_path[1024];
+    SDL_snprintf(full_file_path, sizeof(full_file_path), "%s%s", target_dir, files[sky_texture_index]);
+    SDL_Surface* surface = IMG_Load(full_file_path);
+    if (!surface) {
+        SDL_Log("Failed to load image %s: %s", files[sky_texture_index], SDL_GetError());
+        SDL_free(files);
+        return;
+    }
+    // resize image
+    SDL_Surface* resized_surface = SDL_ScaleSurface(surface, WINDOW_WIDTH * LINE_WIDTH, WINDOW_HEIGHT / 2,
+        SDL_SCALEMODE_LINEAR);
+    if (!resized_surface) {
+        SDL_Log("Failed to scale surface: %s", SDL_GetError());
+        SDL_free(files);
+        return;
+    }
+    SDL_Surface* formatted_surface = SDL_ConvertSurface(resized_surface, SDL_PIXELFORMAT_RGBA8888);
+    if (!formatted_surface) {
+        SDL_Log("Failed to format surface: %s", SDL_GetError());
+        SDL_free(files);
+        return;
+    }
+    // storing and destroying
+    game_screen->sky_surface = formatted_surface;
+    SDL_DestroySurface(surface);
+    SDL_DestroySurface(resized_surface);
+    SDL_free(files);
 }

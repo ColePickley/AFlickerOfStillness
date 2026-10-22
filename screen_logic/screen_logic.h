@@ -11,6 +11,7 @@ typedef struct ScreenData ScreenData;
 
 typedef struct {
     ScreenData* screen_data;
+    const GameData* game_data;
     const UserData* user_data;
     SDL_Renderer* renderer;
     int screen_id;
@@ -39,7 +40,8 @@ void loadScreenTextures(ScreenData* screen_data, SDL_Renderer* renderer, int scr
 
 static int asyncScreenChange(void* data);
 
-void changeScreen(ScreenData* screen_data, int screen_id, SDL_Renderer* renderer, const UserData* user_data);
+void changeScreen(ScreenData* screen_data, int screen_id, SDL_Renderer* renderer, const GameData* game_data,
+    const UserData* user_data);
 
 void paintScreen(int screen_id, ScreenData* screen_data, SDL_Renderer* renderer, GameData* game_data,
     const UserData* user_data);
@@ -65,6 +67,7 @@ void keyPressed(const ScreenData* screen_data, SDL_Keycode keycode, const GameDa
 
 void keyReleased(const ScreenData* screen_data, SDL_Keycode keycode, const GameData* game_data);
 
-void keyClicked(ScreenData* screen_data, SDL_Keycode keycode, SDL_Renderer* renderer, const UserData* user_data);
+void keyClicked(ScreenData* screen_data, SDL_Keycode keycode, SDL_Renderer* renderer, const GameData* game_data,
+    const UserData* user_data);
 
 #endif //AFLICKEROFSTILLNESS_SCREEN_LOGIC_H

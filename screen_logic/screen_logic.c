@@ -45,7 +45,7 @@ static int asyncScreenChange(void* data) {
     ThreadLoadArgs* args = data;
     if (args->screen_data->prev_screen == START_SCREEN) {
         if (args->screen_id == SAVES_SCREEN) {
-            initGameScreen(&args->screen_data->game_screen);
+            initGameScreen(&args->screen_data->game_screen, args->game_data);
         }
     } else if (args->screen_data->prev_screen == SAVES_SCREEN) {
         if (args->screen_id == START_SCREEN) {
@@ -74,7 +74,8 @@ static int asyncScreenChange(void* data) {
     return 0;
 }
 
-void changeScreen(ScreenData* screen_data, const int screen_id, SDL_Renderer* renderer, const UserData* user_data) {
+void changeScreen(ScreenData* screen_data, const int screen_id, SDL_Renderer* renderer, const GameData* game_data,
+        const UserData* user_data) {
     if (screen_id == -1) return;
     if (screen_data->is_loading_in_background) return;
 
@@ -84,6 +85,7 @@ void changeScreen(ScreenData* screen_data, const int screen_id, SDL_Renderer* re
     screen_data->is_loading_in_background = true;
     ThreadLoadArgs* args = malloc(sizeof(ThreadLoadArgs));
     args->screen_data = screen_data;
+    args->game_data = game_data;
     args->user_data = user_data;
     args->renderer = renderer;
     args->screen_id = screen_id;
@@ -210,7 +212,7 @@ void paintScreen(const int screen_id, ScreenData* screen_data, SDL_Renderer* ren
         default:
             break;
     }
-    changeScreen(screen_data, screen_change, renderer, user_data);
+    changeScreen(screen_data, screen_change, renderer, game_data, user_data);
 }
 
 /*
@@ -267,7 +269,7 @@ void mouseReleased(ScreenData* screen_data, const SDL_FPoint pt, SDL_Renderer* r
         default:
             break;
     }
-    changeScreen(screen_data, screen_change, renderer, user_data);
+    changeScreen(screen_data, screen_change, renderer, *game_data, user_data);
 }
 
 void mouseClicked(const ScreenData* screen_data, const SDL_FPoint pt) {
@@ -338,10 +340,11 @@ void keyReleased(const ScreenData* screen_data, const SDL_Keycode keycode, const
     }
 }
 
-void keyClicked(ScreenData* screen_data, const SDL_Keycode keycode, SDL_Renderer* renderer, const UserData* user_data) {
+void keyClicked(ScreenData* screen_data, const SDL_Keycode keycode, SDL_Renderer* renderer, const GameData* game_data,
+        const UserData* user_data) {
     int screen_change = -1;
     if (screen_data->current_screen == GAME_SCREEN) {
         screen_change = gameScreenKeyClicked(keycode);
     }
-    changeScreen(screen_data, screen_change, renderer, user_data);
+    changeScreen(screen_data, screen_change, renderer, game_data, user_data);
 }

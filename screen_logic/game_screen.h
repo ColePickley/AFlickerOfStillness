@@ -13,9 +13,11 @@ typedef struct {
     SDL_Texture* map_textures[MAX_NUM_TEXTURES];
     SDL_Surface* entity_surfaces[MAX_NUM_TEXTURES];
     SDL_Texture* entity_textures[MAX_NUM_TEXTURES];
+    SDL_Surface* sky_surface;
+    SDL_Texture* sky_texture;
 }GameScreen;
 
-void initGameScreen(GameScreen** game_screen);
+void initGameScreen(GameScreen** game_screen, const GameData* game_data);
 
 void setGameScreenTextures(GameScreen* game_screen, SDL_Renderer* renderer);
 
@@ -27,6 +29,8 @@ void destroyGameScreen(GameScreen** game_screen);
 
 int paintGameScreen(const GameScreen* game_screen, SDL_Renderer* renderer, GameData* game_data,
     const UserData* user_data);
+
+static void drawSky(const GameScreen* game_screen, SDL_Renderer* renderer, const GameData* game_data);
 
 static void drawCeilingLine(const GameScreen* game_screen, SDL_Renderer* renderer, const GameData* game_data,
     int vert_res, int ray_num, int start_y, double angle, double pre_adjustment);
@@ -86,8 +90,14 @@ static int getFloorY(const GameData* game_data, double angle, double post_adjust
 
 static double getRayAngle(double ray_degree, double player_rotation);
 
+/*
+ * Surface Loading
+ */
+
 static int setMapSurfaces(GameScreen* game_screen);
 
 static int setEntitySurfaces(GameScreen* game_screen);
+
+static void setSkySurface(GameScreen* game_screen, int sky_texture_index);
 
 #endif //AFLICKEROFSTILLNESS_GAME_SCREEN_H

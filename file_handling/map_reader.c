@@ -50,7 +50,7 @@ void readMap(GameData* game_data) {
                 setEntities(game_data, line, &file_section);
                 break;
             case FILE_SECTION_SKY_TEXTURE:
-                setSkyTexture(game_data, line, &file_section);
+                setSkyTextureIndex(game_data, line, &file_section);
                 break;
             case FILE_SECTION_PLAYER:
                 setPlayer(game_data, line, &file_section);
@@ -316,7 +316,7 @@ static void setEntities(GameData* game_data, char line[500], int* file_section) 
     game_data->num_entities++;
 }
 
-static void setSkyTexture(GameData* game_data, char line[500], int* file_section) {
+static void setSkyTextureIndex(GameData* game_data, char line[500], int* file_section) {
     const char *token = strtok(line, ",");
     if (token[0] == '"') {
         *file_section += 1;
