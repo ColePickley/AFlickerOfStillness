@@ -1,7 +1,6 @@
 #include "player_ui_painter.h"
 
-#include <stdio.h>
-
+#include <stdlib.h>
 #include "painter.h"
 #include "../functions.h"
 #include "SDL3_image/SDL_image.h"

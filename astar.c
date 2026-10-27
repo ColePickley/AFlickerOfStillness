@@ -1,8 +1,8 @@
 #include "astar.h"
 
-#include <stdio.h>
 #include <math.h>
 #include "functions.h"
+#include "stdlib.h"
 
 void setEntityDirection(Entity* entity, const GameData* game_data) {
     const SDL_FPoint cell_pos = {.x = (float) fmod(entity->x, 64), .y = (float) fmod(entity->y, 64)};
@@ -24,7 +24,7 @@ static void setEntityPath(Entity* entity, const GameData* game_data, const Playe
         entity->path = NULL;
         return;
     }
-    Node* (*node_grid)[MAX_MAP_SIZE][MAX_MAP_SIZE] = malloc(sizeof(Node*) * MAX_MAP_SIZE * MAX_MAP_SIZE);
+    Node* (*node_grid)[MAX_MAP_SIZE][MAX_MAP_SIZE] = calloc(1, sizeof(Node*) * MAX_MAP_SIZE * MAX_MAP_SIZE);
     (*node_grid)[start_node.pos.y][start_node.pos.x] = &start_node;
     closeNode(&start_node, &end_node, node_grid, game_data);
     bool path_found = false;
