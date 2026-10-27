@@ -315,7 +315,7 @@ static void setSavesScreenButtons(SavesScreen* saves_screen) {
         .bevel_radius = 30,
         .border_color = {.r = 255, .g = 255, .b = 255, .a = 100}
     };
-    const float font_size = 70.0f;
+    const float font_size = 60.0f;
     const float line_spacing = 0.0f;
     const SDL_Color text_color = {.r = 255, .g = 255, .b = 255, .a = 100};
 

@@ -229,6 +229,10 @@ static int updateGame(GameData* game_data) {
                 case ENTITY_SUBTYPE_COLLECTABLE_KEY:
                     collectKey(game_data, i);
                     break;
+                case ENTITY_SUBTYPE_ENEMY_MELEE:
+                case ENTITY_SUBTYPE_ENEMY_MELEE_AND_PROJECTILE:
+                    game_data->player->health -= game_data->entities[i]->melee_damage;
+                    break;
                 case ENTITY_SUBTYPE_PROJECTILE:
                     game_data->player->health -= game_data->entities[i]->projectile_damage;
                     removeEntity(game_data, i);
