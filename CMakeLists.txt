@@ -56,9 +56,7 @@ file(GLOB_RECURSE SOURCE_FILES_FILE_HANDLING
         "${CMAKE_CURRENT_SOURCE_DIR}/file_handling/*.h"
 )
 
-set(SOURCE_FILES ${SOURCE_FILES_ROOT} ${SOURCE_FILES_SCREEN_LOGIC} ${SOURCE_FILES_FILE_HANDLING}
-        screen_logic/loading_overlay_painter.c
-        screen_logic/loading_overlay_painter.h)
+set(SOURCE_FILES ${SOURCE_FILES_ROOT} ${SOURCE_FILES_SCREEN_LOGIC} ${SOURCE_FILES_FILE_HANDLING})
 
 # -----------------------------------------------------------------------------
 # 4. Define Project Executable
