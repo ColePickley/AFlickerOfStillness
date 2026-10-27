@@ -91,12 +91,26 @@ void destroyPainterFonts() {
     }
 }
 
-void paintEllipse(SDL_Renderer* renderer, const Ellipse e, const SDL_Color color) {
+void paintFilledEllipse(SDL_Renderer* renderer, const Ellipse e, const SDL_Color color) {
     SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
     for (int x = (int) (e.x - e.rx); x <= (int) (e.x + e.rx); x++) {
         for (int y = (int) (e.y - e.ry); y <= (int) (e.y + e.ry); y++) {
             if (pow((float) y - e.y, 2) / pow(e.ry, 2) +
                     pow((float) x - e.x, 2) / pow(e.rx, 2) <= 1) {
+                SDL_RenderPoint(renderer, (float) x, (float) y);
+            }
+        }
+    }
+}
+
+void paintFilledCircle(SDL_Renderer* renderer, const Circle c, const SDL_Color color) {
+    SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
+    const double outer_radius_squared = pow(c.outer_radius, 2);
+    const double inner_radius_squared = pow(c.inner_radius, 2);
+    for (int x = (int) (c.x - c.outer_radius); x <= (int) (c.x + c.outer_radius); x++) {
+        for (int y = (int) (c.y - c.outer_radius); y <= (int) (c.y + c.outer_radius); y++) {
+            const double check = pow((float) y - c.y, 2) + pow((float) x - c.x, 2);
+            if (check <= outer_radius_squared && check >= inner_radius_squared) {
                 SDL_RenderPoint(renderer, (float) x, (float) y);
             }
         }

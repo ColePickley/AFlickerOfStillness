@@ -25,7 +25,9 @@ bool initPainterFonts();
 
 void destroyPainterFonts();
 
-void paintEllipse(SDL_Renderer* renderer, Ellipse e, SDL_Color color);
+void paintFilledEllipse(SDL_Renderer* renderer, Ellipse e, SDL_Color color);
+
+void paintFilledCircle(SDL_Renderer* renderer, Circle c, SDL_Color color);
 
 void paintRightAngleSemiCircle(SDL_Renderer* renderer, Circle circle, int quadrant, SDL_Color color);
 

@@ -4,6 +4,8 @@
 #include "../file_handling/map_reader.h"
 #include <stdlib.h>
 
+#include "loading_overlay_painter.h"
+
 void initScreenData(ScreenData** screen_data, SDL_Renderer* renderer, const UserData* user_data) {
     *screen_data = malloc(sizeof(ScreenData));
     (*screen_data)->current_screen = START_SCREEN;
@@ -153,6 +155,7 @@ void loadScreenTextures(ScreenData* screen_data, SDL_Renderer* renderer, const i
 
 void paintScreen(int screen_id, ScreenData* screen_data, SDL_Renderer* renderer, GameData* game_data,
         const UserData* user_data) {
+    bool paint_loading_overlay = false;
     if (screen_data->is_loading_in_background && screen_data->active_async_task) {
         if (screen_data->active_async_task->is_done) {
             SDL_WaitThread(screen_data->bg_thread, NULL);
@@ -161,8 +164,10 @@ void paintScreen(int screen_id, ScreenData* screen_data, SDL_Renderer* renderer,
             screen_data->bg_thread = NULL;
             screen_data->is_loading_in_background = false;
             loadScreenTextures(screen_data, renderer, screen_id);
-        } else if (screen_id == GAME_SCREEN) {
+            resetLoadingOverlay();
+        } else if (screen_id == GAME_SCREEN && screen_data->prev_screen == SAVES_SCREEN) {
             screen_id = screen_data->prev_screen;
+            paint_loading_overlay = true;
         }
     }
 
@@ -207,6 +212,9 @@ void paintScreen(int screen_id, ScreenData* screen_data, SDL_Renderer* renderer,
             screen_change = paintDeathScreen(screen_data->death_screen, renderer);
         default:
             break;
+    }
+    if (paint_loading_overlay) {
+        paintLoadingOverlay(renderer);
     }
     changeScreen(screen_data, screen_change, renderer, game_data, user_data);
 }
