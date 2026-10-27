@@ -40,7 +40,9 @@ void destroyStartScreen(StartScreen** start_screen);
 int paintStartScreen(const StartScreen* start_screen, SDL_Renderer* renderer);
 
 /*
+ *----------------------------------------------------------------------------------------------------------------------
  * Event handling
+ *----------------------------------------------------------------------------------------------------------------------
  */
 
 void startScreenMousePressed(const StartScreen* start_screen, SDL_FPoint mouse_pos);
@@ -52,7 +54,9 @@ void startScreenMouseDragged(const StartScreen* start_screen, SDL_FPoint mouse_p
 void startScreenMouseMoved(const StartScreen* start_screen, SDL_FPoint mouse_pos);
 
 /*
+ *----------------------------------------------------------------------------------------------------------------------
  * Helper Functions
+ *----------------------------------------------------------------------------------------------------------------------
  */
 
 static void setStartScreenSurfaces(const StartScreen* start_screen);

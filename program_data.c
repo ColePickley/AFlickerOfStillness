@@ -29,21 +29,18 @@ void initGameData(GameData** game_data) {
     CheckpointQueue* checkpoint_queue;
     initCheckpointQueue(&checkpoint_queue);
     (*game_data)->checkpoint_queue = checkpoint_queue;
-    (*game_data)->player = malloc(sizeof(Player));
-    if ((*game_data)->player == NULL) {
-        printf("Failed to allocate player.\n");
-    }
+    (*game_data)->player = NULL;
 }
 
 void destroyGameData(GameData** game_data) {
     if (*game_data == NULL) return;
     destroyCheckpointQueue(&(*game_data)->checkpoint_queue);
     if ((*game_data)->player != NULL) {
-        destroyPlayer((*game_data)->player);
+        destroyPlayer(&(*game_data)->player);
         free((*game_data)->player);
     }
-    for (int i = 0; i < MAX_NUM_ENTITIES; i++) {
-        free((*game_data)->entities[i]);
+    for (int i = 0; i < (*game_data)->num_entities; i++) {
+        destroyEntity(&(*game_data)->entities[i]);
     }
     free(*game_data);
     *game_data = NULL;
@@ -68,4 +65,18 @@ void destroyUserData(UserData** user_data) {
     if (*user_data == NULL) return;
     free(*user_data);
     *user_data = NULL;
+}
+
+void addEntity(GameData* game_data, Entity* entity) {
+    game_data->num_entities++;
+    game_data->entities[game_data->num_entities-1] = entity;
+}
+
+void removeEntity(GameData* game_data, const int entity_index) {
+    destroyEntity(&game_data->entities[entity_index]);
+    game_data->entities[entity_index] = NULL;
+    for (int i = entity_index; i < game_data->num_entities - 1; i++) {
+        game_data->entities[i] = game_data->entities[i + 1];
+    }
+    game_data->num_entities--;
 }

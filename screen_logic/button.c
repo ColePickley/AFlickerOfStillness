@@ -12,7 +12,7 @@ void initButton(Button** button, Label* label, const ButtonColorData color_data)
 }
 
 void destroyButton(Button* button) {
-    destroyLabel(button->label);
+    destroyLabel(&button->label);
     button->label = NULL;
     if (button != NULL) {
         free(button);
@@ -74,13 +74,13 @@ bool buttonMouseDragCheck(Button* button, const SDL_FPoint mouse_pos) {
 void turnOnButton(Button* button) {
     button->is_on = true;
     button->label->fill_color = button->color_data.fill_click_color;
-    button->label->style_data.boarder_color = button->color_data.boarder_click_color;
+    button->label->style_data.border_color = button->color_data.boarder_click_color;
     button->label->text_data.text_color = button->color_data.text_click_color;
 }
 
 void turnOffButton(Button* button) {
     button->is_on = false;
     button->label->fill_color = button->color_data.fill_idle_color;
-    button->label->style_data.boarder_color = button->color_data.boarder_idle_color;
+    button->label->style_data.border_color = button->color_data.boarder_idle_color;
     button->label->text_data.text_color = button->color_data.text_idle_color;
 }

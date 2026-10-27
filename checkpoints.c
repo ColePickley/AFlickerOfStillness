@@ -3,18 +3,21 @@
 #include "constants.h"
 #include <stdlib.h>
 
+#include "screen_logic/painter.h"
+
 void initDialogueBox(DialogueBox* dialogue_box, const SDL_FRect rect, const char* text, const int alignment,
-                     const SDL_Color color) {
-    const LabelStyleData style_data = {.boarder_thickness = 2, .bevel_radius = 5, .boarder_color = color};
+        const SDL_Color color) {
+    const LabelStyleData style_data = {.border_thickness = 2, .bevel_radius = 5, .border_color = color};
     LabelTextData text_data;
-    initLabelTextData(&text_data, text, DIALOGUE_FONT_SIZE, DIALOGUE_LINE_SPACING, 2, 2,
-        ALIGN_CENTER, alignment, color);
+    initLabelTextData(&text_data, text, FONT_PIXELOID, DIALOGUE_FONT_SIZE,
+        DIALOGUE_LINE_SPACING, 2, 2,ALIGN_CENTER,
+        alignment, color);
     const SDL_Color fill_color = {.r = 255, .g = 255, .b = 255, .a = 255};
     initLabel(&dialogue_box->label, rect, fill_color, style_data, text_data);
 }
 
 void destroyDialogueBox(DialogueBox* dialogue_box) {
-    destroyLabel(dialogue_box->label);
+    destroyLabel(&dialogue_box->label);
     dialogue_box->label = NULL;
 }
 
@@ -24,9 +27,9 @@ void initCheckpointPage(CheckpointPage** checkpoint_page, DialogueBox* page_dial
     const SDL_FRect page_rect = {.x = (WINDOW_WIDTH - 500.0f) / 2.0f, .y = (WINDOW_HEIGHT - 400.0f) / 2.0f, .w = 500, .h = 400};
     const SDL_Color fill_color = {.r = 255, .g = 255, .b = 255, .a = 255};
     const SDL_Color boarder_color = {.r = 255, .g = 255, .b = 255, .a = 255};
-    const LabelStyleData style_data = {.boarder_thickness = 2.0f, .bevel_radius = 5.0f, .boarder_color = boarder_color};
+    const LabelStyleData style_data = {.border_thickness = 2.0f, .bevel_radius = 5.0f, .border_color = boarder_color};
     LabelTextData text_data;
-    initLabelTextData(&text_data, NULL, 0, 0, 0, 0, 0, 0, fill_color);
+    initDefaultLabelTextData(&text_data);
     Label* page_label;
     initLabel(&page_label, page_rect, fill_color, style_data, text_data);
     (*checkpoint_page)->label = page_label;
@@ -36,7 +39,7 @@ void initCheckpointPage(CheckpointPage** checkpoint_page, DialogueBox* page_dial
 }
 
 void destroyCheckpointPage(CheckpointPage* checkpoint_page) {
-    destroyLabel(checkpoint_page->label);
+    destroyLabel(&checkpoint_page->label);
     free(checkpoint_page);
     checkpoint_page = NULL;
 }

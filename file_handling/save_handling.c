@@ -30,7 +30,7 @@ bool loadSave(GameData* game_data) {
             game_data->map_grid[i][j] = 0;
         }
     }
-    destroyPlayer(game_data->player);
+    destroyPlayer(&game_data->player);
     for (int i = 0; i < game_data->num_entities; i++) {
         destroyEntity(&game_data->entities[i]);
     }
@@ -214,14 +214,24 @@ static void setSaveEntities(GameData* game_data, char line[500], int* file_secti
     game_data->num_entities++;
 }
 
-static void setSavePlayer(const GameData* game_data, char line[500], int* file_section) {
+static void setSavePlayer(GameData* game_data, char line[500], int* file_section) {
     const char* token = strtok(line, ",");
     if (token[0] == '"') {
         *file_section += 1;
         return;
     }
-    initPlayer(game_data->player);
     int token_num = 0;
+    if (game_data->player == NULL) {
+        initPlayer(&game_data->player);
+        if (game_data->player == NULL) {
+            printf("Failed to allocate player.\n");
+        }
+    }
+    //weapon info
+    int primary_weapon_index = -1;
+    int ammo_count = -1;
+    int mag_count = -1;
+    int secondary_weapon_index = -1;
     while (token != NULL && token_num < 8) {
         char* end_token;
         const double token_as_double = strtod(token, &end_token);
@@ -240,22 +250,30 @@ static void setSavePlayer(const GameData* game_data, char line[500], int* file_s
                 game_data->player->health = token_as_int;
                 break;
             case 4:
-                game_data->player->primary_weapon_index = token_as_int;
+                primary_weapon_index = token_as_int;
                 break;
             case 5:
-                game_data->player->ammo_count = token_as_int;
+                ammo_count = token_as_int;
                 break;
             case 6:
-                game_data->player->mag_count = token_as_int;
+                mag_count = token_as_int;
                 break;
             case 7:
-                game_data->player->secondary_weapon_index = token_as_int;
+                secondary_weapon_index = token_as_int;
                 break;
             default:
                 break;
         }
         token = strtok(NULL, ",");
         token_num++;
+    }
+    if (primary_weapon_index != -1) {
+        initWeapon(&game_data->player->primary_weapon, primary_weapon_index, -1, mag_count,
+            ammo_count);
+    }
+    if (secondary_weapon_index != -1) {
+        initWeapon(&game_data->player->secondary_weapon, secondary_weapon_index, -1, -1,
+            -1);
     }
 }
 
@@ -300,9 +318,19 @@ void writeSave(const GameData* game_data) {
     if (game_data->player == NULL) {
         perror("player is null");
     }
-    fprintf(file, "\"\"\n%lf,%lf,%lf,%d,%d,%d,%d,%d", game_data->player->x, game_data->player->y,
-        game_data->player->rotation, game_data->player->health, game_data->player->primary_weapon_index,
-        game_data->player->ammo_count, game_data->player->mag_count, game_data->player->secondary_weapon_index);
+    fprintf(file, "\"\"\n%lf,%lf,%lf,%d,", game_data->player->x, game_data->player->y,
+        game_data->player->rotation, game_data->player->health);
+    if (game_data->player->primary_weapon != NULL) {
+        fprintf(file, "%d,%d,%d,", game_data->player->primary_weapon->weapon_id,
+        game_data->player->primary_weapon->ammo_count, game_data->player->primary_weapon->mag_count);
+    } else {
+        fprintf(file, "%d,%d,%d,", -1, -1, -1);
+    }
+    if (game_data->player->secondary_weapon != NULL) {
+        fprintf(file, "%d", game_data->player->secondary_weapon->weapon_id);
+    } else {
+        fprintf(file, "%d", -1);
+    }
     fclose(file);
 }
 

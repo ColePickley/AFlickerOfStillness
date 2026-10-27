@@ -36,7 +36,9 @@ static void addNode(Node* parent, const Node* end_node, Node* (*node_grid)[MAX_M
 static int getHCost(const Node* new_node, const Node* end_node);
 
 /*
+ *----------------------------------------------------------------------------------------------------------------------
  * Entity Path Functions
+ *----------------------------------------------------------------------------------------------------------------------
  */
 
 void initEntityPath(EntityPath** path, const Node* end_node);

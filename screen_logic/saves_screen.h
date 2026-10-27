@@ -44,7 +44,9 @@ void destroySavesScreen(SavesScreen** saves_screen);
 int paintSavesScreen(const SavesScreen* saves_screen, SDL_Renderer* renderer);
 
 /*
+ *----------------------------------------------------------------------------------------------------------------------
  * Event handling
+ *----------------------------------------------------------------------------------------------------------------------
  */
 
 void savesScreenMousePressed(const SavesScreen* saves_screen, SDL_FPoint mouse_pos);
@@ -56,7 +58,9 @@ void savesScreenMouseDragged(const SavesScreen* saves_screen, SDL_FPoint mouse_p
 void savesScreenMouseMoved(const SavesScreen* saves_screen, SDL_FPoint mouse_pos);
 
 /*
+ *----------------------------------------------------------------------------------------------------------------------
  * Helper functions
+ *----------------------------------------------------------------------------------------------------------------------
  */
 
 static void setSavesScreenSurfaces(const SavesScreen* saves_screen);

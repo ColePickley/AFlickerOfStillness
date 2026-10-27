@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include "../program_data.h"
 #include "../functions.h"
+#include "../screen_logic/painter.h"
 
 void readMap(GameData* game_data) {
     const char* base_path = SDL_GetBasePath();
@@ -262,7 +263,7 @@ static SDL_FRect getDialogueBoxRect(DialogueBox* box, DialogueBox* page_dialogue
     float x = CHECKPOINT_PAGE_X;
     float y = CHECKPOINT_PAGE_Y + DIALOGUE_BOX_SPACING;
     float line_height;
-    setLineHeight(&line_height, DIALOGUE_FONT_SIZE, DIALOGUE_LINE_SPACING);
+    setLineHeight(&line_height, DIALOGUE_FONT_SIZE, DIALOGUE_LINE_SPACING, FONT_PIXELOID);
     const int num_lines = getNumLines(text);
     const float h = (float) num_lines * line_height;
 
@@ -327,18 +328,19 @@ static void setSkyTextureIndex(GameData* game_data, char line[500], int* file_se
     game_data->sky_texture_index = token_as_int;
 }
 
-static void setPlayer(const GameData* game_data, char line[500], int* file_section) {
+static void setPlayer(GameData* game_data, char line[500], int* file_section) {
     const char *token = strtok(line, ",");
     if (token[0] == '"') {
         *file_section += 1;
         return;
     }
-    if (game_data->player == NULL) {
-        perror("Failed to allocate memory for player");
-        return;
-    }
-    initPlayer(game_data->player);
     int token_num = 0;
+    if (game_data->player == NULL) {
+        initPlayer(&game_data->player);
+        if (game_data->player == NULL) {
+            printf("Failed to allocate player.\n");
+        }
+    }
     while (token != NULL && token_num < 3) {
         char* end_token;
         const double token_as_double = strtod(token, &end_token);

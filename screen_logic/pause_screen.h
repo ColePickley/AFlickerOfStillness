@@ -46,7 +46,9 @@ void shuffleTextureSet(SDL_Texture* (*textures)[12]);
 int paintPauseScreen(PauseScreen* pause_screen, SDL_Renderer* renderer);
 
 /*
+ *----------------------------------------------------------------------------------------------------------------------
  * Event handling
+ *----------------------------------------------------------------------------------------------------------------------
  */
 
 void pauseScreenMousePressed(const PauseScreen* pause_screen, SDL_FPoint mouse_pos);
@@ -58,7 +60,9 @@ void pauseScreenMouseDragged(const PauseScreen* pause_screen, SDL_FPoint mouse_p
 void pauseScreenMouseMoved(const PauseScreen* pause_screen, SDL_FPoint mouse_pos);
 
 /*
+ *----------------------------------------------------------------------------------------------------------------------
  * Helper functions
+ *----------------------------------------------------------------------------------------------------------------------
  */
 
 static void setPauseScreenSurfaces(const PauseScreen* pause_screen);

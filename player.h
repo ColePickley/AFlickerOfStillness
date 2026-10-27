@@ -3,6 +3,9 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include "constants.h"
+#include "weapon.h"
+
+#define MAX_PLAYER_HEALTH 100
 
 typedef struct {
     double x;
@@ -13,27 +16,37 @@ typedef struct {
 }Ray;
 
 typedef struct {
+    int entity_id;
+    int chunk;
+}Key;
+
+typedef struct {
     bool w_pressed;
     bool a_pressed;
     bool s_pressed;
     bool d_pressed;
+    bool primary_selected;
+    uint8_t num_keys;
     uint64_t last_update_time;
+    int health;
     double x_velocity;
     double y_velocity;
     double x;
     double y;
     double rotation;
-    int health;
-    int primary_weapon_index;
-    int ammo_count;
-    int mag_count;
-    int secondary_weapon_index;
     Ray rays[NUM_RAYS];
+    Key* keys[MAX_NUM_KEYS];
+    Weapon* primary_weapon;
+    Weapon* secondary_weapon;
 }Player;
 
-void initPlayer(Player* player);
+void initKey(Key** key, int entity_id, int chunk);
 
-void destroyPlayer(Player* player);
+void destroyKey(Key** key);
+
+void initPlayer(Player** player);
+
+void destroyPlayer(Player** player);
 
 void movePlayer(Player* player, int (*map_grid)[MAX_MAP_SIZE][MAX_MAP_SIZE]);
 

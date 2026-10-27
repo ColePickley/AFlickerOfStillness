@@ -1,5 +1,7 @@
 #include "screen_logic.h"
 
+#include "../file_handling/save_handling.h"
+#include "../file_handling/map_reader.h"
 #include <stdlib.h>
 
 void initScreenData(ScreenData** screen_data, SDL_Renderer* renderer, const UserData* user_data) {
@@ -42,7 +44,7 @@ void destroyScreenData(ScreenData** screen_data) {
 }
 
 static int asyncScreenChange(void* data) {
-    ThreadLoadArgs* args = data;
+    ThreadLoadingData* args = data;
     if (args->screen_data->prev_screen == START_SCREEN) {
         if (args->screen_id == SAVES_SCREEN) {
             initGameScreen(&args->screen_data->game_screen, args->game_data);
@@ -51,6 +53,10 @@ static int asyncScreenChange(void* data) {
         if (args->screen_id == START_SCREEN) {
             initSettingsScreen(&args->screen_data->settings_screen, args->user_data, args->screen_data->current_screen);
         } else if (args->screen_id == GAME_SCREEN) {
+            args->game_data->level_index = getLevelIndex(args->game_data->save_index);
+            readMap(args->game_data);
+            loadSave(args->game_data);
+            writeSave(args->game_data);
             initDeathScreen(&args->screen_data->death_screen);
             initPauseScreen(&args->screen_data->pause_screen);
         }
@@ -74,7 +80,7 @@ static int asyncScreenChange(void* data) {
     return 0;
 }
 
-void changeScreen(ScreenData* screen_data, const int screen_id, SDL_Renderer* renderer, const GameData* game_data,
+void changeScreen(ScreenData* screen_data, const int screen_id, SDL_Renderer* renderer, GameData* game_data,
         const UserData* user_data) {
     if (screen_id == -1) return;
     if (screen_data->is_loading_in_background) return;
@@ -83,7 +89,7 @@ void changeScreen(ScreenData* screen_data, const int screen_id, SDL_Renderer* re
     screen_data->current_screen = screen_id;
 
     screen_data->is_loading_in_background = true;
-    ThreadLoadArgs* args = malloc(sizeof(ThreadLoadArgs));
+    ThreadLoadingData* args = malloc(sizeof(ThreadLoadingData));
     args->screen_data = screen_data;
     args->game_data = game_data;
     args->user_data = user_data;
@@ -145,28 +151,18 @@ void loadScreenTextures(ScreenData* screen_data, SDL_Renderer* renderer, const i
     }
 }
 
-void paintScreen(const int screen_id, ScreenData* screen_data, SDL_Renderer* renderer, GameData* game_data,
+void paintScreen(int screen_id, ScreenData* screen_data, SDL_Renderer* renderer, GameData* game_data,
         const UserData* user_data) {
-
-    // --- ASYNC RUNTIME COMPLETION POLL ---
     if (screen_data->is_loading_in_background && screen_data->active_async_task) {
         if (screen_data->active_async_task->is_done) {
-            // Clean up our finished worker thread resources completely
             SDL_WaitThread(screen_data->bg_thread, NULL);
             free(screen_data->active_async_task);
             screen_data->active_async_task = NULL;
             screen_data->bg_thread = NULL;
             screen_data->is_loading_in_background = false;
             loadScreenTextures(screen_data, renderer, screen_id);
-        } else if (screen_data->prev_screen == PAUSE_SCREEN) {
-            // --- DRAW YOUR LOADING SCREEN HERE ---
-            // The background thread is busy! Render something animated to keep UI responsive.
-
-            // screen_id = screen_data->prev_screen;
-
-            // Call a helper function here to display text like "Loading Assets..."
-            // or step up a rotating layout spinner frame-by-frame.
-            return; // Interrupt processing so it skips trying to render the uninitialized game screen!
+        } else if (screen_id == GAME_SCREEN) {
+            screen_id = screen_data->prev_screen;
         }
     }
 
@@ -216,7 +212,9 @@ void paintScreen(const int screen_id, ScreenData* screen_data, SDL_Renderer* ren
 }
 
 /*
- * event handling
+ *----------------------------------------------------------------------------------------------------------------------
+ * Event handling
+ *----------------------------------------------------------------------------------------------------------------------
  */
 
 void mousePressed(const ScreenData* screen_data, const SDL_FPoint pt) {
@@ -340,7 +338,7 @@ void keyReleased(const ScreenData* screen_data, const SDL_Keycode keycode, const
     }
 }
 
-void keyClicked(ScreenData* screen_data, const SDL_Keycode keycode, SDL_Renderer* renderer, const GameData* game_data,
+void keyClicked(ScreenData* screen_data, const SDL_Keycode keycode, SDL_Renderer* renderer, GameData* game_data,
         const UserData* user_data) {
     int screen_change = -1;
     if (screen_data->current_screen == GAME_SCREEN) {

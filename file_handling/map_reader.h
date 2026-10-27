@@ -29,6 +29,6 @@ static void setEntities(GameData* game_data, char line[500], int* file_section);
 
 static void setSkyTextureIndex(GameData* game_data, char line[500], int* file_section);
 
-static void setPlayer(const GameData* game_data, char line[500], int* file_section);
+static void setPlayer(GameData* game_data, char line[500], int* file_section);
 
 #endif //AFLICKEROFSTILLNESS_MAP_READER_H

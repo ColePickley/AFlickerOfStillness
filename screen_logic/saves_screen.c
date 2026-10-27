@@ -4,7 +4,6 @@
 #include <SDL3_image/SDL_image.h>
 #include "../constants.h"
 #include "../file_handling/save_handling.h"
-#include "../file_handling/map_reader.h"
 
 void initSavesScreen(SavesScreen** saves_screen) {
     *saves_screen = malloc(sizeof(SavesScreen));
@@ -42,9 +41,9 @@ void setSavesScreenTextures(const SavesScreen* saves_screen, SDL_Renderer* rende
 
 void destroySavesScreen(SavesScreen** saves_screen) {
     if (*saves_screen == NULL) return;
-    destroyLabel((*saves_screen)->left_panel_label);
-    destroyLabel((*saves_screen)->right_panel_label);
-    destroyLabel((*saves_screen)->select_save_label);
+    destroyLabel(&(*saves_screen)->left_panel_label);
+    destroyLabel(&(*saves_screen)->right_panel_label);
+    destroyLabel(&(*saves_screen)->select_save_label);
     destroyButton((*saves_screen)->back_button);
     destroyButton((*saves_screen)->play_button);
     for (int i = 0; i < 3; i++) {
@@ -100,7 +99,9 @@ int paintSavesScreen(const SavesScreen* saves_screen, SDL_Renderer* renderer) {
 }
 
 /*
+ *----------------------------------------------------------------------------------------------------------------------
  * Event handling
+ *----------------------------------------------------------------------------------------------------------------------
  */
 
 void savesScreenMousePressed(const SavesScreen* saves_screen, const SDL_FPoint mouse_pos) {
@@ -168,10 +169,6 @@ int savesScreenMouseReleased(SavesScreen* saves_screen, const SDL_FPoint mouse_p
         }
         if (button_released) {
             screen_change = GAME_SCREEN;
-            game_data->level_index = getLevelIndex(game_data->save_index);
-            readMap(game_data);
-            loadSave(game_data);
-            writeSave(game_data);
         } else {
             button_released = true;
         }
@@ -205,7 +202,9 @@ void savesScreenMouseMoved(const SavesScreen* saves_screen, SDL_FPoint mouse_pos
 }
 
 /*
+ *----------------------------------------------------------------------------------------------------------------------
  * Helper functions
+ *----------------------------------------------------------------------------------------------------------------------
  */
 
 static void setSavesScreenSurfaces(const SavesScreen* saves_screen) {
@@ -245,9 +244,9 @@ static void setSavesScreenLabels(SavesScreen* saves_screen) {
         .h = (float) WINDOW_HEIGHT
     };
     const LabelStyleData style_data = {
-        .boarder_thickness = 10.0f,
+        .border_thickness = 10.0f,
         .bevel_radius = 0.0f,
-        .boarder_color = {.r = 0, .g = 0, .b = 0, .a = 100}
+        .border_color = {.r = 0, .g = 0, .b = 0, .a = 100}
     };
     const LabelTextData text_data = {};
     initLabel(&saves_screen->left_panel_label, left_label_rect, (SDL_Color) {.r = 255, .g = 255, .b = 255, .a = 0},
@@ -260,9 +259,9 @@ static void setSavesScreenLabels(SavesScreen* saves_screen) {
      */
 
     const LabelStyleData select_save_style_data = {
-        .boarder_thickness = 10,
+        .border_thickness = 10,
         .bevel_radius = 30,
-        .boarder_color = {.r = 255, .g = 255, .b = 255, .a = 100}
+        .border_color = {.r = 255, .g = 255, .b = 255, .a = 100}
     };
     LabelTextData select_save_text_data;
     const char* text = "Select Save:";
@@ -273,7 +272,7 @@ static void setSavesScreenLabels(SavesScreen* saves_screen) {
     const int vertical_text_alignment = ALIGN_CENTER;
     const int horizontal_text_alignment = ALIGN_CENTER;
     const SDL_Color text_color = {.r = 255, .g = 255, .b = 255, .a = 100};
-    initLabelTextData(&select_save_text_data, text, font_size, line_spacing, vertical_text_margin,
+    initLabelTextData(&select_save_text_data, text, FONT_KLARISSA, font_size, line_spacing, vertical_text_margin,
         horizontal_text_margin, vertical_text_alignment, horizontal_text_alignment, text_color);
     const SDL_FRect select_save_rect = (SDL_FRect) {
         .x = (WINDOW_WIDTH - 800.0f) / 2.0f,
@@ -289,13 +288,12 @@ static void setSavesScreenLabels(SavesScreen* saves_screen) {
      */
 
     const LabelStyleData saves_style_data = {
-        .boarder_thickness = 10,
+        .border_thickness = 10,
         .bevel_radius = 30,
-        .boarder_color = {.r = 100, .g = 100, .b = 100, .a = 100}
+        .border_color = {.r = 100, .g = 100, .b = 100, .a = 100}
     };
     LabelTextData saves_text_data;
-    initLabelTextData(&saves_text_data, NULL, 0, 0, 0, 0,
-        0, 0, (SDL_Color) {.r = 0, .g = 0, .b = 0, .a = 0});
+    initDefaultLabelTextData(&saves_text_data);
     const SDL_FRect saves_rect = (SDL_FRect) {
         .x = (WINDOW_WIDTH - 800.0f) / 2.0f,
         .y = (WINDOW_HEIGHT - 480.0f) / 2.0f,
@@ -313,9 +311,9 @@ static void setSavesScreenButtons(SavesScreen* saves_screen) {
 
     const SDL_Color fill_color = {.r = 75, .g = 50, .b = 50, .a = 100};
     const LabelStyleData style_data = {
-        .boarder_thickness = 10,
+        .border_thickness = 10,
         .bevel_radius = 30,
-        .boarder_color = {.r = 255, .g = 255, .b = 255, .a = 100}
+        .border_color = {.r = 255, .g = 255, .b = 255, .a = 100}
     };
     const float font_size = 70.0f;
     const float line_spacing = 0.0f;
@@ -324,7 +322,7 @@ static void setSavesScreenButtons(SavesScreen* saves_screen) {
     const SDL_Color click_color = {.r = 100, .g = 0, .b = 0, .a = 100};
     const ButtonColorData color_data = {
         .boarder_click_color = click_color,
-        .boarder_idle_color = style_data.boarder_color,
+        .boarder_idle_color = style_data.border_color,
         .text_click_color = click_color,
         .text_idle_color = text_color,
         .fill_click_color = fill_color,
@@ -343,8 +341,8 @@ static void setSavesScreenButtons(SavesScreen* saves_screen) {
     const float back_button_height = 120.0f;
     LabelTextData back_button_text_data;
     const char* back_button_label_text = "Back";
-    initLabelTextData(&back_button_text_data, back_button_label_text, font_size, line_spacing, vertical_text_margin,
-        horizontal_text_margin, vertical_text_alignment, horizontal_text_alignment, text_color);
+    initLabelTextData(&back_button_text_data, back_button_label_text, FONT_KLARISSA, font_size, line_spacing,
+        vertical_text_margin, horizontal_text_margin, vertical_text_alignment, horizontal_text_alignment, text_color);
     SDL_FRect back_button_rect = {
         .x = back_button_x,
         .y = back_button_y,
@@ -365,8 +363,8 @@ static void setSavesScreenButtons(SavesScreen* saves_screen) {
     const float play_button_height = 120.0f;
     LabelTextData play_button_text_data;
     const char* play_button_label_text = "Play";
-    initLabelTextData(&play_button_text_data, play_button_label_text, font_size, line_spacing, vertical_text_margin,
-        horizontal_text_margin, vertical_text_alignment, horizontal_text_alignment, text_color);
+    initLabelTextData(&play_button_text_data, play_button_label_text, FONT_KLARISSA, font_size, line_spacing,
+        vertical_text_margin, horizontal_text_margin, vertical_text_alignment, horizontal_text_alignment, text_color);
     SDL_FRect play_button_rect = {
         .x = play_button_x,
         .y = play_button_y,
@@ -398,8 +396,9 @@ static void setSavesScreenButtons(SavesScreen* saves_screen) {
             horizontal_text_alignment = ALIGN_LEFT;
             horizontal_text_margin = 30.0f;
         }
-        initLabelTextData(&save_text_data, save_label_text, font_size, line_spacing, vertical_text_margin,
-            horizontal_text_margin, vertical_text_alignment, horizontal_text_alignment, text_color);
+        initLabelTextData(&save_text_data, save_label_text, FONT_KLARISSA, font_size, line_spacing,
+            vertical_text_margin, horizontal_text_margin, vertical_text_alignment, horizontal_text_alignment,
+            text_color);
         Label* save_label = NULL;
         initLabel(&save_label, (SDL_FRect) {.x = x, .y = y + (height + spacing) * (float) i, .w = width, .h = height},
             fill_color, style_data, save_text_data);
@@ -411,14 +410,13 @@ static void setSavesScreenButtons(SavesScreen* saves_screen) {
      */
 
     const LabelStyleData delete_save_style_data = {
-        .boarder_thickness = 5,
+        .border_thickness = 5,
         .bevel_radius = 20,
-        .boarder_color = {.r = 0, .g = 0, .b = 0, .a = 100}
+        .border_color = {.r = 0, .g = 0, .b = 0, .a = 100}
     };
     SDL_Color delete_save_fill_color = {.r = 100, .g = 100, .b = 100, .a = 100};
     LabelTextData delete_save_text_data;
-    initLabelTextData(&delete_save_text_data, "", 0, 0, 0,
-        0, 0, 0, (SDL_Color) {.r = 0, .g = 0, .b = 0, .a = 0});
+    initDefaultLabelTextData(&delete_save_text_data);
     Label* delete_save_label = NULL;
     SDL_FRect delete_save_label_rect = {
         .x = x + width - height + 15,

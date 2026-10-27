@@ -35,7 +35,7 @@ void setStartScreenTextures(const StartScreen* start_screen, SDL_Renderer* rende
 
 void destroyStartScreen(StartScreen** start_screen) {
     if (*start_screen == NULL) return;
-    destroyLabel((*start_screen)->game_label);
+    destroyLabel(&(*start_screen)->game_label);
     destroyButton((*start_screen)->play_button);
     destroyButton((*start_screen)->settings_button);
     destroyButton((*start_screen)->exit_button);
@@ -72,7 +72,9 @@ int paintStartScreen(const StartScreen* start_screen, SDL_Renderer* renderer) {
 }
 
 /*
+ *----------------------------------------------------------------------------------------------------------------------
  * Event handling
+ *----------------------------------------------------------------------------------------------------------------------
  */
 
 void startScreenMousePressed(const StartScreen* start_screen, const SDL_FPoint mouse_pos) {
@@ -105,7 +107,9 @@ void startScreenMouseMoved(const StartScreen* start_screen, SDL_FPoint mouse_pos
 }
 
 /*
+ *----------------------------------------------------------------------------------------------------------------------
  * Helper functions
+ *----------------------------------------------------------------------------------------------------------------------
  */
 
 static void setStartScreenSurfaces(const StartScreen* start_screen) {
@@ -156,13 +160,12 @@ static void setStartScreenLabels(StartScreen* start_screen) {
         .h = (float) WINDOW_HEIGHT
     };
     const LabelStyleData style_data = {
-        .boarder_thickness = 10.0f,
+        .border_thickness = 10.0f,
         .bevel_radius = 0.0f,
-        .boarder_color = {.r = 0, .g = 0, .b = 0, .a = 100}
+        .border_color = {.r = 0, .g = 0, .b = 0, .a = 100}
     };
     LabelTextData text_data;
-    initLabelTextData(&text_data, "", 0, 0, 0, 0,
-        0, 0, (SDL_Color) {.r = 0, .g = 0, .b = 0, .a = 0});
+    initDefaultLabelTextData(&text_data);
     initLabel(&start_screen->left_panel_label, left_label_rect, (SDL_Color) {.r = 255, .g = 255, .b = 255, .a = 0},
         style_data, text_data);
     initLabel(&start_screen->right_panel_label, right_label_rect, (SDL_Color) {.r = 255, .g = 255, .b = 255, .a = 0},
@@ -173,20 +176,20 @@ static void setStartScreenLabels(StartScreen* start_screen) {
      */
 
     const LabelStyleData game_label_style_data = {
-        .boarder_thickness = 10,
+        .border_thickness = 10,
         .bevel_radius = 30,
-        .boarder_color = {.r = 255, .g = 255, .b = 255, .a = 100}
+        .border_color = {.r = 255, .g = 255, .b = 255, .a = 100}
     };
     LabelTextData game_label_text_data;
     const char* text = "A Flicker of Stillness:\nThe Video Game";
-    const float font_size = 90.0f;
+    const float font_size = 75.0f;
     const float line_spacing = 0.0f;
     const float vertical_text_margin = 0.0f;
     const float horizontal_text_margin = 0.0f;
     const int vertical_text_alignment = ALIGN_CENTER;
     const int horizontal_text_alignment = ALIGN_CENTER;
     const SDL_Color text_color = {.r = 255, .g = 255, .b = 255, .a = 100};
-    initLabelTextData(&game_label_text_data, text, font_size, line_spacing, vertical_text_margin,
+    initLabelTextData(&game_label_text_data, text, FONT_KLARISSA, font_size, line_spacing, vertical_text_margin,
         horizontal_text_margin, vertical_text_alignment, horizontal_text_alignment, text_color);
     const SDL_FRect rect = (SDL_FRect) {
         .x = (WINDOW_WIDTH - 800.0f) / 2.0f,
@@ -207,9 +210,9 @@ static void setStartScreenButtons(StartScreen* start_screen) {
     const float spacing = 30.0f;
     const SDL_Color fill_color = {.r = 75, .g = 50, .b = 50, .a = 100};
     const LabelStyleData style_data = {
-        .boarder_thickness = 10,
+        .border_thickness = 10,
         .bevel_radius = 30,
-        .boarder_color = {.r = 255, .g = 255, .b = 255, .a = 100}
+        .border_color = {.r = 255, .g = 255, .b = 255, .a = 100}
     };
     const float font_size = 70.0f;
     const float line_spacing = 0.0f;
@@ -220,7 +223,7 @@ static void setStartScreenButtons(StartScreen* start_screen) {
     const SDL_Color click_color = {.r = 100, .g = 0, .b = 0, .a = 100};
     const ButtonColorData color_data = {
         .boarder_click_color = click_color,
-        .boarder_idle_color = style_data.boarder_color,
+        .boarder_idle_color = style_data.border_color,
         .text_click_color = click_color,
         .text_idle_color = text_color,
         .fill_click_color = fill_color,
@@ -229,8 +232,8 @@ static void setStartScreenButtons(StartScreen* start_screen) {
     //Play button
     LabelTextData play_label_text_data;
     const char* play_label_text = "Play";
-    initLabelTextData(&play_label_text_data, play_label_text, font_size, line_spacing, vertical_text_margin,
-        horizontal_text_margin, vertical_text_alignment, horizontal_text_alignment, text_color);
+    initLabelTextData(&play_label_text_data, play_label_text, FONT_KLARISSA, font_size, line_spacing,
+        vertical_text_margin, horizontal_text_margin, vertical_text_alignment, horizontal_text_alignment, text_color);
     Label* play_label = NULL;
     initLabel(&play_label, (SDL_FRect) {.x = x, .y = y, .w = width, .h = height}, fill_color, style_data,
         play_label_text_data);
@@ -238,8 +241,8 @@ static void setStartScreenButtons(StartScreen* start_screen) {
     //settings button
     LabelTextData settings_label_text_data;
     const char* settings_label_text = "Settings";
-    initLabelTextData(&settings_label_text_data, settings_label_text, font_size, line_spacing, vertical_text_margin,
-        horizontal_text_margin, vertical_text_alignment, horizontal_text_alignment, text_color);
+    initLabelTextData(&settings_label_text_data, settings_label_text, FONT_KLARISSA, font_size, line_spacing,
+        vertical_text_margin, horizontal_text_margin, vertical_text_alignment, horizontal_text_alignment, text_color);
     Label* settings_label = NULL;
     initLabel(&settings_label, (SDL_FRect) {.x = x, .y = y + height + spacing, .w = width, .h = height}, fill_color,
         style_data, settings_label_text_data);
@@ -247,8 +250,8 @@ static void setStartScreenButtons(StartScreen* start_screen) {
     //exit button
     LabelTextData exit_label_text_data;
     const char* exit_label_text = "Exit";
-    initLabelTextData(&exit_label_text_data, exit_label_text, font_size, line_spacing, vertical_text_margin,
-        horizontal_text_margin, vertical_text_alignment, horizontal_text_alignment, text_color);
+    initLabelTextData(&exit_label_text_data, exit_label_text, FONT_KLARISSA, font_size, line_spacing,
+        vertical_text_margin, horizontal_text_margin, vertical_text_alignment, horizontal_text_alignment, text_color);
     Label* exit_label = NULL;
     initLabel(&exit_label, (SDL_FRect) {.x = x, .y = y + (height + spacing) * 2, .w = width, .h = height}, fill_color,
         style_data, exit_label_text_data);

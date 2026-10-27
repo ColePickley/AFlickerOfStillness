@@ -7,13 +7,14 @@ enum {
 };
 
 typedef struct {
-    float boarder_thickness;
+    float border_thickness;
     float bevel_radius;
-    SDL_Color boarder_color;
+    SDL_Color border_color;
 }LabelStyleData;
 
 typedef struct {
     int num_lines;
+    int font;
     float font_size;
     float line_spacing;
     char text[50][100];
@@ -31,19 +32,25 @@ typedef struct {
     LabelTextData text_data;
 }Label;
 
-void paintLabel(SDL_Renderer* renderer, const Label* label);
-
 void initLabel(Label** label, SDL_FRect rect, SDL_Color fill_color, LabelStyleData style_data, LabelTextData text_data);
 
-void initLabelTextData(LabelTextData* text_data, const char* text, float font_size, float line_spacing,
+void initDefaultLabelTextData(LabelTextData* text_data);
+
+void initLabelTextData(LabelTextData* text_data, const char* text, int font, float font_size, float line_spacing,
     float vertical_text_margin, float horizontal_text_margin, int vertical_text_alignment, int horizontal_text_alignment,
     SDL_Color text_color);
 
-void destroyLabel(Label* label);
-
-int getNumLines(const char* text);
+void destroyLabel(Label** label);
 
 static void setLabelText(char label_text[50][100], const char* original_text, int num_lines);
+
+/*
+ *----------------------------------------------------------------------------------------------------------------------
+ * Painting
+ *----------------------------------------------------------------------------------------------------------------------
+ */
+
+void paintLabel(SDL_Renderer* renderer, const Label* label);
 
 static void paintLabelText(SDL_Renderer* renderer, const Label* label);
 
@@ -51,14 +58,22 @@ static void paintLabelRect(SDL_Renderer* renderer, const Label* label);
 
 static void paintBeveledLabelRect(SDL_Renderer* renderer, const Label* label);
 
-static void paintLabelBoarder(SDL_Renderer* renderer, const Label* label);
+static void paintLabelBorder(SDL_Renderer* renderer, const Label* label);
 
-static void paintBeveledLabelBoarder(SDL_Renderer* renderer, const Label* label);
+static void paintBeveledLabelBorder(SDL_Renderer* renderer, const Label* label);
 
-static void setLineWidths(float line_widths[50], const char (*text)[100], int num_lines, float font_size);
+/*
+ *----------------------------------------------------------------------------------------------------------------------
+ * Text Metrics
+ *----------------------------------------------------------------------------------------------------------------------
+ */
 
-static float getLineWidth(const char line[100], float scale);
+int getNumLines(const char* text);
 
-void setLineHeight(float* line_height, float font_size, float line_spacing);
+static void setLineWidths(float line_widths[50], const char (*text)[100], int font, int num_lines, float font_size);
+
+static float getLineWidth(const char line[100], float scale, int font);
+
+void setLineHeight(float* line_height, float font_size, float line_spacing, int font);
 
 #endif //AFLICKEROFSTILLNESS_LABEL_H

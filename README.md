@@ -255,7 +255,7 @@ The index of the weapon's texture.
 - **damage (all types):**
 The amount of damage a weapon deals
 
-- **ammo_type (types 1 and 2):**
+- **ammo_type (types 1 - 3):**
 The type index of ammo that the weapon excepts
 
 - **projectile_index (type 3):**

@@ -46,10 +46,10 @@ void resetSettingsScreen(SettingsScreen* settings_screen, const UserData* user_d
 
 void destroySettingsScreen(SettingsScreen** settings_screen) {
     if (*settings_screen == NULL) return;
-    destroyLabel((*settings_screen)->settings_label);
-    destroyLabel((*settings_screen)->fps_label);
-    destroyLabel((*settings_screen)->graphics_quality_label);
-    destroyLabel((*settings_screen)->sensitivity_label);
+    destroyLabel(&(*settings_screen)->settings_label);
+    destroyLabel(&(*settings_screen)->fps_label);
+    destroyLabel(&(*settings_screen)->graphics_quality_label);
+    destroyLabel(&(*settings_screen)->sensitivity_label);
     destroyButton((*settings_screen)->fullscreen_button);
     destroyButton((*settings_screen)->fps_button);
     destroyButton((*settings_screen)->graphics_quality_button);
@@ -162,7 +162,9 @@ int paintSettingsScreen(SettingsScreen* settings_screen, SDL_Renderer* renderer)
 }
 
 /*
+ *----------------------------------------------------------------------------------------------------------------------
  * Event handling
+ *----------------------------------------------------------------------------------------------------------------------
  */
 
 void settingsScreenMousePressed(const SettingsScreen* settings_screen, const SDL_FPoint mouse_pos) {
@@ -270,7 +272,9 @@ void settingsScreenMouseMoved(SettingsScreen* settings_screen, const SDL_FPoint 
 }
 
 /*
+ *----------------------------------------------------------------------------------------------------------------------
  * Helper functions
+ *----------------------------------------------------------------------------------------------------------------------
  */
 
 static void setSettingsScreenSurfaces(const SettingsScreen* settings_screen) {
@@ -293,9 +297,9 @@ static void setSettingsScreenLabels(SettingsScreen* settings_screen, const UserD
      */
 
     const LabelStyleData style_data = {
-        .boarder_thickness = 10,
+        .border_thickness = 10,
         .bevel_radius = 30,
-        .boarder_color = {.r = 255, .g = 255, .b = 255, .a = 150}
+        .border_color = {.r = 255, .g = 255, .b = 255, .a = 150}
     };
     LabelTextData text_data;
     const float line_spacing = 0.0f;
@@ -311,8 +315,8 @@ static void setSettingsScreenLabels(SettingsScreen* settings_screen, const UserD
     float horizontal_text_margin = 0.0f;
     int vertical_text_alignment = ALIGN_CENTER;
     int horizontal_text_alignment = ALIGN_CENTER;
-    initLabelTextData(&text_data, text, font_size, line_spacing, vertical_text_margin, horizontal_text_margin,
-        vertical_text_alignment, horizontal_text_alignment, text_color);
+    initLabelTextData(&text_data, text, FONT_KLARISSA, font_size, line_spacing, vertical_text_margin,
+        horizontal_text_margin, vertical_text_alignment, horizontal_text_alignment, text_color);
     initLabel(&settings_screen->settings_label,
         (SDL_FRect) {.x = (WINDOW_WIDTH - 800.0f) / 2.0f, .y = 20.0f, .w = 800.0f, .h = 120.0f},
         (SDL_Color) {.r = 75, .g = 50, .b = 50, .a = 150}, style_data, text_data);
@@ -321,8 +325,8 @@ static void setSettingsScreenLabels(SettingsScreen* settings_screen, const UserD
      * consistent data for all the following labels
      */
 
-    font_size = 45.0f;
-    vertical_text_margin = 15.0f;
+    font_size = 40.0f;
+    vertical_text_margin = 20.0f;
     horizontal_text_margin = 25.0f;
     vertical_text_alignment = ALIGN_TOP;
     horizontal_text_alignment = ALIGN_LEFT;
@@ -334,8 +338,8 @@ static void setSettingsScreenLabels(SettingsScreen* settings_screen, const UserD
     char fps_label_text[20] = "Max Frame Rate: ";
     snprintf(fps_label_text, sizeof(fps_label_text), "%s%d",
         fps_label_text, user_data->frame_rate_cap);
-    initLabelTextData(&text_data, fps_label_text, font_size, line_spacing, vertical_text_margin, horizontal_text_margin,
-        vertical_text_alignment, horizontal_text_alignment, text_color);
+    initLabelTextData(&text_data, fps_label_text, FONT_KLARISSA, font_size, line_spacing, vertical_text_margin,
+        horizontal_text_margin, vertical_text_alignment, horizontal_text_alignment, text_color);
     initLabel(&settings_screen->fps_label,
         (SDL_FRect) {.x = (WINDOW_WIDTH - 800.0f) / 2.0f, .y = 160.0f, .w = 800.0f, .h = 160.0f},
         (SDL_Color) {.r = 75, .g = 50, .b = 50, .a = 150}, style_data, text_data);
@@ -357,8 +361,8 @@ static void setSettingsScreenLabels(SettingsScreen* settings_screen, const UserD
         default:
             break;
     }
-    initLabelTextData(&text_data, text, font_size, line_spacing, vertical_text_margin, horizontal_text_margin,
-        vertical_text_alignment, horizontal_text_alignment, text_color);
+    initLabelTextData(&text_data, text, FONT_KLARISSA, font_size, line_spacing, vertical_text_margin,
+        horizontal_text_margin, vertical_text_alignment, horizontal_text_alignment, text_color);
     initLabel(&settings_screen->graphics_quality_label,
         (SDL_FRect) {.x = (WINDOW_WIDTH - 800.0f) / 2.0f, .y = 340.0f, .w = 800.0f, .h = 160.0f},
         (SDL_Color) {.r = 75, .g = 50, .b = 50, .a = 150}, style_data, text_data);
@@ -370,8 +374,8 @@ static void setSettingsScreenLabels(SettingsScreen* settings_screen, const UserD
     char sensitivity_label_text[17] = "Sensitivity: ";
     snprintf(sensitivity_label_text, sizeof(sensitivity_label_text), "%s%d",
         sensitivity_label_text, user_data->sensitivity);
-    initLabelTextData(&text_data, sensitivity_label_text, font_size, line_spacing, vertical_text_margin,
-        horizontal_text_margin, vertical_text_alignment, horizontal_text_alignment, text_color);
+    initLabelTextData(&text_data, sensitivity_label_text, FONT_KLARISSA, font_size, line_spacing,
+        vertical_text_margin, horizontal_text_margin, vertical_text_alignment, horizontal_text_alignment, text_color);
     initLabel(&settings_screen->sensitivity_label,
         (SDL_FRect) {.x = (WINDOW_WIDTH - 800.0f) / 2.0f, .y = 520.0f, .w = 800.0f, .h = 160.0f},
         (SDL_Color) {.r = 75, .g = 50, .b = 50, .a = 150}, style_data, text_data);
@@ -384,9 +388,9 @@ static void setSettingsScreenButtons(SettingsScreen* settings_screen, const User
      */
 
     const LabelStyleData style_data = {
-        .boarder_thickness = 10,
+        .border_thickness = 10,
         .bevel_radius = 30,
-        .boarder_color = {.r = 255, .g = 255, .b = 255, .a = 150}
+        .border_color = {.r = 255, .g = 255, .b = 255, .a = 150}
     };
     LabelTextData text_data;
     const float font_size = 45.0f;
@@ -398,7 +402,7 @@ static void setSettingsScreenButtons(SettingsScreen* settings_screen, const User
     const SDL_Color text_color = {.r = 255, .g = 255, .b = 255, .a = 150};
     const ButtonColorData color_data = {
         .boarder_click_color = (SDL_Color) {.r = 100, .g = 0, .b = 0, .a = 100},
-        .boarder_idle_color = style_data.boarder_color,
+        .boarder_idle_color = style_data.border_color,
         .text_click_color = (SDL_Color) {.r = 100, .g = 0, .b = 0, .a = 100},
         .text_idle_color = text_color,
         .fill_click_color = (SDL_Color) {.r = 75, .g = 50, .b = 50, .a = 150},
@@ -415,8 +419,8 @@ static void setSettingsScreenButtons(SettingsScreen* settings_screen, const User
     } else {
         text = "Fullscreen: OFF";
     }
-    initLabelTextData(&text_data, text, font_size, line_spacing, vertical_text_margin, horizontal_text_margin,
-        vertical_text_alignment, horizontal_text_alignment, text_color);
+    initLabelTextData(&text_data, text, FONT_KLARISSA, font_size, line_spacing, vertical_text_margin,
+        horizontal_text_margin, vertical_text_alignment, horizontal_text_alignment, text_color);
     Label* fullscreen_label;
     initLabel(&fullscreen_label,
         (SDL_FRect) {.x = (WINDOW_WIDTH - 800.0f) / 2.0f, .y = 700.0f, .w = 800.0f, .h = 80.0f},
@@ -428,8 +432,8 @@ static void setSettingsScreenButtons(SettingsScreen* settings_screen, const User
      */
 
     text = "Back";
-    initLabelTextData(&text_data, text, font_size, line_spacing, vertical_text_margin, horizontal_text_margin,
-        vertical_text_alignment, horizontal_text_alignment, text_color);
+    initLabelTextData(&text_data, text, FONT_KLARISSA, font_size, line_spacing, vertical_text_margin,
+        horizontal_text_margin, vertical_text_alignment, horizontal_text_alignment, text_color);
     Label* back_label;
     initLabel(&back_label,
         (SDL_FRect) {.x = (WINDOW_WIDTH - 800.0f) / 2.0f, .y = 800.0f, .w = 247, .h = 80.0f},
@@ -441,8 +445,8 @@ static void setSettingsScreenButtons(SettingsScreen* settings_screen, const User
      */
 
     text = "Reset";
-    initLabelTextData(&text_data, text, font_size, line_spacing, vertical_text_margin, horizontal_text_margin,
-        vertical_text_alignment, horizontal_text_alignment, text_color);
+    initLabelTextData(&text_data, text, FONT_KLARISSA, font_size, line_spacing, vertical_text_margin,
+        horizontal_text_margin, vertical_text_alignment, horizontal_text_alignment, text_color);
     Label* reset_label;
     initLabel(&reset_label,
         (SDL_FRect) {.x = (WINDOW_WIDTH - 800.0f) / 2.0f + 276.0f, .y = 800.0f, .w = 247, .h = 80.0f},
@@ -454,8 +458,8 @@ static void setSettingsScreenButtons(SettingsScreen* settings_screen, const User
      */
 
     text = "Save";
-    initLabelTextData(&text_data, text, font_size, line_spacing, vertical_text_margin, horizontal_text_margin,
-        vertical_text_alignment, horizontal_text_alignment, text_color);
+    initLabelTextData(&text_data, text, FONT_KLARISSA, font_size, line_spacing, vertical_text_margin,
+        horizontal_text_margin, vertical_text_alignment, horizontal_text_alignment, text_color);
     Label* save_label;
     initLabel(&save_label,
         (SDL_FRect) {.x = (WINDOW_WIDTH - 800.0f) / 2.0f + 553.0f, .y = 800.0f, .w = 247, .h = 80.0f},
@@ -475,12 +479,11 @@ static void setSettingsScreenButtons(SettingsScreen* settings_screen, const User
         .fill_idle_color = (SDL_Color) {.r = 150, .g = 150, .b = 150, .a = 255}
     };
     const LabelStyleData slider_style_data = {
-        .boarder_thickness = 2,
+        .border_thickness = 2,
         .bevel_radius = 0,
-        .boarder_color = {.r = 100, .g = 100, .b = 100, .a = 255}
+        .border_color = {.r = 100, .g = 100, .b = 100, .a = 255}
     };
-    initLabelTextData(&text_data, "", 0, 0, 0, 0,
-        0, 0, (SDL_Color) {.r = 0, .g = 0, .b = 0, .a = 0});
+    initDefaultLabelTextData(&text_data);
     SDL_FRect default_slider_rect = {.x = (WINDOW_WIDTH - 800.0f) / 2.0f + 25.0f, .y = 235.0f, .w = 20.0f, .h = 60.0f};
 
     /*

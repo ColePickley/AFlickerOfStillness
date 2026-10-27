@@ -50,7 +50,9 @@ void destroySettingsScreen(SettingsScreen** settings_screen);
 int paintSettingsScreen(SettingsScreen* settings_screen, SDL_Renderer* renderer);
 
 /*
+ *----------------------------------------------------------------------------------------------------------------------
  * Event Handling
+ *----------------------------------------------------------------------------------------------------------------------
  */
 
 void settingsScreenMousePressed(const SettingsScreen* settings_screen, SDL_FPoint mouse_pos);
@@ -63,7 +65,9 @@ void settingsScreenMouseDragged(SettingsScreen* settings_screen, SDL_FPoint mous
 void settingsScreenMouseMoved(SettingsScreen* settings_screen, SDL_FPoint mouse_pos);
 
 /*
+ *----------------------------------------------------------------------------------------------------------------------
  * Helper Functions
+ *----------------------------------------------------------------------------------------------------------------------
  */
 
 static void setSettingsScreenSurfaces(const SettingsScreen* settings_screen);

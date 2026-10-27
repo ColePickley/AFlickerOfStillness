@@ -18,7 +18,7 @@ static void dequeHitCheckpoints(const GameData* game_data, char line[500], int* 
 
 static void setSaveEntities(GameData* game_data, char line[500], int* file_section);
 
-static void setSavePlayer(const GameData* game_data, char line[500], int* file_section);
+static void setSavePlayer(GameData* game_data, char line[500], int* file_section);
 
 void writeSave(const GameData* game_data);
 

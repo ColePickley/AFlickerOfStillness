@@ -3,28 +3,32 @@
 #include <SDL3/SDL_render.h>
 
 #include "pause_screen.h"
+#include "player_ui_painter.h"
 #include "../program_data.h"
 #include "../constants.h"
 
 typedef struct {
     int num_map_textures;
     int num_entity_textures;
-    SDL_Surface* map_surfaces[MAX_NUM_TEXTURES];
-    SDL_Texture* map_textures[MAX_NUM_TEXTURES];
-    SDL_Surface* entity_surfaces[MAX_NUM_TEXTURES];
-    SDL_Texture* entity_textures[MAX_NUM_TEXTURES];
+    SDL_Surface* map_surfaces[MAX_NUM_MAP_TEXTURES];
+    SDL_Texture* map_textures[MAX_NUM_MAP_TEXTURES];
+    SDL_Surface* entity_surfaces[MAX_NUM_MAP_TEXTURES];
+    SDL_Texture* entity_textures[MAX_NUM_MAP_TEXTURES];
     SDL_Surface* sky_surface;
     SDL_Texture* sky_texture;
+    PlayerUIPainter* ui_painter;
 }GameScreen;
 
-void initGameScreen(GameScreen** game_screen, const GameData* game_data);
+void initGameScreen(GameScreen** game_screen, GameData* game_data);
 
 void setGameScreenTextures(GameScreen* game_screen, SDL_Renderer* renderer);
 
 void destroyGameScreen(GameScreen** game_screen);
 
 /*
+ *----------------------------------------------------------------------------------------------------------------------
  * Painting
+ *----------------------------------------------------------------------------------------------------------------------
  */
 
 int paintGameScreen(const GameScreen* game_screen, SDL_Renderer* renderer, GameData* game_data,
@@ -44,7 +48,9 @@ static void drawWallLine(const GameScreen* game_screen, SDL_Renderer* renderer, 
 static void drawEntities(const GameScreen* game_screen, SDL_Renderer* renderer, GameData* game_data);
 
 /*
+ *----------------------------------------------------------------------------------------------------------------------
  * Event Handling
+ *----------------------------------------------------------------------------------------------------------------------
  */
 
 void gameScreenMousePressed(GameScreen* game_screen, SDL_FPoint mouse_pos);
@@ -64,7 +70,9 @@ void gameScreenKeyReleased(SDL_Keycode keycode, const GameData* game_data);
 int gameScreenKeyClicked(SDL_Keycode keycode);
 
 /*
+ *----------------------------------------------------------------------------------------------------------------------
  * Helper functions
+ *----------------------------------------------------------------------------------------------------------------------
  */
 
 static void setSurfacePixelColor(const SDL_Surface* surface, int x, int y, SDL_Color* out_color);
@@ -91,7 +99,9 @@ static int getFloorY(const GameData* game_data, double angle, double post_adjust
 static double getRayAngle(double ray_degree, double player_rotation);
 
 /*
+ *----------------------------------------------------------------------------------------------------------------------
  * Surface Loading
+ *----------------------------------------------------------------------------------------------------------------------
  */
 
 static int setMapSurfaces(GameScreen* game_screen);

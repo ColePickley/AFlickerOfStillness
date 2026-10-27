@@ -32,7 +32,9 @@ void doPrimaryAnimation(DeathScreen* death_screen);
 void doExitAnimation(DeathScreen* death_screen);
 
 /*
+ *----------------------------------------------------------------------------------------------------------------------
  * Event handling
+ *----------------------------------------------------------------------------------------------------------------------
  */
 
 void deathScreenMousePressed(const DeathScreen* death_screen, SDL_FPoint mouse_pos);
@@ -44,7 +46,9 @@ void deathScreenMouseDragged(const DeathScreen* death_screen, SDL_FPoint mouse_p
 void deathScreenMouseMoved(const DeathScreen* death_screen, SDL_FPoint mouse_pos);
 
 /*
+ *----------------------------------------------------------------------------------------------------------------------
  * Helper functions
+ *----------------------------------------------------------------------------------------------------------------------
  */
 
 static void setLayer1NewPoint(SDL_FPoint* new_point, uint8_t pt_index, float direction);

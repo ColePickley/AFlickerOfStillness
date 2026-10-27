@@ -7,32 +7,54 @@
 #include "functions.h"
 #include "program_data.h"
 
-void initPlayer(Player* player) {
-    player->w_pressed = false;
-    player->a_pressed = false;
-    player->s_pressed = false;
-    player->d_pressed = false;
-    player->last_update_time = -1;
-    player->x_velocity = 0;
-    player->y_velocity = 0;
-    player->x = 0;
-    player->y = 0;
-    player->rotation = 0;
-    for (int i = 0; i < NUM_RAYS; i++) {
-        // player->rays[i] = malloc(sizeof(Ray));
-        player->rays[i].x = 0.0;
-        player->rays[i].y = 0.0;
-        player->rays[i].degree = 0.25 * i - 30.0;
-    }
+void initKey(Key** key, const int entity_id, const int chunk) {
+    *key = malloc(sizeof(Key));
+    (*key)->entity_id = entity_id;
+    (*key)->chunk = chunk;
 }
 
-void destroyPlayer(Player* player) {
-    // for (int i = 0; i < NUM_RAYS; i++) {
-    //     if (player->rays[i] != NULL) {
-    //         free(player->rays[i]);
-    //         player->rays[i] = NULL;
-    //     }
-    // }
+void destroyKey(Key** key) {
+    free(*key);
+    *key = NULL;
+}
+
+void initPlayer(Player** player) {
+    *player = malloc(sizeof(Player));
+    if (player == NULL) {
+        perror("Failed to allocate memory for player");
+        return;
+    }
+    (*player)->w_pressed = false;
+    (*player)->a_pressed = false;
+    (*player)->s_pressed = false;
+    (*player)->d_pressed = false;
+    (*player)->primary_selected = true;
+    (*player)->num_keys = 0;
+    (*player)->last_update_time = -1;
+    (*player)->health = 100;
+    (*player)->x_velocity = 0;
+    (*player)->y_velocity = 0;
+    (*player)->x = 0;
+    (*player)->y = 0;
+    (*player)->rotation = 0;
+    for (int i = 0; i < NUM_RAYS; i++) {
+        (*player)->rays[i].x = 0.0;
+        (*player)->rays[i].y = 0.0;
+        (*player)->rays[i].degree = 0.25 * i - 30.0;
+    }
+    (*player)->primary_weapon = NULL;
+    (*player)->secondary_weapon = NULL;
+}
+
+void destroyPlayer(Player** player) {
+    if ((*player)->primary_weapon != NULL) {
+        destroyWeapon(&(*player)->primary_weapon);
+    }
+    if ((*player)->secondary_weapon != NULL) {
+        destroyWeapon(&(*player)->secondary_weapon);
+    }
+    free(*player);
+    *player = NULL;
 }
 
 void movePlayer(Player* player, int (*map_grid)[MAX_MAP_SIZE][MAX_MAP_SIZE]) {

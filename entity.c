@@ -20,6 +20,8 @@ void initDefaultEntity(Entity** entity, const int texture_id, const double x, co
     (*entity)->last_update_time = 0;
     // type-specific data
     setEntityData(*entity);
+    (*entity)->ammo_count = -1;
+    (*entity)->mag_count = -1;
     (*entity)->in_range = false;
     (*entity)->in_scope = false;
     // movement

@@ -6,43 +6,88 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-uint8_t* g_font_buffer;
-stbtt_fontinfo g_font;
+uint8_t* g_font_buffer_klarissa;
+stbtt_fontinfo g_font_klarissa;
+uint8_t* g_font_buffer_pixeloid;
+stbtt_fontinfo g_font_pixeloid;
 
-bool initPainterFont(void) {
-    const char* font_path = "fonts/TimesNewRoman.ttf";
-    FILE* font_file = fopen(font_path, "rb");
-    if (!font_file) {
-        fprintf(stderr, "Failed to open g_font file: %s\n", font_path);
+bool initPainterFonts() {
+
+    /*
+     * Klarissa
+     */
+
+    const char* font_path_1 = "fonts/klarissa.regular.ttf";
+    FILE* font_file_1 = fopen(font_path_1, "rb");
+    if (!font_file_1) {
+        fprintf(stderr, "Failed to open g_font file: %s\n", font_path_1);
         return false;
     }
 
-    fseek(font_file, 0, SEEK_END);
-    long size = ftell(font_file);
-    fseek(font_file, 0, SEEK_SET);
+    fseek(font_file_1, 0, SEEK_END);
+    const long size_1 = ftell(font_file_1);
+    fseek(font_file_1, 0, SEEK_SET);
 
-    g_font_buffer = malloc(size);
-    if (!g_font_buffer) {
-        fclose(font_file);
+    g_font_buffer_klarissa = malloc(size_1);
+    if (!g_font_buffer_klarissa) {
+        fclose(font_file_1);
         return false;
     }
 
-    fread(g_font_buffer, 1, size, font_file);
-    fclose(font_file);
+    fread(g_font_buffer_klarissa, 1, size_1, font_file_1);
+    fclose(font_file_1);
 
-    if (!stbtt_InitFont(&g_font, g_font_buffer, stbtt_GetFontOffsetForIndex(g_font_buffer, 0))) {
+    if (!stbtt_InitFont(&g_font_klarissa, g_font_buffer_klarissa,
+            stbtt_GetFontOffsetForIndex(g_font_buffer_klarissa, 0))) {
         fprintf(stderr, "Failed to initialize standard g_font structure.\n");
-        free(g_font_buffer);
-        g_font_buffer = NULL;
+        free(g_font_buffer_klarissa);
+        g_font_buffer_klarissa = NULL;
         return false;
     }
+
+    /*
+     * Cariopixel
+     */
+
+    const char* font_path_2 = "fonts/pixeloid.sans-bold.ttf";
+    FILE* font_file_2 = fopen(font_path_2, "rb");
+    if (!font_file_2) {
+        fprintf(stderr, "Failed to open g_font file: %s\n", font_path_2);
+        return false;
+    }
+
+    fseek(font_file_2, 0, SEEK_END);
+    const long size_2 = ftell(font_file_2);
+    fseek(font_file_2, 0, SEEK_SET);
+
+    g_font_buffer_pixeloid = malloc(size_2);
+    if (!g_font_buffer_pixeloid) {
+        fclose(font_file_2);
+        return false;
+    }
+
+    fread(g_font_buffer_pixeloid, 1, size_2, font_file_2);
+    fclose(font_file_2);
+
+    if (!stbtt_InitFont(&g_font_pixeloid, g_font_buffer_pixeloid,
+            stbtt_GetFontOffsetForIndex(g_font_buffer_pixeloid, 0))) {
+        fprintf(stderr, "Failed to initialize standard g_font structure.\n");
+        free(g_font_buffer_pixeloid);
+        g_font_buffer_pixeloid = NULL;
+        return false;
+    }
+
     return true;
 }
 
-void destroyPainterFont() {
-    if (g_font_buffer) {
-        free(g_font_buffer);
-        g_font_buffer = NULL;
+void destroyPainterFonts() {
+    if (g_font_buffer_klarissa) {
+        free(g_font_buffer_klarissa);
+        g_font_buffer_klarissa = NULL;
+    }
+    if (g_font_buffer_pixeloid) {
+        free(g_font_buffer_pixeloid);
+        g_font_buffer_pixeloid = NULL;
     }
 }
 
@@ -107,32 +152,50 @@ void paintRightAngleSemiCircle(SDL_Renderer* renderer, const Circle circle, cons
     }
 }
 
-void paintPolygon(SDL_Renderer* renderer, const SDL_FPoint pts[], const int num_pts, const SDL_Color color) {
-
-}
-
 void paintText(SDL_Renderer* renderer, const char* text, const SDL_FPoint p, const float font_size,
-        const SDL_Color color) {
-    if (!g_font_buffer) {
+        const SDL_Color color, const int font) {
+    if (font == FONT_KLARISSA && !g_font_buffer_klarissa || font == FONT_PIXELOID && !g_font_buffer_pixeloid) {
         return;
     }
     // get vertical g_font metrics
-    const float scale = stbtt_ScaleForPixelHeight(&g_font, font_size);
+    float scale;
+    if (font == FONT_KLARISSA) {
+        scale = stbtt_ScaleForPixelHeight(&g_font_klarissa, font_size);
+    } else {
+        scale = stbtt_ScaleForPixelHeight(&g_font_pixeloid, font_size);
+    }
     int ascent, descent, line_gap;
-    stbtt_GetFontVMetrics(&g_font, &ascent, &descent, &line_gap);
+    if (font == FONT_KLARISSA) {
+        stbtt_GetFontVMetrics(&g_font_klarissa, &ascent, &descent, &line_gap);
+    } else {
+        stbtt_GetFontVMetrics(&g_font_pixeloid, &ascent, &descent, &line_gap);
+    }
     const int base_line = (int) p.y + (int) ((float) ascent * scale);
     // paint individual characters
     float current_x = p.x;
     for (int i = 0; text[i] != '\0'; ++i) {
         int advance, lsb;
-        stbtt_GetCodepointHMetrics(&g_font, text[i], &advance, &lsb);
         int c_x1, c_y1, c_x2, c_y2;
-        stbtt_GetCodepointBitmapBox(&g_font, text[i], scale, scale, &c_x1, &c_y1, &c_x2, &c_y2);
+        if (font == FONT_KLARISSA) {
+            stbtt_GetCodepointHMetrics(&g_font_klarissa, text[i], &advance, &lsb);
+            stbtt_GetCodepointBitmapBox(&g_font_klarissa, text[i], scale, scale, &c_x1, &c_y1,
+                &c_x2, &c_y2);
+        } else {
+            stbtt_GetCodepointHMetrics(&g_font_pixeloid, text[i], &advance, &lsb);
+            stbtt_GetCodepointBitmapBox(&g_font_pixeloid, text[i], scale, scale, &c_x1, &c_y1,
+                &c_x2, &c_y2);
+        }
         const int glyph_w = c_x2 - c_x1;
         const int glyph_h = c_y2 - c_y1;
         if (glyph_w > 0 && glyph_h > 0) {
             uint8_t* bitmap = malloc(glyph_w * glyph_h);
-            stbtt_MakeCodepointBitmap(&g_font, bitmap, glyph_w, glyph_h, glyph_w, scale, scale, text[i]);
+            if (font == FONT_KLARISSA) {
+                stbtt_MakeCodepointBitmap(&g_font_klarissa, bitmap, glyph_w, glyph_h, glyph_w, scale,
+                    scale, text[i]);
+            } else {
+                stbtt_MakeCodepointBitmap(&g_font_pixeloid, bitmap, glyph_w, glyph_h, glyph_w, scale,
+                    scale, text[i]);
+            }
             for (int gy = 0; gy < glyph_h; ++gy) {
                 for (int gx = 0; gx < glyph_w; ++gx) {
                     const uint8_t alpha = (int) ((float) bitmap[gy * glyph_w + gx] * (float) color.a / 255.0f);
@@ -146,7 +209,13 @@ void paintText(SDL_Renderer* renderer, const char* text, const SDL_FPoint p, con
         }
         current_x += (float) advance * scale;
         if (text[i + 1] != '\0') {
-            current_x += (float) stbtt_GetCodepointKernAdvance(&g_font, text[i], text[i + 1]) * scale;
+            if (font == FONT_KLARISSA) {
+                current_x += (float) stbtt_GetCodepointKernAdvance(&g_font_klarissa, text[i], text[i + 1]) *
+                    scale;
+            } else {
+                current_x += (float) stbtt_GetCodepointKernAdvance(&g_font_pixeloid, text[i], text[i + 1]) *
+                    scale;
+            }
         }
     }
 }

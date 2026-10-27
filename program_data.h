@@ -40,4 +40,8 @@ void resetUserData(UserData* user_data);
 
 void destroyUserData(UserData** user_data);
 
+void addEntity(GameData* game_data, Entity* entity);
+
+void removeEntity(GameData* game_data, int entity_index);
+
 #endif //AFLICKEROFSTILLNESS_PROGRAM_DATA_H

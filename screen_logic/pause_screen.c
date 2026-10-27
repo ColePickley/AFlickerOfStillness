@@ -159,7 +159,9 @@ int paintPauseScreen(PauseScreen* pause_screen, SDL_Renderer* renderer) {
 }
 
 /*
+ *----------------------------------------------------------------------------------------------------------------------
  * Event handling
+ *----------------------------------------------------------------------------------------------------------------------
  */
 
 void pauseScreenMousePressed(const PauseScreen* pause_screen, const SDL_FPoint mouse_pos) {
@@ -206,7 +208,9 @@ void pauseScreenMouseMoved(const PauseScreen* pause_screen, const SDL_FPoint mou
 }
 
 /*
+ *----------------------------------------------------------------------------------------------------------------------
  * Helper functions
+ *----------------------------------------------------------------------------------------------------------------------
  */
 
 static void setPauseScreenSurfaces(const PauseScreen* pause_screen) {
@@ -231,9 +235,9 @@ static void setPauseScreenButtons(PauseScreen* pause_screen) {
     const float spacing = 30.0f;
     const SDL_Color fill_color = {.r = 75, .g = 50, .b = 50, .a = 100};
     const LabelStyleData style_data = {
-        .boarder_thickness = 10,
+        .border_thickness = 10,
         .bevel_radius = 30,
-        .boarder_color = {.r = 255, .g = 255, .b = 255, .a = 100}
+        .border_color = {.r = 255, .g = 255, .b = 255, .a = 100}
     };
     const float font_size = 70.0f;
     const float line_spacing = 0.0f;
@@ -244,7 +248,7 @@ static void setPauseScreenButtons(PauseScreen* pause_screen) {
     const SDL_Color click_color = {.r = 100, .g = 0, .b = 0, .a = 100};
     const ButtonColorData color_data = {
         .boarder_click_color = click_color,
-        .boarder_idle_color = style_data.boarder_color,
+        .boarder_idle_color = style_data.border_color,
         .text_click_color = click_color,
         .text_idle_color = text_color,
         .fill_click_color = fill_color,
@@ -253,8 +257,8 @@ static void setPauseScreenButtons(PauseScreen* pause_screen) {
     //Resume button
     LabelTextData resume_label_text_data;
     const char* play_label_text = "Resume";
-    initLabelTextData(&resume_label_text_data, play_label_text, font_size, line_spacing, vertical_text_margin,
-        horizontal_text_margin, vertical_text_alignment, horizontal_text_alignment, text_color);
+    initLabelTextData(&resume_label_text_data, play_label_text, FONT_KLARISSA, font_size, line_spacing,
+        vertical_text_margin, horizontal_text_margin, vertical_text_alignment, horizontal_text_alignment, text_color);
     Label* resume_label = NULL;
     initLabel(&resume_label, (SDL_FRect) {.x = x, .y = y, .w = width, .h = height}, fill_color, style_data,
         resume_label_text_data);
@@ -262,8 +266,9 @@ static void setPauseScreenButtons(PauseScreen* pause_screen) {
     //Last checkpoint button
     LabelTextData last_checkpoint_label_text_data;
     const char* last_checkpoint_label_text = "Last Checkpoint";
-    initLabelTextData(&last_checkpoint_label_text_data, last_checkpoint_label_text, font_size, line_spacing,
-        vertical_text_margin, horizontal_text_margin, vertical_text_alignment, horizontal_text_alignment, text_color);
+    initLabelTextData(&last_checkpoint_label_text_data, last_checkpoint_label_text, FONT_KLARISSA, font_size,
+        line_spacing, vertical_text_margin, horizontal_text_margin, vertical_text_alignment, horizontal_text_alignment,
+        text_color);
     Label* last_checkpoint_label = NULL;
     initLabel(&last_checkpoint_label, (SDL_FRect) {.x = x, .y = y + height + spacing, .w = width, .h = height},
         fill_color, style_data, last_checkpoint_label_text_data);
@@ -271,8 +276,9 @@ static void setPauseScreenButtons(PauseScreen* pause_screen) {
     //Restart level button
     LabelTextData restart_level_label_text_data;
     const char* restart_level_label_text = "Restart Level";
-    initLabelTextData(&restart_level_label_text_data, restart_level_label_text, font_size, line_spacing,
-        vertical_text_margin, horizontal_text_margin, vertical_text_alignment, horizontal_text_alignment, text_color);
+    initLabelTextData(&restart_level_label_text_data, restart_level_label_text, FONT_KLARISSA, font_size,
+        line_spacing, vertical_text_margin, horizontal_text_margin, vertical_text_alignment, horizontal_text_alignment,
+        text_color);
     Label* restart_level_label = NULL;
     initLabel(&restart_level_label, (SDL_FRect) {.x = x, .y = y + (height + spacing) * 2, .w = width, .h = height},
         fill_color, style_data, restart_level_label_text_data);
@@ -280,8 +286,8 @@ static void setPauseScreenButtons(PauseScreen* pause_screen) {
     //Settings button
     LabelTextData settings_label_text_data;
     const char* settings_label_text = "Settings";
-    initLabelTextData(&settings_label_text_data, settings_label_text, font_size, line_spacing, vertical_text_margin,
-        horizontal_text_margin, vertical_text_alignment, horizontal_text_alignment, text_color);
+    initLabelTextData(&settings_label_text_data, settings_label_text, FONT_KLARISSA, font_size, line_spacing,
+        vertical_text_margin, horizontal_text_margin, vertical_text_alignment, horizontal_text_alignment, text_color);
     Label* settings_label = NULL;
     initLabel(&settings_label, (SDL_FRect) {.x = x, .y = y + (height + spacing) * 3, .w = width, .h = height},
         fill_color, style_data, settings_label_text_data);
@@ -289,7 +295,7 @@ static void setPauseScreenButtons(PauseScreen* pause_screen) {
     //Exit button
     LabelTextData exit_text_data;
     const char* exit_text = "Exit";
-    initLabelTextData(&exit_text_data, exit_text, font_size, line_spacing, vertical_text_margin,
+    initLabelTextData(&exit_text_data, exit_text, FONT_KLARISSA, font_size, line_spacing, vertical_text_margin,
         horizontal_text_margin, vertical_text_alignment, horizontal_text_alignment, text_color);
     Label* exit_label = NULL;
     initLabel(&exit_label, (SDL_FRect) {.x = x, .y = y + (height + spacing) * 4, .w = width, .h = height},

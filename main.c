@@ -7,6 +7,7 @@
 
 #include "astar.h"
 #include "constants.h"
+#include "functions.h"
 #include "program_data.h"
 #include "screen_logic/screen_logic.h"
 
@@ -22,6 +23,14 @@ static void handleEvents(ScreenData* screen_data, SDL_Renderer* renderer, GameDa
     EventData* event_data, UserData* user_data, SDL_Window* window);
 
 static int updateGame(GameData* game_data);
+
+static void collectAmmo(GameData* game_data, int entity_index);
+
+static void collectHealth(GameData* game_data, int entity_index);
+
+static void collectWeapon(GameData* game_data, int entity_index);
+
+static void collectKey(GameData* game_data, int entity_index);
 
 static void printGameData(const GameData* game_data);
 
@@ -58,7 +67,7 @@ int main() {
      * Initialize painter
      */
 
-    if (!initPainterFont()) {
+    if (!initPainterFonts()) {
         SDL_Log("Critical Failure loading TrueType Font Engine!");
         SDL_Quit();
         return 1;
@@ -92,12 +101,6 @@ int main() {
         int screen_change = -1;
         if (screen_data->current_screen == GAME_SCREEN) {
             screen_change = updateGame(game_data);
-            for (int i = 0; i < game_data->num_entities; i++) {
-                if (getEntityType(game_data->entities[i]) == ENTITY_TYPE_ENEMY) {
-                    setEntityDirection(game_data->entities[i], game_data);
-                    moveEntity(game_data->entities[i], &game_data->map_grid, game_data->entities, game_data->num_entities);
-                }
-            }
         }
         if (screen_change != -1) {
             changeScreen(screen_data, screen_change, renderer, game_data, user_data);
@@ -118,7 +121,7 @@ int main() {
         if (frame_count >= 15) {
             end_time = SDL_GetPerformanceCounter();
             time_elapsed = (double) (end_time - start_time) / (double) SDL_GetPerformanceFrequency();
-            printf("\rFPS: %.2f | ", 1.0 / time_elapsed);
+            // printf("\rFPS: %.2f | ", 1.0 / time_elapsed);
             // printf("Start Screen: %s | ", screen_data->start_screen != NULL ? "Loaded" : "Unloaded");
             // printf("Saves Screen: %s | ", screen_data->saves_screen != NULL ? "Loaded" : "Unloaded");
             // printf("Game Screen: %s | ", screen_data->game_screen != NULL ? "Loaded" : "Unloaded");
@@ -135,7 +138,7 @@ int main() {
     destroyUserData(&user_data);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
-    destroyPainterFont();
+    destroyPainterFonts();
     SDL_Quit();
     printf("\nProgram run successfully!\n");
     return 0;
@@ -202,13 +205,108 @@ static void handleEvents(ScreenData* screen_data, SDL_Renderer* renderer, GameDa
 
 static int updateGame(GameData* game_data) {
     movePlayer(game_data->player, &game_data->map_grid);
+
+    /*
+     * Check entity collisions
+     */
+
     for (int i = 0; i < game_data->num_entities; i++) {
         if (fabs(game_data->entities[i]->x - game_data->player->x) < 10 &&
                 fabs(game_data->entities[i]->y - game_data->player->y) < 10) {
-            return DEATH_SCREEN;
+            switch (game_data->entities[i]->subtype_id) {
+                case ENTITY_SUBTYPE_AESTHETIC:
+                case ENTITY_SUBTYPE_ENEMY_PROJECTILE:
+                    break;
+                case ENTITY_SUBTYPE_COLLECTABLE_AMMO:
+                    collectAmmo(game_data, i);
+                    break;
+                case ENTITY_SUBTYPE_COLLECTABLE_HEALTH:
+                    collectHealth(game_data, i);
+                    break;
+                case ENTITY_SUBTYPE_COLLECTABLE_WEAPON:
+                    collectWeapon(game_data, i);
+                    break;
+                case ENTITY_SUBTYPE_COLLECTABLE_KEY:
+                    collectKey(game_data, i);
+                    break;
+                case ENTITY_SUBTYPE_PROJECTILE:
+                    game_data->player->health -= game_data->entities[i]->projectile_damage;
+                    removeEntity(game_data, i);
+                    break;
+                default:
+                    break;
+            }
         }
     }
-    return -1;
+    int screen_change = -1;
+    if (game_data->player->health <= 0) {
+        screen_change = DEATH_SCREEN;
+    }
+    for (int i = 0; i < game_data->num_entities; i++) {
+        if (getEntityType(game_data->entities[i]) == ENTITY_TYPE_ENEMY) {
+            setEntityDirection(game_data->entities[i], game_data);
+            moveEntity(game_data->entities[i], &game_data->map_grid, game_data->entities, game_data->num_entities);
+        }
+    }
+    return screen_change;
+}
+
+static void collectAmmo(GameData* game_data, const int entity_index) {
+    if (game_data->player->primary_weapon == NULL) return;
+    if (game_data->player->primary_weapon->mag_count == game_data->player->primary_weapon->max_mag_count) return;
+    if (game_data->entities[entity_index]->ammo_type == game_data->player->primary_weapon->ammo_type) {
+        game_data->player->primary_weapon->mag_count += game_data->entities[entity_index]->mag_amount;
+        game_data->player->primary_weapon->mag_count =
+            min(game_data->player->primary_weapon->max_mag_count,
+            game_data->player->primary_weapon->mag_count);
+        removeEntity(game_data, entity_index);
+    }
+}
+
+static void collectWeapon(GameData* game_data, const int entity_index) {
+    Weapon* new_weapon;
+    initWeapon(&new_weapon, game_data->entities[entity_index]->weapon_index,
+        game_data->entities[entity_index]->texture_id, game_data->entities[entity_index]->mag_count,
+        game_data->entities[entity_index]->ammo_count);
+    Weapon* old_weapon;
+    if (isPrimaryWeapon(new_weapon)) {
+        old_weapon = game_data->player->primary_weapon;
+        game_data->player->primary_weapon = new_weapon;
+    } else {
+        old_weapon = game_data->player->secondary_weapon;
+        game_data->player->secondary_weapon = new_weapon;
+    }
+    if (old_weapon != NULL) {
+        Entity* new_entity;
+        initDefaultEntity(&new_entity, old_weapon->entity_id, game_data->entities[entity_index]->x,
+            game_data->entities[entity_index]->y);
+        new_entity->mag_count = old_weapon->mag_count;
+        new_entity->ammo_count = old_weapon->ammo_count;
+        addEntity(game_data, new_entity);
+    }
+    removeEntity(game_data, entity_index);
+}
+
+static void collectHealth(GameData* game_data, const int entity_index) {
+    if (game_data->player->health < MAX_PLAYER_HEALTH) {
+        game_data->player->health += game_data->entities[entity_index]->health_amount;
+        game_data->player->health = min(game_data->player->health, MAX_PLAYER_HEALTH);
+        removeEntity(game_data, entity_index);
+    }
+}
+
+static void collectKey(GameData* game_data, const int entity_index) {
+    if (game_data->player->num_keys < MAX_NUM_KEYS) {
+        const int entity_id = game_data->entities[entity_index]->texture_id;
+        const int grid_y = (int) (game_data->entities[entity_index]->y / 64);
+        const int grid_x = (int) (game_data->entities[entity_index]->x / 64);
+        const int chunk = game_data->chunk_grid[grid_y][grid_x];
+        Key* new_key;
+        initKey(&new_key, entity_id, chunk);
+        game_data->player->keys[game_data->player->num_keys] = new_key;
+        game_data->player->num_keys++;
+        removeEntity(game_data, entity_index);
+    }
 }
 
 static void printGameData(const GameData* game_data) {
