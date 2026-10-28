@@ -24,11 +24,18 @@ static void handleEvents(ScreenData* screen_data, SDL_Renderer* renderer, GameDa
 
 static int updateGame(GameData* game_data);
 
+// returns true if an entity is removed
+static bool playerEntityCollisionCheck(GameData* game_data, int entity_index);
+
+// returns true if an entity is removed
+static bool entityEntityCollisionCheck(GameData* game_data, int entity_index1, int entity_index2);
+
 static void collectAmmo(GameData* game_data, int entity_index);
 
 static void collectHealth(GameData* game_data, int entity_index);
 
-static void collectWeapon(GameData* game_data, int entity_index);
+// returns true if a weapon is picked up
+static bool collectWeapon(GameData* game_data, int entity_index);
 
 static void collectKey(GameData* game_data, int entity_index);
 
@@ -121,7 +128,7 @@ int main() {
         if (frame_count >= 15) {
             end_time = SDL_GetPerformanceCounter();
             time_elapsed = (double) (end_time - start_time) / (double) SDL_GetPerformanceFrequency();
-            // printf("\rFPS: %.2f | ", 1.0 / time_elapsed);
+            printf("\rFPS: %.2f | ", 1.0 / time_elapsed);
             // printf("Start Screen: %s | ", screen_data->start_screen != NULL ? "Loaded" : "Unloaded");
             // printf("Saves Screen: %s | ", screen_data->saves_screen != NULL ? "Loaded" : "Unloaded");
             // printf("Game Screen: %s | ", screen_data->game_screen != NULL ? "Loaded" : "Unloaded");
@@ -173,7 +180,7 @@ static void handleEvents(ScreenData* screen_data, SDL_Renderer* renderer, GameDa
                 const double time_elapsed = (double) (mouse_up_time - event_data->mouse_down_time) /
                     (double) SDL_GetPerformanceFrequency();
                 if (time_elapsed < 0.2) {
-                    mouseClicked(screen_data, pt);
+                    mouseClicked(screen_data, pt, *game_data);
                 }
             }
         } else if (event.type == SDL_EVENT_MOUSE_MOTION) {
@@ -211,35 +218,20 @@ static int updateGame(GameData* game_data) {
      */
 
     for (int i = 0; i < game_data->num_entities; i++) {
-        if (fabs(game_data->entities[i]->x - game_data->player->x) < 10 &&
-                fabs(game_data->entities[i]->y - game_data->player->y) < 10) {
-            switch (game_data->entities[i]->subtype_id) {
-                case ENTITY_SUBTYPE_AESTHETIC:
-                case ENTITY_SUBTYPE_ENEMY_PROJECTILE:
+        if (playerEntityCollisionCheck(game_data, i)) {
+            i--;
+        }
+        if (game_data->entities[i]->subtype_id == ENTITY_SUBTYPE_PROJECTILE) {
+            for (int j = 0; j < game_data->num_entities; j++) {
+                if (i == j) continue;
+                if (entityEntityCollisionCheck(game_data, i, j)) {
+                    i--;
                     break;
-                case ENTITY_SUBTYPE_COLLECTABLE_AMMO:
-                    collectAmmo(game_data, i);
-                    break;
-                case ENTITY_SUBTYPE_COLLECTABLE_HEALTH:
-                    collectHealth(game_data, i);
-                    break;
-                case ENTITY_SUBTYPE_COLLECTABLE_WEAPON:
-                    collectWeapon(game_data, i);
-                    break;
-                case ENTITY_SUBTYPE_COLLECTABLE_KEY:
-                    collectKey(game_data, i);
-                    break;
-                case ENTITY_SUBTYPE_ENEMY_MELEE:
-                case ENTITY_SUBTYPE_ENEMY_MELEE_AND_PROJECTILE:
-                    game_data->player->health -= game_data->entities[i]->melee_damage;
-                    break;
-                case ENTITY_SUBTYPE_PROJECTILE:
-                    game_data->player->health -= game_data->entities[i]->projectile_damage;
-                    removeEntity(game_data, i);
-                    break;
-                default:
-                    break;
+                }
             }
+        } else if (getEntityType(game_data->entities[i]) == ENTITY_TYPE_ENEMY && game_data->entities[i]->health <= 0) {
+            removeEntity(game_data, i);
+            i--;
         }
     }
     int screen_change = -1;
@@ -247,12 +239,69 @@ static int updateGame(GameData* game_data) {
         screen_change = DEATH_SCREEN;
     }
     for (int i = 0; i < game_data->num_entities; i++) {
-        if (getEntityType(game_data->entities[i]) == ENTITY_TYPE_ENEMY) {
+        const int entity_type = getEntityType(game_data->entities[i]);
+        if (entity_type == ENTITY_TYPE_ENEMY) {
             setEntityDirection(game_data->entities[i], game_data);
-            moveEntity(game_data->entities[i], &game_data->map_grid, game_data->entities, game_data->num_entities);
+            moveEnemy(game_data->entities[i], &game_data->map_grid, game_data->entities, game_data->num_entities);
+        } else if (entity_type == ENTITY_TYPE_PROJECTILE) {
+            bool destroy_projectile;
+            moveProjectile(game_data->entities[i], &game_data->map_grid, &destroy_projectile);
+            if (destroy_projectile) {
+                removeEntity(game_data, i);
+                i--;
+            }
         }
     }
     return screen_change;
+}
+
+static bool playerEntityCollisionCheck(GameData* game_data, const int entity_index) {
+    const bool is_collision = fabs(game_data->entities[entity_index]->x - game_data->player->x) < 10 &&
+        fabs(game_data->entities[entity_index]->y - game_data->player->y) < 10;
+    if (!is_collision) return false;
+    switch (game_data->entities[entity_index]->subtype_id) {
+        case ENTITY_SUBTYPE_AESTHETIC:
+        case ENTITY_SUBTYPE_ENEMY_PROJECTILE:
+            return false;
+        case ENTITY_SUBTYPE_COLLECTABLE_AMMO:
+            collectAmmo(game_data, entity_index);
+            return true;
+        case ENTITY_SUBTYPE_COLLECTABLE_HEALTH:
+            collectHealth(game_data, entity_index);
+            return true;
+        case ENTITY_SUBTYPE_COLLECTABLE_WEAPON:
+            return collectWeapon(game_data, entity_index);
+        case ENTITY_SUBTYPE_COLLECTABLE_KEY:
+            collectKey(game_data, entity_index);
+            return true;
+        case ENTITY_SUBTYPE_ENEMY_MELEE:
+        case ENTITY_SUBTYPE_ENEMY_MELEE_AND_PROJECTILE:
+            game_data->player->health -= game_data->entities[entity_index]->melee_damage;
+            return false;
+        case ENTITY_SUBTYPE_PROJECTILE:
+            game_data->player->health -= game_data->entities[entity_index]->projectile_damage;
+            removeEntity(game_data, entity_index);
+            return true;
+        default:
+            return false;
+    }
+}
+
+static bool entityEntityCollisionCheck(GameData* game_data, const int entity_index1, const int entity_index2) {
+    const double max_collision_distance =
+        (game_data->entities[entity_index1]->scale + game_data->entities[entity_index2]->scale) / 8.0;
+    const double x_distance = fabs(game_data->entities[entity_index2]->x - game_data->entities[entity_index1]->x);
+    const double y_distance = fabs(game_data->entities[entity_index2]->y - game_data->entities[entity_index1]->y);
+    const bool is_collision = x_distance <= max_collision_distance && y_distance <= max_collision_distance;
+    if (!is_collision) return false;
+    const int type1 = getEntityType(game_data->entities[entity_index1]);
+    const int type2 = getEntityType(game_data->entities[entity_index2]);
+    if (type1 == ENTITY_TYPE_PROJECTILE && type2 == ENTITY_TYPE_ENEMY) {
+        game_data->entities[entity_index2]->health -= game_data->entities[entity_index1]->projectile_damage;
+        removeEntity(game_data, entity_index1);
+        return true;
+    }
+    return false;
 }
 
 static void collectAmmo(GameData* game_data, const int entity_index) {
@@ -267,7 +316,8 @@ static void collectAmmo(GameData* game_data, const int entity_index) {
     }
 }
 
-static void collectWeapon(GameData* game_data, const int entity_index) {
+static bool collectWeapon(GameData* game_data, const int entity_index) {
+    if (!game_data->player->pickup_enabled) return false;
     Weapon* new_weapon;
     initWeapon(&new_weapon, game_data->entities[entity_index]->weapon_index,
         game_data->entities[entity_index]->texture_id, game_data->entities[entity_index]->mag_count,
@@ -287,8 +337,10 @@ static void collectWeapon(GameData* game_data, const int entity_index) {
         new_entity->mag_count = old_weapon->mag_count;
         new_entity->ammo_count = old_weapon->ammo_count;
         addEntity(game_data, new_entity);
+        game_data->player->pickup_enabled = false;
     }
     removeEntity(game_data, entity_index);
+    return true;
 }
 
 static void collectHealth(GameData* game_data, const int entity_index) {

@@ -3,7 +3,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <SDL3_image/SDL_image.h>
-
+#include "../weapon.h"
 #include "../constants.h"
 #include "../functions.h"
 #include "../program_data.h"
@@ -245,6 +245,22 @@ void gameScreenMousePressed(GameScreen* game_screen, SDL_FPoint mouse_pos) {
 
 int gameScreenMouseReleased(GameScreen* game_screen, SDL_FPoint mouse_pos) {
     return -1;
+}
+
+void gameScreenMouseClicked(GameScreen* game_screen, SDL_FPoint mouse_pos, GameData* game_data) {
+    if (game_data->player == NULL) return;
+    if (game_data->player->primary_selected && game_data->player->primary_weapon == NULL) return;
+    if (!game_data->player->primary_selected && game_data->player->secondary_weapon == NULL) return;
+    if (game_data->player->primary_weapon->type == WEAPON_PROJECTILE) {
+        const double rotation = game_data->player->rotation;
+        const double x = game_data->player->x + sin(toRadians(rotation)) * 20;
+        const double y = game_data->player->y + cos(toRadians(rotation)) * 20;
+        Entity* entity;
+        initDefaultEntity(&entity, game_data->player->primary_weapon->projectile_index, x, y);
+        entity->x_direction = -sin(toRadians(rotation));
+        entity->y_direction = -cos(toRadians(rotation));
+        addEntity(game_data, entity);
+    }
 }
 
 void gameScreenMouseDragged(GameScreen* game_screen, const SDL_FPoint mouse_pos, const double prev_mouse_x,

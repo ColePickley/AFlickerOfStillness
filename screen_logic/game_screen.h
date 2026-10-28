@@ -57,6 +57,8 @@ void gameScreenMousePressed(GameScreen* game_screen, SDL_FPoint mouse_pos);
 
 int gameScreenMouseReleased(GameScreen* game_screen, SDL_FPoint mouse_pos);
 
+void gameScreenMouseClicked(GameScreen* game_screen, SDL_FPoint mouse_pos, GameData* game_data);
+
 void gameScreenMouseDragged(GameScreen* game_screen, SDL_FPoint mouse_pos, double prev_mouse_x,
     const GameData* game_data, const UserData* user_data);
 

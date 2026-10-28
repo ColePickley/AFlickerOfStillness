@@ -29,6 +29,7 @@ void initPlayer(Player** player) {
     (*player)->s_pressed = false;
     (*player)->d_pressed = false;
     (*player)->primary_selected = true;
+    (*player)->pickup_enabled = true;
     (*player)->num_keys = 0;
     (*player)->last_update_time = -1;
     (*player)->health = 100;
@@ -62,6 +63,8 @@ void movePlayer(Player* player, int (*map_grid)[MAX_MAP_SIZE][MAX_MAP_SIZE]) {
     if (player->last_update_time == -1) {
         player->last_update_time = SDL_GetTicks();
     }
+    const int grid_x = (int) player->x / 64;
+    const int grid_y = (int) player->y / 64;
     const uint64_t time_elapsed = SDL_GetTicks() - player->last_update_time;
     const double speed = (double) time_elapsed / 15.0;
     const double delta_x = player->x_velocity * speed;
@@ -73,6 +76,9 @@ void movePlayer(Player* player, int (*map_grid)[MAX_MAP_SIZE][MAX_MAP_SIZE]) {
         player->y += delta_y;
     }
     player->last_update_time = SDL_GetTicks();
+    if (((int) player->y / 64 != grid_y || (int) player->x / 64 != grid_x) && !player->pickup_enabled) {
+        player->pickup_enabled = true;
+    }
 }
 
 void rotatePlayer(Player* player, const int sensitivity, const double mouse_delta_x) {

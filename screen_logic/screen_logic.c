@@ -278,8 +278,14 @@ void mouseReleased(ScreenData* screen_data, const SDL_FPoint pt, SDL_Renderer* r
     changeScreen(screen_data, screen_change, renderer, *game_data, user_data);
 }
 
-void mouseClicked(const ScreenData* screen_data, const SDL_FPoint pt) {
-
+void mouseClicked(const ScreenData* screen_data, const SDL_FPoint pt, GameData* game_data) {
+    switch (screen_data->current_screen) {
+        case GAME_SCREEN:
+            gameScreenMouseClicked(screen_data->game_screen, pt, game_data);
+            break;
+        default:
+            break;
+    }
 }
 
 void mouseDragged(const ScreenData* screen_data, const SDL_FPoint pt, const double prev_mouse_x,

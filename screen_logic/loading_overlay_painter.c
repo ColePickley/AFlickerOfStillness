@@ -29,7 +29,7 @@ void paintLoadingOverlay(SDL_Renderer *renderer) {
         .outer_radius = radius1 + 15,
         .inner_radius = radius1,
     };
-    int color1 = max(0, min(255, (int) (radius1 / 100.0f * 255.0f)));
+    const int color1 = max(0, min(255, (int) (radius1 / 100.0f * 255.0f)));
     paintFilledCircle(renderer, circle1, (SDL_Color) {.r = color1, .g = color1, .b = color1, .a = 255});
 
     const float radius2 = 100.0f - radius1;
@@ -55,7 +55,7 @@ void paintLoadingOverlay(SDL_Renderer *renderer) {
     const SDL_Color text_color = {.r = 255, .g = 255, .b = 255, .a = 255};
     paintText(renderer, text, pt, 60.0f, text_color, FONT_PIXELOID);
 
-    SDL_SetRenderDrawColor(renderer, 38, 31, 28, 150);
+    SDL_SetRenderDrawColor(renderer, 38, 31, 28, 100);
     SDL_RenderFillRect(renderer, &(SDL_FRect) {.x = 0, .y = 0, .w = WINDOW_WIDTH, .h = WINDOW_HEIGHT});
 
     g_last_paint_time = SDL_GetTicks();

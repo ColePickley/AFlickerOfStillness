@@ -42,7 +42,7 @@ typedef struct {
     bool in_range, in_scope;
     // movement
     EntityPath* path;
-    int x_direction, y_direction;
+    double x_direction, y_direction;
 }Entity;
 
 void initDefaultEntity(Entity** entity, int texture_id, double x, double y);
@@ -51,8 +51,10 @@ void destroyEntity(Entity** entity);
 
 int getEntityType(const Entity* entity);
 
-void moveEntity(Entity* entity, int (*map_grid)[MAX_MAP_SIZE][MAX_MAP_SIZE], Entity* entities[MAX_NUM_ENTITIES],
+void moveEnemy(Entity* entity, int (*map_grid)[MAX_MAP_SIZE][MAX_MAP_SIZE], Entity* entities[MAX_NUM_ENTITIES],
     int num_entities);
+
+void moveProjectile(Entity* entity, int (*map_grid)[MAX_MAP_SIZE][MAX_MAP_SIZE], bool* destroy_projectile);
 
 static void setEntityData(Entity* entity);
 

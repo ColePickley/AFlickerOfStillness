@@ -57,7 +57,7 @@ void mousePressed(const ScreenData* screen_data, SDL_FPoint pt);
 void mouseReleased(ScreenData* screen_data, SDL_FPoint pt, SDL_Renderer* renderer, bool* program_running,
     GameData** game_data, UserData* user_data, SDL_Window* window);
 
-void mouseClicked(const ScreenData* screen_data, SDL_FPoint pt);
+void mouseClicked(const ScreenData* screen_data, SDL_FPoint pt, GameData* game_data);
 
 void mouseDragged(const ScreenData* screen_data, SDL_FPoint pt, double prev_mouse_x, const GameData* game_data,
     UserData* user_data);

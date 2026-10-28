@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <SDL3/SDL_timer.h>
-
+#include <math.h>
 #include "functions.h"
 
 void initDefaultEntity(Entity** entity, const int texture_id, const double x, const double y) {
@@ -55,7 +55,7 @@ int getEntityType(const Entity* entity) {
     }
 }
 
-void moveEntity(Entity* entity, int (*map_grid)[MAX_MAP_SIZE][MAX_MAP_SIZE], Entity* entities[MAX_NUM_ENTITIES],
+void moveEnemy(Entity* entity, int (*map_grid)[MAX_MAP_SIZE][MAX_MAP_SIZE], Entity* entities[MAX_NUM_ENTITIES],
         const int num_entities) {
     if (entity->last_update_time == -1) {
         entity->last_update_time = SDL_GetTicks();
@@ -88,6 +88,23 @@ void moveEntity(Entity* entity, int (*map_grid)[MAX_MAP_SIZE][MAX_MAP_SIZE], Ent
         entity->y += delta_y;
     }
     entity->last_update_time = SDL_GetTicks();
+}
+
+void moveProjectile(Entity* entity, int (*map_grid)[MAX_MAP_SIZE][MAX_MAP_SIZE], bool* destroy_projectile) {
+    *destroy_projectile = false;
+    const double delta_x = entity->x_direction * entity->speed;
+    const double delta_y = entity->y_direction * entity->speed;
+    if (!isXCollision((SDL_FPoint) {.x = (float) entity->x, .y = (float) entity->y}, map_grid, delta_x, 5)) {
+        entity->x += delta_x;
+    } else {
+        *destroy_projectile = true;
+        return;
+    }
+    if (!isYCollision((SDL_FPoint) {.x = (float) entity->x, .y = (float) entity->y}, map_grid, delta_y, 5)) {
+        entity->y += delta_y;
+    } else {
+        *destroy_projectile = true;
+    }
 }
 
 static void setEntityData(Entity* entity) {
