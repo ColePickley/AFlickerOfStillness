@@ -30,9 +30,9 @@ static bool playerEntityCollisionCheck(GameData* game_data, int entity_index);
 // returns true if an entity is removed
 static bool entityEntityCollisionCheck(GameData* game_data, int entity_index1, int entity_index2);
 
-static void collectAmmo(GameData* game_data, int entity_index);
+static bool collectAmmo(GameData* game_data, int entity_index);
 
-static void collectHealth(GameData* game_data, int entity_index);
+static bool collectHealth(GameData* game_data, int entity_index);
 
 // returns true if a weapon is picked up
 static bool collectWeapon(GameData* game_data, int entity_index);
@@ -202,7 +202,7 @@ static void handleEvents(ScreenData* screen_data, SDL_Renderer* renderer, GameDa
                 const uint64_t key_up_time = SDL_GetPerformanceCounter();
                 const double time_elapsed = (double) (key_up_time - event_data->mouse_down_time) /
                     (double) SDL_GetPerformanceFrequency();
-                if (time_elapsed < 100) {
+                if (time_elapsed < 100.0) {
                     keyClicked(screen_data, event_data->current_keycode, renderer, *game_data, user_data);
                 }
             }
@@ -264,11 +264,9 @@ static bool playerEntityCollisionCheck(GameData* game_data, const int entity_ind
         case ENTITY_SUBTYPE_ENEMY_PROJECTILE:
             return false;
         case ENTITY_SUBTYPE_COLLECTABLE_AMMO:
-            collectAmmo(game_data, entity_index);
-            return true;
+            return collectAmmo(game_data, entity_index);
         case ENTITY_SUBTYPE_COLLECTABLE_HEALTH:
-            collectHealth(game_data, entity_index);
-            return true;
+            return collectHealth(game_data, entity_index);
         case ENTITY_SUBTYPE_COLLECTABLE_WEAPON:
             return collectWeapon(game_data, entity_index);
         case ENTITY_SUBTYPE_COLLECTABLE_KEY:
@@ -304,16 +302,18 @@ static bool entityEntityCollisionCheck(GameData* game_data, const int entity_ind
     return false;
 }
 
-static void collectAmmo(GameData* game_data, const int entity_index) {
-    if (game_data->player->primary_weapon == NULL) return;
-    if (game_data->player->primary_weapon->mag_count == game_data->player->primary_weapon->max_mag_count) return;
+static bool collectAmmo(GameData* game_data, const int entity_index) {
+    if (game_data->player->primary_weapon == NULL) return false;
+    if (game_data->player->primary_weapon->mag_count == game_data->player->primary_weapon->max_mag_count) return false;
     if (game_data->entities[entity_index]->ammo_type == game_data->player->primary_weapon->ammo_type) {
         game_data->player->primary_weapon->mag_count += game_data->entities[entity_index]->mag_amount;
         game_data->player->primary_weapon->mag_count =
             min(game_data->player->primary_weapon->max_mag_count,
             game_data->player->primary_weapon->mag_count);
         removeEntity(game_data, entity_index);
+        return true;
     }
+    return false;
 }
 
 static bool collectWeapon(GameData* game_data, const int entity_index) {
@@ -343,12 +343,14 @@ static bool collectWeapon(GameData* game_data, const int entity_index) {
     return true;
 }
 
-static void collectHealth(GameData* game_data, const int entity_index) {
+static bool collectHealth(GameData* game_data, const int entity_index) {
     if (game_data->player->health < MAX_PLAYER_HEALTH) {
         game_data->player->health += game_data->entities[entity_index]->health_amount;
         game_data->player->health = min(game_data->player->health, MAX_PLAYER_HEALTH);
         removeEntity(game_data, entity_index);
+        return true;
     }
+    return false;
 }
 
 static void collectKey(GameData* game_data, const int entity_index) {

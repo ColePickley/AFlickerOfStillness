@@ -4,7 +4,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <SDL3/SDL_timer.h>
-#include <math.h>
 #include "functions.h"
 
 void initDefaultEntity(Entity** entity, const int texture_id, const double x, const double y) {

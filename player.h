@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include "constants.h"
 #include "weapon.h"
+#include "entity.h"
 
 #define MAX_PLAYER_HEALTH 100
 
@@ -52,6 +53,13 @@ void destroyPlayer(Player** player);
 void movePlayer(Player* player, int (*map_grid)[MAX_MAP_SIZE][MAX_MAP_SIZE]);
 
 void rotatePlayer(Player* player, int sensitivity, double mouse_delta_x);
+
+// returns the entity that needs to be added to game_data if the weapon fires a projectile
+Entity* playerRangedAttack(const Player* player, Entity* const (*entities)[MAX_NUM_ENTITIES], int num_entities);
+
+void playerMeleeAttack(const Player* player, Entity* const (*entities)[MAX_NUM_ENTITIES], int num_entities);
+
+void playerReload(const Player* player);
 
 static void setPlayerVelocity(Player* player);
 

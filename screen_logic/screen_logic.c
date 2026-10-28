@@ -356,7 +356,7 @@ void keyClicked(ScreenData* screen_data, const SDL_Keycode keycode, SDL_Renderer
         const UserData* user_data) {
     int screen_change = -1;
     if (screen_data->current_screen == GAME_SCREEN) {
-        screen_change = gameScreenKeyClicked(keycode);
+        screen_change = gameScreenKeyClicked(keycode, game_data);
     }
     changeScreen(screen_data, screen_change, renderer, game_data, user_data);
 }

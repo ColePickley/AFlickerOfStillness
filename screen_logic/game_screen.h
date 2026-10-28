@@ -69,7 +69,7 @@ void gameScreenKeyPressed(SDL_Keycode keycode, const GameData* game_data);
 
 void gameScreenKeyReleased(SDL_Keycode keycode, const GameData* game_data);
 
-int gameScreenKeyClicked(SDL_Keycode keycode);
+int gameScreenKeyClicked(SDL_Keycode keycode, const GameData* game_data);
 
 /*
  *----------------------------------------------------------------------------------------------------------------------

@@ -176,16 +176,6 @@ static void drawWallLine(const GameScreen* game_screen, SDL_Renderer* renderer, 
     const SDL_FRect src_rect = {.x = img_x, .y = 0, .w = 1, .h = TEXTURE_RESOLUTION};
     const SDL_FRect dst_rect = {.x = (float) x, .y = (float) y, .w = LINE_WIDTH, .h = line_length + LINE_WIDTH};
     SDL_RenderTexture(renderer, texture, &src_rect, &dst_rect);
-    // transform and draw texture
-    // if (line_length - WINDOW_HEIGHT > 0) {
-        // img = pygame.transform.scale(img, (3, line_length))
-        // rect = pygame.Rect(0, (line_length - GAME_HEIGHT) // 2, 3, GAME_HEIGHT)
-        // img = img.subsurface(rect)
-        // screen.blit(img, (x + BIRDS_EYE_WIDTH, 0))
-    // } else {
-        // img = pygame.transform.scale(img, (3, line_length))
-        // screen.blit(img, (x + BIRDS_EYE_WIDTH, y))
-    // }
 }
 
 static void drawEntities(const GameScreen* game_screen, SDL_Renderer* renderer, GameData* game_data) {
@@ -249,17 +239,16 @@ int gameScreenMouseReleased(GameScreen* game_screen, SDL_FPoint mouse_pos) {
 
 void gameScreenMouseClicked(GameScreen* game_screen, SDL_FPoint mouse_pos, GameData* game_data) {
     if (game_data->player == NULL) return;
-    if (game_data->player->primary_selected && game_data->player->primary_weapon == NULL) return;
+    if (game_data->player->primary_selected && (game_data->player->primary_weapon == NULL ||
+        game_data->player->primary_weapon->ammo_count == 0)) return;
     if (!game_data->player->primary_selected && game_data->player->secondary_weapon == NULL) return;
-    if (game_data->player->primary_weapon->type == WEAPON_PROJECTILE) {
-        const double rotation = game_data->player->rotation;
-        const double x = game_data->player->x + sin(toRadians(rotation)) * 20;
-        const double y = game_data->player->y + cos(toRadians(rotation)) * 20;
-        Entity* entity;
-        initDefaultEntity(&entity, game_data->player->primary_weapon->projectile_index, x, y);
-        entity->x_direction = -sin(toRadians(rotation));
-        entity->y_direction = -cos(toRadians(rotation));
-        addEntity(game_data, entity);
+    if (game_data->player->primary_selected) {
+        Entity* entity = playerRangedAttack(game_data->player, &game_data->entities, game_data->num_entities);
+        if (entity != NULL) {
+            addEntity(game_data, entity);
+        }
+    } else {
+        playerMeleeAttack(game_data->player, &game_data->entities, game_data->num_entities);
     }
 }
 
@@ -317,11 +306,16 @@ void gameScreenKeyReleased(const SDL_Keycode keycode, const GameData* game_data)
     }
 }
 
-int gameScreenKeyClicked(const SDL_Keycode keycode) {
-    if (keycode == SDLK_ESCAPE) {
-        return PAUSE_SCREEN;
+int gameScreenKeyClicked(const SDL_Keycode keycode, const GameData* game_data) {
+    int screen_change = -1;
+    switch (keycode) {
+        case SDLK_ESCAPE:
+            screen_change = PAUSE_SCREEN;
+        case SDLK_R:
+            playerReload(game_data->player);
+            break;
     }
-    return -1;
+    return screen_change;
 }
 
 /*

@@ -94,6 +94,41 @@ void rotatePlayer(Player* player, const int sensitivity, const double mouse_delt
     }
 }
 
+Entity* playerRangedAttack(const Player* player, Entity* const (*entities)[MAX_NUM_ENTITIES], const int num_entities) {
+    player->primary_weapon->ammo_count--;
+    if (player->primary_weapon->type == WEAPON_PROJECTILE) {
+        const double rotation = player->rotation;
+        const double x = player->x + sin(toRadians(rotation)) * 20;
+        const double y = player->y + cos(toRadians(rotation)) * 20;
+        Entity* entity;
+        initDefaultEntity(&entity, player->primary_weapon->projectile_index, x, y);
+        entity->x_direction = -sin(toRadians(rotation));
+        entity->y_direction = -cos(toRadians(rotation));
+        return entity;
+    }
+    for (int i = 0; i < num_entities; i++) {
+        if ((*entities)[i]->in_scope && (*entities)[i]->vect_mag <= player->primary_weapon->range) {
+            (*entities)[i]->health -= player->primary_weapon->damage;
+        }
+    }
+    return NULL;
+}
+
+void playerMeleeAttack(const Player* player, Entity* const (*entities)[MAX_NUM_ENTITIES], const int num_entities) {
+    for (int i = 0; i < num_entities; i++) {
+        if ((*entities)[i]->in_scope && (*entities)[i]->vect_mag <= player->secondary_weapon->range) {
+            (*entities)[i]->health -= player->secondary_weapon->damage;
+        }
+    }
+}
+
+void playerReload(const Player* player) {
+    if (player->primary_weapon == NULL || !player->primary_selected || player->primary_weapon->mag_count == 0 ||
+        player->primary_weapon->ammo_count == player->primary_weapon->max_ammo_count) return;
+    player->primary_weapon->ammo_count = player->primary_weapon->max_ammo_count;
+    player->primary_weapon->mag_count--;
+}
+
 static void setPlayerVelocity(Player* player) {
     if (player->w_pressed && player->s_pressed || player->a_pressed && player->d_pressed ||
             !player->w_pressed && !player->a_pressed && !player->s_pressed && !player->d_pressed) {
