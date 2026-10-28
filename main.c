@@ -128,7 +128,7 @@ int main() {
         if (frame_count >= 15) {
             end_time = SDL_GetPerformanceCounter();
             time_elapsed = (double) (end_time - start_time) / (double) SDL_GetPerformanceFrequency();
-            printf("\rFPS: %.2f | ", 1.0 / time_elapsed);
+            // printf("\rFPS: %.2f | ", 1.0 / time_elapsed);
             // printf("Start Screen: %s | ", screen_data->start_screen != NULL ? "Loaded" : "Unloaded");
             // printf("Saves Screen: %s | ", screen_data->saves_screen != NULL ? "Loaded" : "Unloaded");
             // printf("Game Screen: %s | ", screen_data->game_screen != NULL ? "Loaded" : "Unloaded");
