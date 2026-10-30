@@ -1,6 +1,7 @@
 #ifndef AFLICKEROFSTILLNESS_WEAPON_H
 #define AFLICKEROFSTILLNESS_WEAPON_H
 #include <stdbool.h>
+#include <stdint.h>
 
 enum {
     WEAPON_MELEE, WEAPON_RANGED, WEAPON_AUTOMATIC, WEAPON_PROJECTILE
@@ -11,6 +12,7 @@ typedef struct {
     int weapon_id;
     int mag_count;
     int ammo_count;
+    uint64_t last_attack_time, last_reload_time;
 
     int type, damage, ammo_type, projectile_index, max_ammo_count, default_mag_count, max_mag_count, range,
     attack_cool_down, relead_speed;

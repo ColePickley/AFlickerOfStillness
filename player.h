@@ -27,6 +27,7 @@ typedef struct {
     bool s_pressed;
     bool d_pressed;
     bool primary_selected;
+    bool attacking;
     bool pickup_enabled;
     uint8_t num_keys;
     uint64_t last_update_time;

@@ -1,9 +1,8 @@
 #include "screen_logic.h"
 
+#include <stdlib.h>
 #include "../file_handling/save_handling.h"
 #include "../file_handling/map_reader.h"
-#include <stdlib.h>
-
 #include "loading_overlay_painter.h"
 
 void initScreenData(ScreenData** screen_data, SDL_Renderer* renderer, const UserData* user_data) {
@@ -105,7 +104,7 @@ void changeScreen(ScreenData* screen_data, const int screen_id, SDL_Renderer* re
     }
 }
 
-void loadScreenTextures(ScreenData* screen_data, SDL_Renderer* renderer, const int screen_id) {
+void loadScreenTextures(ScreenData* screen_data, SDL_Renderer* renderer, const int screen_id, SDL_Window* window) {
     if (screen_data->prev_screen == START_SCREEN) {
         if (screen_id == SAVES_SCREEN) {
             destroySettingsScreen(&screen_data->settings_screen);
@@ -119,6 +118,9 @@ void loadScreenTextures(ScreenData* screen_data, SDL_Renderer* renderer, const i
             destroyStartScreen(&screen_data->start_screen);
             destroySavesScreen(&screen_data->saves_screen);
             setPauseScreenTextures(screen_data->pause_screen, renderer);
+            if (!SDL_SetWindowRelativeMouseMode(window, true)) {
+                SDL_Log("Could not enable relative mouse mode: %s", SDL_GetError());
+            }
         }
     } else if (screen_data->prev_screen == GAME_SCREEN) {
         if (screen_id == PAUSE_SCREEN) {
@@ -130,10 +132,16 @@ void loadScreenTextures(ScreenData* screen_data, SDL_Renderer* renderer, const i
             setSettingsScreenTextures(screen_data->settings_screen, renderer);
             setStartScreenTextures(screen_data->start_screen, renderer);
         }
+        if (!SDL_SetWindowRelativeMouseMode(window, false)) {
+            SDL_Log("Could not enable relative mouse mode: %s", SDL_GetError());
+        }
     } else if (screen_data->prev_screen == PAUSE_SCREEN) {
         if (screen_id == GAME_SCREEN) {
             destroySettingsScreen(&screen_data->settings_screen);
             destroyStartScreen(&screen_data->start_screen);
+            if (!SDL_SetWindowRelativeMouseMode(window, true)) {
+                SDL_Log("Could not enable relative mouse mode: %s", SDL_GetError());
+            }
         } else if (screen_id == START_SCREEN) {
             destroyPauseScreen(&screen_data->pause_screen);
             destroyGameScreen(&screen_data->game_screen);
@@ -144,6 +152,9 @@ void loadScreenTextures(ScreenData* screen_data, SDL_Renderer* renderer, const i
         if (screen_id == GAME_SCREEN) {
             destroySettingsScreen(&screen_data->settings_screen);
             destroyStartScreen(&screen_data->start_screen);
+            if (!SDL_SetWindowRelativeMouseMode(window, true)) {
+                SDL_Log("Could not enable relative mouse mode: %s", SDL_GetError());
+            }
         } else if (screen_id == START_SCREEN) {
             destroyDeathScreen(&screen_data->death_screen);
             destroyGameScreen(&screen_data->game_screen);
@@ -154,7 +165,7 @@ void loadScreenTextures(ScreenData* screen_data, SDL_Renderer* renderer, const i
 }
 
 void paintScreen(int screen_id, ScreenData* screen_data, SDL_Renderer* renderer, GameData* game_data,
-        const UserData* user_data) {
+        const UserData* user_data, SDL_Window* window) {
     bool paint_loading_overlay = false;
     if (screen_data->is_loading_in_background && screen_data->active_async_task) {
         if (screen_data->active_async_task->is_done) {
@@ -163,7 +174,7 @@ void paintScreen(int screen_id, ScreenData* screen_data, SDL_Renderer* renderer,
             screen_data->active_async_task = NULL;
             screen_data->bg_thread = NULL;
             screen_data->is_loading_in_background = false;
-            loadScreenTextures(screen_data, renderer, screen_id);
+            loadScreenTextures(screen_data, renderer, screen_id, window);
             resetLoadingOverlay();
         } else if (screen_id == GAME_SCREEN && screen_data->prev_screen == SAVES_SCREEN) {
             screen_id = screen_data->prev_screen;
@@ -191,24 +202,28 @@ void paintScreen(int screen_id, ScreenData* screen_data, SDL_Renderer* renderer,
             break;
         case PAUSE_SCREEN:
             if (screen_data->pause_screen == NULL) return;
-            if (screen_data->pause_screen->do_entrance_animation)
-                paintScreen(screen_data->prev_screen, screen_data, renderer, game_data, user_data);
-            else if (screen_data->pause_screen->do_exit_animation)
-                paintScreen(screen_data->pause_screen->next_screen, screen_data, renderer, game_data, user_data);
+            if (screen_data->pause_screen->do_entrance_animation) {
+                paintScreen(screen_data->prev_screen, screen_data, renderer, game_data, user_data, window);
+            } else if (screen_data->pause_screen->do_exit_animation) {
+                paintScreen(screen_data->pause_screen->next_screen, screen_data, renderer, game_data, user_data,
+                    window);
+            }
             screen_change = paintPauseScreen(screen_data->pause_screen, renderer);
             break;
         case SETTINGS_SCREEN:
             if (screen_data->settings_screen == NULL) return;
-            if (screen_data->settings_screen->do_entrance_animation || screen_data->settings_screen->do_exit_animation)
-                paintScreen(screen_data->settings_screen->prev_screen, screen_data, renderer, game_data, user_data);
+            if (screen_data->settings_screen->do_entrance_animation || screen_data->settings_screen->do_exit_animation) {
+                paintScreen(screen_data->settings_screen->prev_screen, screen_data, renderer, game_data, user_data,
+                    window);
+            }
             screen_change = paintSettingsScreen(screen_data->settings_screen, renderer);
             break;
         case DEATH_SCREEN:
             if (screen_data->death_screen == NULL) return;
             if (screen_data->death_screen->do_entrance_animation)
-                paintScreen(GAME_SCREEN, screen_data, renderer, game_data, user_data);
+                paintScreen(GAME_SCREEN, screen_data, renderer, game_data, user_data, window);
             if (screen_data->death_screen->do_exit_animation)
-                paintScreen(START_SCREEN, screen_data, renderer, game_data, user_data);
+                paintScreen(START_SCREEN, screen_data, renderer, game_data, user_data, window);
             screen_change = paintDeathScreen(screen_data->death_screen, renderer);
         default:
             break;
@@ -225,7 +240,7 @@ void paintScreen(int screen_id, ScreenData* screen_data, SDL_Renderer* renderer,
  *----------------------------------------------------------------------------------------------------------------------
  */
 
-void mousePressed(const ScreenData* screen_data, const SDL_FPoint pt) {
+void mousePressed(const ScreenData* screen_data, const SDL_FPoint pt, GameData* game_data) {
     switch (screen_data->current_screen) {
         case START_SCREEN:
             startScreenMousePressed(screen_data->start_screen, pt);
@@ -234,7 +249,7 @@ void mousePressed(const ScreenData* screen_data, const SDL_FPoint pt) {
             savesScreenMousePressed(screen_data->saves_screen, pt);
             break;
         case GAME_SCREEN:
-            gameScreenMousePressed(screen_data->game_screen, pt);
+            gameScreenMousePressed(screen_data->game_screen, pt, game_data);
             break;
         case PAUSE_SCREEN:
             pauseScreenMousePressed(screen_data->pause_screen, pt);
@@ -261,7 +276,7 @@ void mouseReleased(ScreenData* screen_data, const SDL_FPoint pt, SDL_Renderer* r
             screen_change = savesScreenMouseReleased(screen_data->saves_screen, pt, *game_data);
             break;
         case GAME_SCREEN:
-            screen_change = gameScreenMouseReleased(screen_data->game_screen, pt);
+            screen_change = gameScreenMouseReleased(screen_data->game_screen, pt, *game_data);
             break;
         case PAUSE_SCREEN:
             screen_change = pauseScreenMouseReleased(screen_data->pause_screen, pt, game_data);
@@ -288,8 +303,7 @@ void mouseClicked(const ScreenData* screen_data, const SDL_FPoint pt, GameData* 
     }
 }
 
-void mouseDragged(const ScreenData* screen_data, const SDL_FPoint pt, const double prev_mouse_x,
-        const GameData* game_data, UserData* user_data) {
+void mouseDragged(const ScreenData* screen_data, const SDL_FPoint pt, const GameData* game_data, UserData* user_data) {
     switch (screen_data->current_screen) {
         case START_SCREEN:
             startScreenMouseDragged(screen_data->start_screen, pt);
@@ -298,7 +312,7 @@ void mouseDragged(const ScreenData* screen_data, const SDL_FPoint pt, const doub
             savesScreenMouseDragged(screen_data->saves_screen, pt);
             break;
         case GAME_SCREEN:
-            gameScreenMouseDragged(screen_data->game_screen, pt, prev_mouse_x, game_data, user_data);
+            gameScreenMouseDragged(screen_data->game_screen, pt, game_data, user_data);
             break;
         case PAUSE_SCREEN:
             pauseScreenMouseDragged(screen_data->pause_screen, pt);
@@ -314,8 +328,8 @@ void mouseDragged(const ScreenData* screen_data, const SDL_FPoint pt, const doub
     }
 }
 
-void mouseMoved(const ScreenData* screen_data, const SDL_FPoint pt, const double prev_mouse_x,
-        const GameData* game_data, const UserData* user_data) {
+void mouseMoved(const ScreenData* screen_data, const SDL_FPoint pt, const GameData* game_data,
+        const UserData* user_data) {
     switch (screen_data->current_screen) {
         case START_SCREEN:
             startScreenMouseMoved(screen_data->start_screen, pt);
@@ -324,7 +338,7 @@ void mouseMoved(const ScreenData* screen_data, const SDL_FPoint pt, const double
             savesScreenMouseMoved(screen_data->saves_screen, pt);
             break;
         case GAME_SCREEN:
-            gameScreenMouseMoved(screen_data->game_screen, pt, prev_mouse_x, game_data, user_data);
+            gameScreenMouseMoved(screen_data->game_screen, pt, game_data, user_data);
             break;
         case PAUSE_SCREEN:
             pauseScreenMouseMoved(screen_data->pause_screen, pt);

@@ -3,9 +3,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <SDL3/SDL_timer.h>
-
 #include "functions.h"
-#include "program_data.h"
 
 void initKey(Key** key, const int entity_id, const int chunk) {
     *key = malloc(sizeof(Key));
@@ -29,6 +27,7 @@ void initPlayer(Player** player) {
     (*player)->s_pressed = false;
     (*player)->d_pressed = false;
     (*player)->primary_selected = true;
+    (*player)->attacking = false;
     (*player)->pickup_enabled = true;
     (*player)->num_keys = 0;
     (*player)->last_update_time = -1;
@@ -95,6 +94,12 @@ void rotatePlayer(Player* player, const int sensitivity, const double mouse_delt
 }
 
 Entity* playerRangedAttack(const Player* player, Entity* const (*entities)[MAX_NUM_ENTITIES], const int num_entities) {
+    if ((SDL_GetTicks() - player->primary_weapon->last_attack_time) / 40 < player->primary_weapon->attack_cool_down) {
+        return NULL;
+    }
+    if (player->primary_weapon->ammo_count == 0) {
+        return NULL;
+    }
     player->primary_weapon->ammo_count--;
     if (player->primary_weapon->type == WEAPON_PROJECTILE) {
         const double rotation = player->rotation;
@@ -104,6 +109,7 @@ Entity* playerRangedAttack(const Player* player, Entity* const (*entities)[MAX_N
         initDefaultEntity(&entity, player->primary_weapon->projectile_index, x, y);
         entity->x_direction = -sin(toRadians(rotation));
         entity->y_direction = -cos(toRadians(rotation));
+        player->primary_weapon->last_attack_time = SDL_GetTicks();
         return entity;
     }
     for (int i = 0; i < num_entities; i++) {
@@ -111,6 +117,7 @@ Entity* playerRangedAttack(const Player* player, Entity* const (*entities)[MAX_N
             (*entities)[i]->health -= player->primary_weapon->damage;
         }
     }
+    player->primary_weapon->last_attack_time = SDL_GetTicks();
     return NULL;
 }
 

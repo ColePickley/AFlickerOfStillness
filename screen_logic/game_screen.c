@@ -229,11 +229,15 @@ static void drawEntities(const GameScreen* game_screen, SDL_Renderer* renderer, 
  *----------------------------------------------------------------------------------------------------------------------
  */
 
-void gameScreenMousePressed(GameScreen* game_screen, SDL_FPoint mouse_pos) {
-
+void gameScreenMousePressed(GameScreen* game_screen, SDL_FPoint mouse_pos, const GameData* game_data) {
+    if (game_data->player == NULL || !game_data->player->primary_selected) return;
+    if (game_data->player->primary_weapon == NULL || game_data->player->primary_weapon->ammo_count == 0) return;
+    if (game_data->player->primary_weapon->type != WEAPON_AUTOMATIC) return;
+    game_data->player->attacking = true;
 }
 
-int gameScreenMouseReleased(GameScreen* game_screen, SDL_FPoint mouse_pos) {
+int gameScreenMouseReleased(GameScreen* game_screen, SDL_FPoint mouse_pos, const GameData* game_data) {
+    game_data->player->attacking = false;
     return -1;
 }
 
@@ -242,24 +246,26 @@ void gameScreenMouseClicked(GameScreen* game_screen, SDL_FPoint mouse_pos, GameD
     if (game_data->player->primary_selected && (game_data->player->primary_weapon == NULL ||
         game_data->player->primary_weapon->ammo_count == 0)) return;
     if (!game_data->player->primary_selected && game_data->player->secondary_weapon == NULL) return;
-    if (game_data->player->primary_selected) {
+    if (game_data->player->primary_selected && game_data->player->primary_weapon->type != WEAPON_AUTOMATIC) {
         Entity* entity = playerRangedAttack(game_data->player, &game_data->entities, game_data->num_entities);
         if (entity != NULL) {
             addEntity(game_data, entity);
         }
-    } else {
+        game_data->player->attacking = true;
+    } else if (!game_data->player->primary_selected) {
         playerMeleeAttack(game_data->player, &game_data->entities, game_data->num_entities);
+        game_data->player->attacking = true;
     }
 }
 
-void gameScreenMouseDragged(GameScreen* game_screen, const SDL_FPoint mouse_pos, const double prev_mouse_x,
-        const GameData* game_data, const UserData* user_data) {
-    rotatePlayer(game_data->player, user_data->sensitivity, mouse_pos.x - prev_mouse_x);
+void gameScreenMouseDragged(GameScreen* game_screen, const SDL_FPoint mouse_pos, const GameData* game_data,
+        const UserData* user_data) {
+
 }
 
-void gameScreenMouseMoved(GameScreen* game_screen, const SDL_FPoint mouse_pos, const double prev_mouse_x,
-        const GameData* game_data, const UserData* user_data) {
-
+void gameScreenMouseMoved(GameScreen* game_screen, const SDL_FPoint mouse_pos, const GameData* game_data,
+        const UserData* user_data) {
+    rotatePlayer(game_data->player, user_data->sensitivity, mouse_pos.x);
 }
 
 void gameScreenKeyPressed(const SDL_Keycode keycode, const GameData* game_data) {
@@ -311,8 +317,11 @@ int gameScreenKeyClicked(const SDL_Keycode keycode, const GameData* game_data) {
     switch (keycode) {
         case SDLK_ESCAPE:
             screen_change = PAUSE_SCREEN;
+            break;
         case SDLK_R:
             playerReload(game_data->player);
+            break;
+        default:
             break;
     }
     return screen_change;

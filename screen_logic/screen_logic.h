@@ -36,7 +36,7 @@ void initScreenData(ScreenData** screen_data, SDL_Renderer* renderer, const User
 
 void destroyScreenData(ScreenData** screen_data);
 
-void loadScreenTextures(ScreenData* screen_data, SDL_Renderer* renderer, int screen_id);
+void loadScreenTextures(ScreenData* screen_data, SDL_Renderer* renderer, int screen_id, SDL_Window* window);
 
 static int asyncScreenChange(void* data);
 
@@ -44,7 +44,7 @@ void changeScreen(ScreenData* screen_data, int screen_id, SDL_Renderer* renderer
     const UserData* user_data);
 
 void paintScreen(int screen_id, ScreenData* screen_data, SDL_Renderer* renderer, GameData* game_data,
-    const UserData* user_data);
+    const UserData* user_data, SDL_Window* window);
 
 /*
  *----------------------------------------------------------------------------------------------------------------------
@@ -52,18 +52,16 @@ void paintScreen(int screen_id, ScreenData* screen_data, SDL_Renderer* renderer,
  *----------------------------------------------------------------------------------------------------------------------
  */
 
-void mousePressed(const ScreenData* screen_data, SDL_FPoint pt);
+void mousePressed(const ScreenData* screen_data, SDL_FPoint pt, GameData* game_data);
 
 void mouseReleased(ScreenData* screen_data, SDL_FPoint pt, SDL_Renderer* renderer, bool* program_running,
     GameData** game_data, UserData* user_data, SDL_Window* window);
 
 void mouseClicked(const ScreenData* screen_data, SDL_FPoint pt, GameData* game_data);
 
-void mouseDragged(const ScreenData* screen_data, SDL_FPoint pt, double prev_mouse_x, const GameData* game_data,
-    UserData* user_data);
+void mouseDragged(const ScreenData* screen_data, SDL_FPoint pt, const GameData* game_data, UserData* user_data);
 
-void mouseMoved(const ScreenData* screen_data, SDL_FPoint pt, double prev_mouse_x, const GameData* game_data,
-    const UserData* user_data);
+void mouseMoved(const ScreenData* screen_data, SDL_FPoint pt, const GameData* game_data, const UserData* user_data);
 
 void keyPressed(const ScreenData* screen_data, SDL_Keycode keycode, const GameData* game_data);
 

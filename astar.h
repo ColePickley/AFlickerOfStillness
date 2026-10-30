@@ -3,8 +3,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "entity.h"
-#include "player.h"
 #include "program_data.h"
 
 #define CARDINAL_DIST 10

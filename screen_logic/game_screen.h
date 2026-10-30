@@ -53,17 +53,17 @@ static void drawEntities(const GameScreen* game_screen, SDL_Renderer* renderer, 
  *----------------------------------------------------------------------------------------------------------------------
  */
 
-void gameScreenMousePressed(GameScreen* game_screen, SDL_FPoint mouse_pos);
+void gameScreenMousePressed(GameScreen* game_screen, SDL_FPoint mouse_pos, const GameData* game_data);
 
-int gameScreenMouseReleased(GameScreen* game_screen, SDL_FPoint mouse_pos);
+int gameScreenMouseReleased(GameScreen* game_screen, SDL_FPoint mouse_pos, const GameData* game_data);
 
 void gameScreenMouseClicked(GameScreen* game_screen, SDL_FPoint mouse_pos, GameData* game_data);
 
-void gameScreenMouseDragged(GameScreen* game_screen, SDL_FPoint mouse_pos, double prev_mouse_x,
-    const GameData* game_data, const UserData* user_data);
+void gameScreenMouseDragged(GameScreen* game_screen, SDL_FPoint mouse_pos, const GameData* game_data,
+    const UserData* user_data);
 
-void gameScreenMouseMoved(GameScreen* game_screen, SDL_FPoint mouse_pos, double prev_mouse_x,
-    const GameData* game_data, const UserData* user_data);
+void gameScreenMouseMoved(GameScreen* game_screen, SDL_FPoint mouse_pos, const GameData* game_data,
+    const UserData* user_data);
 
 void gameScreenKeyPressed(SDL_Keycode keycode, const GameData* game_data);
 

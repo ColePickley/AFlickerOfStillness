@@ -2,25 +2,14 @@
 #include <stdint.h>
 #include <math.h>
 #include <stdlib.h>
-#include <time.h>
 #include <SDL3/SDL.h>
 
 #include "astar.h"
 #include "constants.h"
+#include "event_handling.h"
 #include "functions.h"
 #include "program_data.h"
 #include "screen_logic/screen_logic.h"
-
-typedef struct {
-    bool mouse_down;
-    uint64_t mouse_down_time;
-    uint64_t key_press_time;
-    double prev_mouse_x;
-    SDL_Keycode current_keycode;
-}EventData;
-
-static void handleEvents(ScreenData* screen_data, SDL_Renderer* renderer, GameData** game_data, bool* program_running,
-    EventData* event_data, UserData* user_data, SDL_Window* window);
 
 static int updateGame(GameData* game_data);
 
@@ -43,9 +32,12 @@ static void printGameData(const GameData* game_data);
 
 int main() {
     SDL_SetHint(SDL_HINT_RENDER_DRIVER, "opengl");
-    srand((unsigned int) time(NULL));
-    EventData event_data =
-        {.mouse_down = false, .mouse_down_time = 0, .key_press_time = 0, .prev_mouse_x = 0, .current_keycode = 0};
+    EventData event_data = {
+        .mouse_down = false,
+        .mouse_down_time = 0,
+        .key_press_time = 0,
+        .current_keycode = 0
+    };
     UserData* user_data;
     initUserData(&user_data);
     loadUserData(user_data);
@@ -103,7 +95,7 @@ int main() {
     while (program_running) {
         const uint64_t start_time = SDL_GetPerformanceCounter();
         // paint screen
-        paintScreen(screen_data->current_screen, screen_data, renderer, game_data, user_data);
+        paintScreen(screen_data->current_screen, screen_data, renderer, game_data, user_data, window);
         // update game
         int screen_change = -1;
         if (screen_data->current_screen == GAME_SCREEN) {
@@ -128,13 +120,7 @@ int main() {
         if (frame_count >= 15) {
             end_time = SDL_GetPerformanceCounter();
             time_elapsed = (double) (end_time - start_time) / (double) SDL_GetPerformanceFrequency();
-            // printf("\rFPS: %.2f | ", 1.0 / time_elapsed);
-            // printf("Start Screen: %s | ", screen_data->start_screen != NULL ? "Loaded" : "Unloaded");
-            // printf("Saves Screen: %s | ", screen_data->saves_screen != NULL ? "Loaded" : "Unloaded");
-            // printf("Game Screen: %s | ", screen_data->game_screen != NULL ? "Loaded" : "Unloaded");
-            // printf("Pause Screen: %s | ", screen_data->pause_screen != NULL ? "Loaded" : "Unloaded");
-            // printf("Death Screen: %s | ", screen_data->death_screen != NULL ? "Loaded" : "Unloaded");
-            // printf("Settings Screen: %s | ", screen_data->settings_screen != NULL ? "Loaded" : "Unloaded");
+            // printf("\rFPS: %.2f", 1.0 / time_elapsed);
             fflush(stdout);
             frame_count = 0;
         }
@@ -151,67 +137,12 @@ int main() {
     return 0;
 }
 
-static void handleEvents(ScreenData* screen_data, SDL_Renderer* renderer, GameData** game_data, bool* program_running,
-        EventData* event_data, UserData* user_data, SDL_Window* window) {
-    SDL_Event event;
-    while (SDL_PollEvent(&event)) {
-        if (event.type == SDL_EVENT_QUIT) {
-            *program_running = false;
-        }
-
-        if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN || event.type == SDL_EVENT_MOUSE_BUTTON_UP ||
-                event.type == SDL_EVENT_MOUSE_MOTION) {
-            SDL_ConvertEventToRenderCoordinates(renderer, &event);
-        }
-        const SDL_FPoint pt = { .x = event.button.x, .y = event.button.y };
-        const bool mouse_in_bounds = pt.x >= 0 && pt.y >= 0 && pt.x <= WINDOW_WIDTH && pt.y <= WINDOW_HEIGHT;
-
-        if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN) {
-            event_data->mouse_down = true;
-            if (event.button.button == SDL_BUTTON_LEFT && mouse_in_bounds) {
-                mousePressed(screen_data, pt);
-                event_data->mouse_down_time = SDL_GetPerformanceCounter();
-            }
-        } else if (event.type == SDL_EVENT_MOUSE_BUTTON_UP) {
-            event_data->mouse_down = false;
-            if (event.button.button == SDL_BUTTON_LEFT && mouse_in_bounds) {
-                mouseReleased(screen_data, pt, renderer, program_running, game_data, user_data, window);
-                const uint64_t mouse_up_time = SDL_GetPerformanceCounter();
-                const double time_elapsed = (double) (mouse_up_time - event_data->mouse_down_time) /
-                    (double) SDL_GetPerformanceFrequency();
-                if (time_elapsed < 0.2) {
-                    mouseClicked(screen_data, pt, *game_data);
-                }
-            }
-        } else if (event.type == SDL_EVENT_MOUSE_MOTION) {
-            const SDL_FPoint motion_pt = { .x = event.motion.x, .y = event.motion.y };
-            const bool motion_in_bounds = motion_pt.x >= 0 && motion_pt.y >= 0 &&
-                motion_pt.x <= WINDOW_WIDTH && motion_pt.y <= WINDOW_HEIGHT;
-            // mouseMoved(screen_data, pt, event_data->prev_mouse_x, *game_data, user_data);
-            if (event_data->mouse_down && motion_in_bounds) {
-                mouseDragged(screen_data, pt, event_data->prev_mouse_x, *game_data, user_data);
-                event_data->prev_mouse_x = pt.x;
-            }
-        } else if (event.type == SDL_EVENT_KEY_DOWN) {
-            event_data->current_keycode = event.key.key;
-            event_data->key_press_time = SDL_GetPerformanceCounter();
-            keyPressed(screen_data, event.key.key, *game_data);
-        } else if (event.type == SDL_EVENT_KEY_UP) {
-            keyReleased(screen_data, event.key.key, *game_data);
-            if (event.key.key == event_data->current_keycode) {
-                const uint64_t key_up_time = SDL_GetPerformanceCounter();
-                const double time_elapsed = (double) (key_up_time - event_data->mouse_down_time) /
-                    (double) SDL_GetPerformanceFrequency();
-                if (time_elapsed < 100.0) {
-                    keyClicked(screen_data, event_data->current_keycode, renderer, *game_data, user_data);
-                }
-            }
-        }
-    }
-}
-
 static int updateGame(GameData* game_data) {
     movePlayer(game_data->player, &game_data->map_grid);
+    if (game_data->player->primary_selected && game_data->player->primary_weapon != NULL &&
+            game_data->player->primary_weapon->type == WEAPON_AUTOMATIC && game_data->player->attacking) {
+        playerRangedAttack(game_data->player, &game_data->entities, game_data->num_entities);
+    }
 
     /*
      * Check entity collisions
