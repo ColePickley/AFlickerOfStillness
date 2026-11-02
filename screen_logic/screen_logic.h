@@ -59,7 +59,8 @@ void mouseReleased(ScreenData* screen_data, SDL_FPoint pt, SDL_Renderer* rendere
 
 void mouseClicked(const ScreenData* screen_data, SDL_FPoint pt, GameData* game_data);
 
-void mouseDragged(const ScreenData* screen_data, SDL_FPoint pt, const GameData* game_data, UserData* user_data);
+void mouseDragged(const ScreenData* screen_data, SDL_FPoint motion_pt, SDL_FPoint screen_pt, const GameData* game_data,
+    UserData* user_data);
 
 void mouseMoved(const ScreenData* screen_data, SDL_FPoint pt, const GameData* game_data, const UserData* user_data);
 
