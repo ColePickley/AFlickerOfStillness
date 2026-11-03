@@ -31,7 +31,7 @@ typedef struct {
     // universal data
     double x, y, vect_x, vect_y, vect_mag;
     int subtype_id, texture_id, scale, height;
-    uint64_t last_update_time;
+    uint64_t last_move_time, last_path_time;
     // type-specific data
     int health_amount; // collectable health
     int weapon_index, ammo_count, mag_count; // collectable weapon

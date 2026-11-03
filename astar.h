@@ -8,6 +8,12 @@
 #define CARDINAL_DIST 10
 #define DIAGONAL_DIST 14
 
+#define MAX_NODE_GRID_SIZE 127
+
+enum {
+    NODE_OPEN, NODE_CLOSED, NODE_INACTIVE
+};
+
 typedef struct Node Node;
 
 struct Node {
@@ -16,8 +22,12 @@ struct Node {
     uint16_t g_cost; // how far away this node is from the start node
     uint16_t h_cost; // how far away this node is from the end node
     uint16_t f_cost; // g_cost + h_cost
-    bool open;
+    uint8_t node_state;
 };
+
+static void initDefaultNode(Node** node);
+
+static void destroyNode(Node** node);
 
 void setEntityDirection(Entity* entity, const GameData* game_data);
 

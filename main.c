@@ -145,44 +145,69 @@ static int updateGame(GameData* game_data) {
     }
 
     /*
-     * Check entity collisions
+     * Check player-entity collisions
      */
 
-    for (int i = 0; i < game_data->num_entities; i++) {
-        if (playerEntityCollisionCheck(game_data, i)) {
-            i--;
+    int i = 0;
+    while (i < game_data->num_entities) {
+        if (!playerEntityCollisionCheck(game_data, i)) {
+            i++;
         }
+    }
+
+    /*
+     * Check entity-entity collisions and dead enemies
+     */
+
+    i = 0;
+    while (i < game_data->num_entities) {
+        bool entity_removed = false;
         if (game_data->entities[i]->subtype_id == ENTITY_SUBTYPE_PROJECTILE) {
             for (int j = 0; j < game_data->num_entities; j++) {
                 if (i == j) continue;
-                if (entityEntityCollisionCheck(game_data, i, j)) {
-                    i--;
-                    break;
-                }
+                entity_removed = entityEntityCollisionCheck(game_data, i, j);
+                if (entity_removed) break;
             }
         } else if (getEntityType(game_data->entities[i]) == ENTITY_TYPE_ENEMY && game_data->entities[i]->health <= 0) {
             removeEntity(game_data, i);
-            i--;
+            entity_removed = true;
+        }
+        if (!entity_removed) {
+            i++;
         }
     }
+
+    /*
+     * Check if player had died
+     */
+
     int screen_change = -1;
     if (game_data->player->health <= 0) {
         screen_change = DEATH_SCREEN;
     }
-    for (int i = 0; i < game_data->num_entities; i++) {
+
+    /*
+     * move entities
+     */
+
+    i= 0;
+    while (i < game_data->num_entities) {
+        bool entity_removed = false;
         const int entity_type = getEntityType(game_data->entities[i]);
         if (entity_type == ENTITY_TYPE_ENEMY) {
             setEntityDirection(game_data->entities[i], game_data);
             moveEnemy(game_data->entities[i], &game_data->map_grid, game_data->entities, game_data->num_entities);
         } else if (entity_type == ENTITY_TYPE_PROJECTILE) {
-            bool destroy_projectile;
-            moveProjectile(game_data->entities[i], &game_data->map_grid, &destroy_projectile);
-            if (destroy_projectile) {
+            moveProjectile(game_data->entities[i], &game_data->map_grid, &entity_removed);
+            if (entity_removed) {
                 removeEntity(game_data, i);
-                i--;
             }
         }
+        if (!entity_removed) {
+            i++;
+        }
     }
+
     return screen_change;
 }
 

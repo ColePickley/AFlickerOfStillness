@@ -4,10 +4,16 @@
 #include <stdlib.h>
 #include <string.h>
 #include <SDL3/SDL_timer.h>
+
+#include "astar.h"
 #include "functions.h"
 
 void initDefaultEntity(Entity** entity, const int texture_id, const double x, const double y) {
     *entity = malloc(sizeof(Entity));
+    if (*entity == NULL) {
+        printf("Failed to allocate entity.\n");
+        return;
+    }
     // universal data
     (*entity)->x = x;
     (*entity)->y = y;
@@ -16,7 +22,8 @@ void initDefaultEntity(Entity** entity, const int texture_id, const double x, co
     (*entity)->vect_mag = 0.0;
     (*entity)->subtype_id = -1;
     (*entity)->texture_id = texture_id;
-    (*entity)->last_update_time = 0;
+    (*entity)->last_move_time = 0;
+    (*entity)->last_path_time = 0;
     // type-specific data
     setEntityData(*entity);
     (*entity)->ammo_count = -1;
@@ -30,6 +37,9 @@ void initDefaultEntity(Entity** entity, const int texture_id, const double x, co
 }
 
 void destroyEntity(Entity** entity) {
+    if ((*entity)->path != NULL) {
+        destroyEntityPath(&(*entity)->path);
+    }
     free(*entity);
     *entity = NULL;
 }
@@ -56,14 +66,18 @@ int getEntityType(const Entity* entity) {
 
 void moveEnemy(Entity* entity, int (*map_grid)[MAX_MAP_SIZE][MAX_MAP_SIZE], Entity* entities[MAX_NUM_ENTITIES],
         const int num_entities) {
-    if (entity->last_update_time == -1) {
-        entity->last_update_time = SDL_GetTicks();
+    if (entity->last_move_time == -1) {
+        entity->last_move_time = SDL_GetTicks();
     }
-    if (entity->path == NULL || (entity->x_direction == 0 && entity->y_direction == 0)) {
-        entity->last_update_time = SDL_GetTicks();
+    if (entity->x_direction == 0 && entity->y_direction == 0) {
+        entity->last_move_time = SDL_GetTicks();
         return;
     }
-    const uint64_t time_elapsed = SDL_GetTicks() - entity->last_update_time;
+    if (entity->path == NULL || entity->path->start_node == NULL || entity->path->start_node->next_node == NULL) {
+        entity->last_move_time = SDL_GetTicks();
+        return;
+    }
+    const uint64_t time_elapsed = SDL_GetTicks() - entity->last_move_time;
     const double speed = (double) time_elapsed / 300.0;
     const double delta_x = entity->x_direction * speed * entity->speed;
     const double delta_y = entity->y_direction * speed * entity->speed;
@@ -74,7 +88,7 @@ void moveEnemy(Entity* entity, int (*map_grid)[MAX_MAP_SIZE][MAX_MAP_SIZE], Enti
         }
         if ((int) entities[i]->x / 64 == entity->path->start_node->next_node->pos.x &&
                 (int) entities[i]->y / 64 == entity->path->start_node->next_node->pos.y) {
-            entity->last_update_time = SDL_GetTicks();
+            entity->last_move_time = SDL_GetTicks();
             return;
         }
     }
@@ -86,17 +100,27 @@ void moveEnemy(Entity* entity, int (*map_grid)[MAX_MAP_SIZE][MAX_MAP_SIZE], Enti
     if (!isYCollision(entity_position, map_grid, delta_y, 32)) {
         entity->y += delta_y;
     }
-    entity->last_update_time = SDL_GetTicks();
+    entity->last_move_time = SDL_GetTicks();
 }
 
 void moveProjectile(Entity* entity, int (*map_grid)[MAX_MAP_SIZE][MAX_MAP_SIZE], bool* destroy_projectile) {
+    if (entity->last_move_time == -1) {
+        entity->last_move_time = SDL_GetTicks();
+    }
     *destroy_projectile = false;
-    const double delta_x = entity->x_direction * entity->speed;
-    const double delta_y = entity->y_direction * entity->speed;
+    const uint64_t time_elapsed = SDL_GetTicks() - entity->last_move_time;
+    const double speed = (double) time_elapsed / 300.0;
+    if (speed > 1) {
+        entity->last_move_time = SDL_GetTicks();
+        return;
+    }
+    const double delta_x = entity->x_direction * speed * entity->speed;
+    const double delta_y = entity->y_direction * speed * entity->speed;
     if (!isXCollision((SDL_FPoint) {.x = (float) entity->x, .y = (float) entity->y}, map_grid, delta_x, 5)) {
         entity->x += delta_x;
     } else {
         *destroy_projectile = true;
+        entity->last_move_time = SDL_GetTicks();
         return;
     }
     if (!isYCollision((SDL_FPoint) {.x = (float) entity->x, .y = (float) entity->y}, map_grid, delta_y, 5)) {
@@ -104,6 +128,7 @@ void moveProjectile(Entity* entity, int (*map_grid)[MAX_MAP_SIZE][MAX_MAP_SIZE],
     } else {
         *destroy_projectile = true;
     }
+    entity->last_move_time = SDL_GetTicks();
 }
 
 static void setEntityData(Entity* entity) {
@@ -119,8 +144,16 @@ static void setEntityData(Entity* entity) {
         const char *token = strtok(line, ",");
         int token_num = 0;
         while (token != NULL) {
-            char* end_token;
-            const int token_as_int = (int) strtol(token, &end_token, 10);
+            char* endptr;
+            const int token_as_int = (int) strtol(token, &endptr, 10);
+            if (endptr == token) {
+                printf("Failed to convert token to int\n");
+                return;
+            }
+            if ((token_as_int == LONG_MAX || token_as_int == LONG_MIN) && errno == ERANGE) {
+                printf("Failed to convert token to int\n");
+                return;
+            }
             if (token_num == 0 && entity->texture_id != token_as_int) {
                 break;
             }

@@ -1,32 +1,78 @@
 #include "astar.h"
 
 #include <math.h>
+#include <stdio.h>
+
 #include "functions.h"
 #include "stdlib.h"
 
+static void initDefaultNode(Node** node) {
+    *node = malloc(sizeof(Node));
+    if (*node == NULL) {
+        printf("Failed to allocate Node.\n");
+        return;
+    }
+    (*node)->parent_node = NULL;
+    (*node)->pos = (SDL_Point) {.x = -1, .y = -1};
+    (*node)->g_cost = 0;
+    (*node)->h_cost = 0;
+    (*node)->f_cost = 0;
+    (*node)->node_state = NODE_INACTIVE;
+}
+
+static void destroyNode(Node** node) {
+    if (node == NULL || *node == NULL) {
+        printf("Failed to destroy Node.\n");
+        return;
+    }
+    free(*node);
+    *node = NULL;
+}
+
 void setEntityDirection(Entity* entity, const GameData* game_data) {
+    if (entity->last_path_time == -1) {
+        entity->last_path_time = SDL_GetTicks();
+    }
+    const uint64_t time_elapsed = SDL_GetTicks() - entity->last_path_time;
+    if (time_elapsed < 1000) {
+        return;
+    }
     const SDL_FPoint cell_pos = {.x = (float) fmod(entity->x, 64), .y = (float) fmod(entity->y, 64)};
     if (cell_pos.x <= 32 + 4 && cell_pos.x >= 32 - 4 && cell_pos.y <= 32 + 4 && cell_pos.y >= 32 - 4) {
         setEntityPath(entity, game_data, game_data->player);
         if (entity->path == NULL) {
+            entity->last_path_time = SDL_GetTicks();
             return;
         }
         entity->x_direction = entity->path->start_node->next_node->pos.x - entity->path->start_node->pos.x;
         entity->y_direction = entity->path->start_node->next_node->pos.y - entity->path->start_node->pos.y;
     }
+    entity->last_path_time = SDL_GetTicks();
 }
 
 static void setEntityPath(Entity* entity, const GameData* game_data, const Player* player) {
-    Node start_node;
-    Node end_node;
-    initStartAndEndNodes(&start_node, &end_node, entity, player);
-    if (start_node.pos.x == end_node.pos.x && start_node.pos.y == end_node.pos.y) {
-        entity->path = NULL;
+    destroyEntityPath(&entity->path);
+    Node* start_node;
+    initDefaultNode(&start_node);
+    Node* end_node;
+    initDefaultNode(&end_node);
+    initStartAndEndNodes(start_node, end_node, entity, player);
+    if (start_node->pos.x == end_node->pos.x && start_node->pos.y == end_node->pos.y) {
+        destroyNode(&start_node);
+        destroyNode(&end_node);
         return;
     }
-    Node* (*node_grid)[MAX_MAP_SIZE][MAX_MAP_SIZE] = calloc(1, sizeof(Node*) * MAX_MAP_SIZE * MAX_MAP_SIZE);
-    (*node_grid)[start_node.pos.y][start_node.pos.x] = &start_node;
-    closeNode(&start_node, &end_node, node_grid, game_data);
+    Node* (*node_grid)[MAX_MAP_SIZE][MAX_MAP_SIZE] = malloc(sizeof(Node*) * MAX_MAP_SIZE * MAX_MAP_SIZE);
+    for (int i = 0; i < MAX_MAP_SIZE; i++) {
+        for (int j = 0; j < MAX_MAP_SIZE; j++) {
+            Node* node = NULL;
+            initDefaultNode(&node);
+            (*node_grid)[i][j] = node;
+        }
+    }
+    destroyNode(&(*node_grid)[start_node->pos.y][start_node->pos.x]);
+    (*node_grid)[start_node->pos.y][start_node->pos.x] = start_node;
+    closeNode(start_node, end_node, node_grid, game_data);
     bool path_found = false;
     int cycle = 0;
     while (!path_found) {
@@ -34,10 +80,9 @@ static void setEntityPath(Entity* entity, const GameData* game_data, const Playe
         Node* current_node = NULL;
         for (int y = 0; y < game_data->num_map_rows; y++) {
             for (int x = 0; x < game_data->num_map_cols; x++) {
-                const bool valid_node = (*node_grid)[y][x] != NULL && (*node_grid)[y][x]->open;
-                if (!valid_node) {
-                    continue;
-                }
+                const bool valid_node = (*node_grid)[y][x]->parent_node != NULL &&
+                    (*node_grid)[y][x]->node_state == NODE_OPEN;
+                if (!valid_node) continue;
                 const bool new_min_f = (*node_grid)[y][x]->f_cost < min_f_cost;
                 const bool equal_min_f = (*node_grid)[y][x]->f_cost == min_f_cost;
                 bool lower_h;
@@ -53,18 +98,30 @@ static void setEntityPath(Entity* entity, const GameData* game_data, const Playe
             }
         }
         if (current_node == NULL) {
-            entity->path = NULL;
+            for (int i = 0; i < MAX_MAP_SIZE; i++) {
+                for (int j = 0; j < MAX_MAP_SIZE; j++) {
+                    destroyNode(&(*node_grid)[i][j]);
+                }
+            }
+            free(node_grid);
             return;
         }
-        if (current_node->pos.x == end_node.pos.x && current_node->pos.y == end_node.pos.y) {
+        if (current_node->pos.x == end_node->pos.x && current_node->pos.y == end_node->pos.y) {
             path_found = true;
-            end_node = *current_node;
+            destroyNode(&end_node);
+            end_node = current_node;
         } else {
-            closeNode(current_node, &end_node, node_grid, game_data);
+            closeNode(current_node, end_node, node_grid, game_data);
         }
         cycle++;
     }
-    initEntityPath(&entity->path, &end_node);
+    initEntityPath(&entity->path, end_node);
+    for (int i = 0; i < MAX_MAP_SIZE; i++) {
+        for (int j = 0; j < MAX_MAP_SIZE; j++) {
+            destroyNode(&(*node_grid)[i][j]);
+        }
+    }
+    free(node_grid);
 }
 
 static void initStartAndEndNodes(Node* start_node, Node* end_node, const Entity* entity, const Player* player) {
@@ -81,13 +138,13 @@ static void initStartAndEndNodes(Node* start_node, Node* end_node, const Entity*
     end_node->g_cost = start_node->h_cost;
     start_node->f_cost = start_node->h_cost;
     end_node->f_cost = end_node->g_cost;
-    start_node->open = true;
-    end_node->open = false;
+    start_node->node_state = NODE_OPEN;
+    end_node->node_state = NODE_CLOSED;
 }
 
 static void closeNode(Node* node, const Node* end_node, Node* (*node_grid)[MAX_MAP_SIZE][MAX_MAP_SIZE],
         const GameData* game_data) {
-    node->open = false;
+    node->node_state = NODE_CLOSED;
     addNode(node, end_node, node_grid, game_data, (SDL_Point) {.x = 1, .y = -1});
     addNode(node, end_node, node_grid, game_data, (SDL_Point) {.x = 1, .y = 0});
     addNode(node, end_node, node_grid, game_data, (SDL_Point) {.x = 1, .y = 1});
@@ -100,30 +157,30 @@ static void closeNode(Node* node, const Node* end_node, Node* (*node_grid)[MAX_M
 
 static void addNode(Node* parent, const Node* end_node, Node* (*node_grid)[MAX_MAP_SIZE][MAX_MAP_SIZE],
         const GameData* game_data, const SDL_Point direction) {
-    Node* new_node = malloc(sizeof(Node));
-    new_node->pos.x = parent->pos.x + direction.x;
-    new_node->pos.y = parent->pos.y + direction.y;
-    if (new_node->pos.x < 1 || new_node->pos.y < 1 || new_node->pos.x >= game_data->num_map_cols - 1 ||
-            new_node->pos.y >= game_data->num_map_rows - 1) {
+    const SDL_Point new_node_pos = {.x = parent->pos.x + direction.x, .y = parent->pos.y + direction.y};
+    if (new_node_pos.x < 1 || new_node_pos.y < 1 || new_node_pos.x >= game_data->num_map_cols - 1 ||
+            new_node_pos.y >= game_data->num_map_rows - 1) {
         return;
     }
-    if (game_data->map_grid[new_node->pos.y][new_node->pos.x] > 0) {
+    if (game_data->map_grid[new_node_pos.y][new_node_pos.x] > 0) {
         return;
     }
-    if ((*node_grid)[new_node->pos.y][new_node->pos.x] != NULL
-            && (*node_grid)[new_node->pos.y][new_node->pos.x]->open == false) {
-        return;
-    }
-    new_node->g_cost = parent->g_cost;
+    Node* new_node = (*node_grid)[new_node_pos.y][new_node_pos.x];
+    new_node->pos = new_node_pos;
+    int new_g_cost = parent->g_cost;
     if (direction.x == 0 || direction.y == 0) {
-        new_node->g_cost += CARDINAL_DIST;
+        new_g_cost += CARDINAL_DIST;
     } else {
-        new_node->g_cost += DIAGONAL_DIST;
+        new_g_cost += DIAGONAL_DIST;
     }
+    if (new_node->node_state != NODE_INACTIVE && new_g_cost >= new_node->g_cost) {
+        return;
+    }
+    new_node->g_cost = new_g_cost;
     new_node->h_cost = getHCost(new_node, end_node);
     new_node->f_cost = new_node->g_cost + new_node->h_cost;
     new_node->parent_node = parent;
-    new_node->open = true;
+    new_node->node_state = NODE_OPEN;
     (*node_grid)[new_node->pos.y][new_node->pos.x] = new_node;
 }
 
@@ -147,6 +204,10 @@ void initEntityPath(EntityPath** path, const Node* end_node) {
         current_node = current_node->parent_node;
     }
     PathNode* start_path_node = malloc(sizeof(PathNode));
+    if (start_path_node == NULL) {
+        printf("Error allocating memory for start_path_node.\n");
+        return;
+    }
     PathNode* current_path_node = start_path_node;
     for (int i = size; i >= 0; i--) {
         current_node = end_node;
@@ -158,6 +219,10 @@ void initEntityPath(EntityPath** path, const Node* end_node) {
             current_path_node->next_node = NULL;
         } else {
             PathNode* new_node = malloc(sizeof(PathNode));
+            if (new_node == NULL) {
+                printf("Error allocating memory for new_node.\n");
+                return;
+            }
             new_node->pos = current_node->pos;
             new_node->next_node = NULL;
             current_path_node->next_node = new_node;
@@ -165,15 +230,21 @@ void initEntityPath(EntityPath** path, const Node* end_node) {
         }
     }
     *path = malloc(sizeof(EntityPath));
+    if (*path == NULL) {
+        printf("Error allocating memory for EntityPath.\n");
+        return;
+    }
     (*path)->size = size;
     (*path)->start_node = start_path_node;
 }
 
 void destroyEntityPath(EntityPath** path) {
-    PathNode* current_path_node = (*path)->start_node;
-    for (int i = 0; i < (*path)->size; i++) {
-        free(current_path_node);
-        current_path_node = current_path_node->next_node;
+    if (path == NULL || *path == NULL) return;
+    PathNode* current = (*path)->start_node;
+    while (current != NULL) {
+        PathNode* next = current->next_node;
+        free(current);
+        current = next;
     }
     free(*path);
     *path = NULL;

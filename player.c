@@ -7,19 +7,24 @@
 
 void initKey(Key** key, const int entity_id, const int chunk) {
     *key = malloc(sizeof(Key));
+    if (*key == NULL) {
+        perror("Failed to allocate key.\n");
+        return;
+    }
     (*key)->entity_id = entity_id;
     (*key)->chunk = chunk;
 }
 
 void destroyKey(Key** key) {
+    if (*key == NULL) return;
     free(*key);
     *key = NULL;
 }
 
 void initPlayer(Player** player) {
     *player = malloc(sizeof(Player));
-    if (player == NULL) {
-        perror("Failed to allocate memory for player");
+    if (*player == NULL) {
+        perror("Failed to allocate player.\n");
         return;
     }
     (*player)->w_pressed = false;
@@ -47,6 +52,7 @@ void initPlayer(Player** player) {
 }
 
 void destroyPlayer(Player** player) {
+    if (*player == NULL) return;
     if ((*player)->primary_weapon != NULL) {
         destroyWeapon(&(*player)->primary_weapon);
     }
@@ -68,10 +74,10 @@ void movePlayer(Player* player, int (*map_grid)[MAX_MAP_SIZE][MAX_MAP_SIZE]) {
     const double speed = (double) time_elapsed / 15.0;
     const double delta_x = player->x_velocity * speed;
     const double delta_y = player->y_velocity * speed;
-    if (!isXCollision((SDL_FPoint) {.x = (float) player->x, .y = (float) player->y}, map_grid, delta_x, 5)) {
+    if (!isXCollision((SDL_FPoint) {.x = (float) player->x, .y = (float) player->y}, map_grid, delta_x, 10)) {
         player->x += delta_x;
     }
-    if (!isYCollision((SDL_FPoint) {.x = (float) player->x, .y = (float) player->y}, map_grid, delta_y, 5)) {
+    if (!isYCollision((SDL_FPoint) {.x = (float) player->x, .y = (float) player->y}, map_grid, delta_y, 10)) {
         player->y += delta_y;
     }
     player->last_update_time = SDL_GetTicks();
@@ -107,8 +113,8 @@ Entity* playerRangedAttack(const Player* player, Entity* const (*entities)[MAX_N
         const double y = player->y + cos(toRadians(rotation)) * 20;
         Entity* entity;
         initDefaultEntity(&entity, player->primary_weapon->projectile_index, x, y);
-        entity->x_direction = -sin(toRadians(rotation));
-        entity->y_direction = -cos(toRadians(rotation));
+        entity->x_direction = sin(toRadians(rotation));
+        entity->y_direction = cos(toRadians(rotation));
         player->primary_weapon->last_attack_time = SDL_GetTicks();
         return entity;
     }
