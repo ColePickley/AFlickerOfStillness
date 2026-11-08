@@ -7,6 +7,7 @@ void handleEvents(ScreenData* screen_data, SDL_Renderer* renderer, GameData** ga
         switch (event.type) {
             case SDL_EVENT_QUIT:
                 *program_running = false;
+                break;
             case SDL_EVENT_MOUSE_BUTTON_DOWN:
                 mouseButtonDown(renderer, event_data, event, screen_data, *game_data);
                 break;
@@ -61,7 +62,7 @@ static void mouseMotion(SDL_Renderer* renderer, const EventData* event_data, SDL
         const ScreenData* screen_data, UserData* user_data, const GameData* game_data) {
     SDL_ConvertEventToRenderCoordinates(renderer, &event);
     const SDL_FPoint motion_pt = {.x = event.motion.xrel, .y = event.motion.yrel};
-    const SDL_FPoint screen_pt = {.x = event.button.x, .y = event.button.y};
+    const SDL_FPoint screen_pt = {.x = event.motion.x, .y = event.motion.y};
     const bool motion_in_bounds = motion_pt.x >= 0 && motion_pt.y >= 0 &&
         motion_pt.x <= WINDOW_WIDTH && motion_pt.y <= WINDOW_HEIGHT;
     mouseMoved(screen_data, motion_pt, game_data, user_data);
