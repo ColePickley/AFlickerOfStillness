@@ -45,6 +45,7 @@ void setGameScreenTextures(GameScreen* game_screen, SDL_Renderer* renderer) {
     }
     SDL_SetTextureScaleMode(texture, SDL_SCALEMODE_NEAREST);
     SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND);
+    SDL_DestroySurface(game_screen->sky_surface);
     game_screen->sky_texture = texture;
     setPlayerUIPainterTextures(game_screen->ui_painter, renderer);
 }
@@ -59,6 +60,8 @@ void destroyGameScreen(GameScreen** game_screen) {
         SDL_DestroyTexture((*game_screen)->entity_textures[i]);
         SDL_DestroySurface((*game_screen)->entity_surfaces[i]);
     }
+    SDL_DestroyTexture((*game_screen)->sky_texture);
+    destroyPlayerUIPainter(&(*game_screen)->ui_painter);
     free(*game_screen);
     *game_screen = NULL;
 }
@@ -348,6 +351,7 @@ static void setEntityVectors(const GameData* game_data) {
         game_data->entities[i]->vect_y = game_data->entities[i]->y - game_data->player->y;
         game_data->entities[i]->vect_mag = sqrt(pow(game_data->entities[i]->vect_x, 2) +
             pow(game_data->entities[i]->vect_y, 2));
+        game_data->entities[i]->in_scope = false;
     }
 }
 

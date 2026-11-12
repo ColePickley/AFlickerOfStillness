@@ -15,7 +15,7 @@ typedef struct {
     const UserData* user_data;
     SDL_Renderer* renderer;
     int screen_id;
-    volatile bool is_done;
+    SDL_AtomicInt is_done;
 } ThreadLoadingData;
 
 struct ScreenData {
@@ -26,6 +26,7 @@ struct ScreenData {
     PauseScreen* pause_screen;
     SettingsScreen* settings_screen;
     DeathScreen* death_screen;
+    bool is_loading_game;
 
     bool is_loading_in_background;
     ThreadLoadingData* active_async_task;
@@ -36,14 +37,14 @@ void initScreenData(ScreenData** screen_data, SDL_Renderer* renderer, const User
 
 void destroyScreenData(ScreenData** screen_data);
 
-void loadScreenTextures(ScreenData* screen_data, SDL_Renderer* renderer, int screen_id, SDL_Window* window);
+void loadScreenTextures(ScreenData* screen_data, SDL_Renderer* renderer, SDL_Window* window);
 
 static int asyncScreenChange(void* data);
 
 void changeScreen(ScreenData* screen_data, int screen_id, SDL_Renderer* renderer, GameData* game_data,
     const UserData* user_data);
 
-void paintScreen(int screen_id, ScreenData* screen_data, SDL_Renderer* renderer, GameData* game_data,
+void paintScreen(int screen_id, bool is_recursive, ScreenData* screen_data, SDL_Renderer* renderer, GameData* game_data,
     const UserData* user_data, SDL_Window* window);
 
 /*

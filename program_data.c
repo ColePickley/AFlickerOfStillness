@@ -80,7 +80,7 @@ void addEntity(GameData* game_data, Entity* entity) {
 }
 
 void removeEntity(GameData* game_data, const int entity_index) {
-    if (entity_index <= 0 || entity_index >= game_data->num_entities) {
+    if (entity_index < 0 || entity_index >= game_data->num_entities) {
         return;
     }
     destroyEntity(&game_data->entities[entity_index]);

@@ -18,6 +18,7 @@ void initScreenData(ScreenData** screen_data, SDL_Renderer* renderer, const User
     (*screen_data)->pause_screen = NULL;
     (*screen_data)->game_screen = NULL;
     (*screen_data)->death_screen = NULL;
+    (*screen_data)->is_loading_game = false;
 
     (*screen_data)->is_loading_in_background = false;
     (*screen_data)->active_async_task = NULL;
@@ -46,13 +47,13 @@ void destroyScreenData(ScreenData** screen_data) {
 
 static int asyncScreenChange(void* data) {
     ThreadLoadingData* args = data;
-    if (args->screen_data->prev_screen == START_SCREEN) {
+    if (args->screen_data->current_screen == START_SCREEN) {
         if (args->screen_id == SAVES_SCREEN) {
             initGameScreen(&args->screen_data->game_screen, args->game_data);
         }
-    } else if (args->screen_data->prev_screen == SAVES_SCREEN) {
+    } else if (args->screen_data->current_screen == SAVES_SCREEN) {
         if (args->screen_id == START_SCREEN) {
-            initSettingsScreen(&args->screen_data->settings_screen, args->user_data, args->screen_data->current_screen);
+            initSettingsScreen(&args->screen_data->settings_screen, args->user_data, args->screen_id);
         } else if (args->screen_id == GAME_SCREEN) {
             args->game_data->level_index = getLevelIndex(args->game_data->save_index);
             readMap(args->game_data);
@@ -61,23 +62,23 @@ static int asyncScreenChange(void* data) {
             initDeathScreen(&args->screen_data->death_screen);
             initPauseScreen(&args->screen_data->pause_screen);
         }
-    } else if (args->screen_data->prev_screen == GAME_SCREEN) {
+    } else if (args->screen_data->current_screen == GAME_SCREEN) {
         if (args->screen_id == PAUSE_SCREEN || args->screen_id == DEATH_SCREEN) {
-            initSettingsScreen(&args->screen_data->settings_screen, args->user_data, args->screen_data->current_screen);
+            initSettingsScreen(&args->screen_data->settings_screen, args->user_data, args->screen_id);
             initStartScreen(&args->screen_data->start_screen);
         }
-    } else if (args->screen_data->prev_screen == PAUSE_SCREEN) {
+    } else if (args->screen_data->current_screen == PAUSE_SCREEN) {
         if (args->screen_id == START_SCREEN) {
             initSavesScreen(&args->screen_data->saves_screen);
         } else if (args->screen_id == GAME_SCREEN) {
             initDeathScreen(&args->screen_data->death_screen);
         }
-    } else if (args->screen_data->prev_screen == DEATH_SCREEN) {
+    } else if (args->screen_data->current_screen == DEATH_SCREEN) {
         if (args->screen_id == START_SCREEN) {
             initSavesScreen(&args->screen_data->saves_screen);
         }
     }
-    args->is_done = true;
+    SDL_SetAtomicInt(&args->is_done, 1);
     return 0;
 }
 
@@ -85,10 +86,9 @@ void changeScreen(ScreenData* screen_data, const int screen_id, SDL_Renderer* re
         const UserData* user_data) {
     if (screen_id == -1) return;
     if (screen_data->is_loading_in_background) return;
-
-    screen_data->prev_screen = screen_data->current_screen;
-    screen_data->current_screen = screen_id;
-
+    if (screen_id == GAME_SCREEN && screen_data->current_screen == SAVES_SCREEN) {
+        screen_data->is_loading_game = true;
+    }
     screen_data->is_loading_in_background = true;
     ThreadLoadingData* args = malloc(sizeof(ThreadLoadingData));
     args->screen_data = screen_data;
@@ -96,7 +96,7 @@ void changeScreen(ScreenData* screen_data, const int screen_id, SDL_Renderer* re
     args->user_data = user_data;
     args->renderer = renderer;
     args->screen_id = screen_id;
-    args->is_done = false;
+    SDL_SetAtomicInt(&args->is_done, 0);
     screen_data->active_async_task = args;
     screen_data->bg_thread = SDL_CreateThread(asyncScreenChange, "GameLoadingWorker", args);
     if (!screen_data->bg_thread) {
@@ -104,17 +104,17 @@ void changeScreen(ScreenData* screen_data, const int screen_id, SDL_Renderer* re
     }
 }
 
-void loadScreenTextures(ScreenData* screen_data, SDL_Renderer* renderer, const int screen_id, SDL_Window* window) {
+void loadScreenTextures(ScreenData* screen_data, SDL_Renderer* renderer, SDL_Window* window) {
     if (screen_data->prev_screen == START_SCREEN) {
-        if (screen_id == SAVES_SCREEN) {
+        if (screen_data->current_screen == SAVES_SCREEN) {
             destroySettingsScreen(&screen_data->settings_screen);
             setGameScreenTextures(screen_data->game_screen, renderer);
         }
     } else if (screen_data->prev_screen == SAVES_SCREEN) {
-        if (screen_id == START_SCREEN) {
+        if (screen_data->current_screen == START_SCREEN) {
             destroyGameScreen(&screen_data->game_screen);
             setSettingsScreenTextures(screen_data->settings_screen, renderer);
-        } else if (screen_id == GAME_SCREEN) {
+        } else if (screen_data->current_screen == GAME_SCREEN) {
             destroyStartScreen(&screen_data->start_screen);
             destroySavesScreen(&screen_data->saves_screen);
             setPauseScreenTextures(screen_data->pause_screen, renderer);
@@ -123,11 +123,11 @@ void loadScreenTextures(ScreenData* screen_data, SDL_Renderer* renderer, const i
             }
         }
     } else if (screen_data->prev_screen == GAME_SCREEN) {
-        if (screen_id == PAUSE_SCREEN) {
+        if (screen_data->current_screen == PAUSE_SCREEN) {
             destroyDeathScreen(&screen_data->death_screen);
             setSettingsScreenTextures(screen_data->settings_screen, renderer);
             setStartScreenTextures(screen_data->start_screen, renderer);
-        } else if (screen_id == DEATH_SCREEN) {
+        } else if (screen_data->current_screen == DEATH_SCREEN) {
             destroyPauseScreen(&screen_data->pause_screen);
             setSettingsScreenTextures(screen_data->settings_screen, renderer);
             setStartScreenTextures(screen_data->start_screen, renderer);
@@ -136,26 +136,26 @@ void loadScreenTextures(ScreenData* screen_data, SDL_Renderer* renderer, const i
             SDL_Log("Could not enable relative mouse mode: %s", SDL_GetError());
         }
     } else if (screen_data->prev_screen == PAUSE_SCREEN) {
-        if (screen_id == GAME_SCREEN) {
+        if (screen_data->current_screen == GAME_SCREEN) {
             destroySettingsScreen(&screen_data->settings_screen);
             destroyStartScreen(&screen_data->start_screen);
             if (!SDL_SetWindowRelativeMouseMode(window, true)) {
                 SDL_Log("Could not enable relative mouse mode: %s", SDL_GetError());
             }
-        } else if (screen_id == START_SCREEN) {
+        } else if (screen_data->current_screen == START_SCREEN) {
             destroyPauseScreen(&screen_data->pause_screen);
             destroyGameScreen(&screen_data->game_screen);
             setSavesScreenTextures(screen_data->saves_screen, renderer);
             screen_data->settings_screen->prev_screen = START_SCREEN;
         }
     } else if (screen_data->prev_screen == DEATH_SCREEN) {
-        if (screen_id == GAME_SCREEN) {
+        if (screen_data->current_screen == GAME_SCREEN) {
             destroySettingsScreen(&screen_data->settings_screen);
             destroyStartScreen(&screen_data->start_screen);
             if (!SDL_SetWindowRelativeMouseMode(window, true)) {
                 SDL_Log("Could not enable relative mouse mode: %s", SDL_GetError());
             }
-        } else if (screen_id == START_SCREEN) {
+        } else if (screen_data->current_screen == START_SCREEN) {
             destroyDeathScreen(&screen_data->death_screen);
             destroyGameScreen(&screen_data->game_screen);
             setSavesScreenTextures(screen_data->saves_screen, renderer);
@@ -164,21 +164,25 @@ void loadScreenTextures(ScreenData* screen_data, SDL_Renderer* renderer, const i
     }
 }
 
-void paintScreen(int screen_id, ScreenData* screen_data, SDL_Renderer* renderer, GameData* game_data,
-        const UserData* user_data, SDL_Window* window) {
+void paintScreen(int screen_id, const bool is_recursive, ScreenData* screen_data, SDL_Renderer* renderer,
+        GameData* game_data, const UserData* user_data, SDL_Window* window) {
     bool paint_loading_overlay = false;
-    if (screen_data->is_loading_in_background && screen_data->active_async_task) {
-        if (screen_data->active_async_task->is_done) {
+    if (screen_data->is_loading_in_background && screen_data->active_async_task && !is_recursive) {
+        if (SDL_GetAtomicInt(&screen_data->active_async_task->is_done)) {
             SDL_WaitThread(screen_data->bg_thread, NULL);
+            screen_data->prev_screen = screen_data->current_screen;
+            screen_data->current_screen = screen_data->active_async_task->screen_id;
             free(screen_data->active_async_task);
             screen_data->active_async_task = NULL;
             screen_data->bg_thread = NULL;
             screen_data->is_loading_in_background = false;
-            loadScreenTextures(screen_data, renderer, screen_id, window);
+            loadScreenTextures(screen_data, renderer, window);
             resetLoadingOverlay();
-        } else if (screen_id == GAME_SCREEN && screen_data->prev_screen == SAVES_SCREEN) {
-            screen_id = screen_data->prev_screen;
+            screen_id = screen_data->current_screen;
+        } else if (screen_id == SAVES_SCREEN && screen_data->is_loading_game) {
             paint_loading_overlay = true;
+        } else if (screen_id != GAME_SCREEN) {
+            screen_id = screen_data->active_async_task->screen_id;
         }
     }
 
@@ -203,27 +207,28 @@ void paintScreen(int screen_id, ScreenData* screen_data, SDL_Renderer* renderer,
         case PAUSE_SCREEN:
             if (screen_data->pause_screen == NULL) return;
             if (screen_data->pause_screen->do_entrance_animation) {
-                paintScreen(screen_data->prev_screen, screen_data, renderer, game_data, user_data, window);
-            } else if (screen_data->pause_screen->do_exit_animation) {
-                paintScreen(screen_data->pause_screen->next_screen, screen_data, renderer, game_data, user_data,
+                paintScreen(screen_data->prev_screen, true, screen_data, renderer, game_data, user_data,
                     window);
+            } else if (screen_data->pause_screen->do_exit_animation) {
+                paintScreen(screen_data->pause_screen->next_screen, true, screen_data, renderer, game_data,
+                    user_data, window);
             }
             screen_change = paintPauseScreen(screen_data->pause_screen, renderer);
             break;
         case SETTINGS_SCREEN:
             if (screen_data->settings_screen == NULL) return;
             if (screen_data->settings_screen->do_entrance_animation || screen_data->settings_screen->do_exit_animation) {
-                paintScreen(screen_data->settings_screen->prev_screen, screen_data, renderer, game_data, user_data,
-                    window);
+                paintScreen(screen_data->settings_screen->prev_screen, true, screen_data, renderer, game_data,
+                    user_data, window);
             }
             screen_change = paintSettingsScreen(screen_data->settings_screen, renderer);
             break;
         case DEATH_SCREEN:
             if (screen_data->death_screen == NULL) return;
             if (screen_data->death_screen->do_entrance_animation)
-                paintScreen(GAME_SCREEN, screen_data, renderer, game_data, user_data, window);
+                paintScreen(GAME_SCREEN, true, screen_data, renderer, game_data, user_data, window);
             if (screen_data->death_screen->do_exit_animation)
-                paintScreen(START_SCREEN, screen_data, renderer, game_data, user_data, window);
+                paintScreen(START_SCREEN, true, screen_data, renderer, game_data, user_data, window);
             screen_change = paintDeathScreen(screen_data->death_screen, renderer);
         default:
             break;
@@ -231,7 +236,7 @@ void paintScreen(int screen_id, ScreenData* screen_data, SDL_Renderer* renderer,
     if (paint_loading_overlay) {
         paintLoadingOverlay(renderer);
     }
-    changeScreen(screen_data, screen_change, renderer, game_data, user_data);
+    if (!is_recursive) changeScreen(screen_data, screen_change, renderer, game_data, user_data);
 }
 
 /*

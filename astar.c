@@ -6,11 +6,11 @@
 #include "functions.h"
 #include "stdlib.h"
 
-static void initDefaultNode(Node** node) {
+static bool initDefaultNode(Node** node) {
     *node = malloc(sizeof(Node));
-    if (*node == NULL) {
+    if (node == NULL || *node == NULL) {
         printf("Failed to allocate Node.\n");
-        return;
+        return false;
     }
     (*node)->parent_node = NULL;
     (*node)->pos = (SDL_Point) {.x = -1, .y = -1};
@@ -18,6 +18,7 @@ static void initDefaultNode(Node** node) {
     (*node)->h_cost = 0;
     (*node)->f_cost = 0;
     (*node)->node_state = NODE_INACTIVE;
+    return true;
 }
 
 static void destroyNode(Node** node) {
@@ -27,6 +28,36 @@ static void destroyNode(Node** node) {
     }
     free(*node);
     *node = NULL;
+}
+
+static bool initNodeGrid(Node* (**node_grid)[MAX_MAP_SIZE][MAX_MAP_SIZE]) {
+    *node_grid = malloc(sizeof(Node*) * MAX_MAP_SIZE * MAX_MAP_SIZE);
+    if (node_grid == NULL || *node_grid == NULL) {
+        printf("Failed to allocate Node Grid.\n");
+        return false;
+    }
+    for (int i = 0; i < MAX_MAP_SIZE; i++) {
+        for (int j = 0; j < MAX_MAP_SIZE; j++) {
+            Node* node = NULL;
+            initDefaultNode(&node);
+            (**node_grid)[i][j] = node;
+        }
+    }
+    return true;
+}
+
+static void destroyNodeGrid(Node* (**node_grid)[MAX_MAP_SIZE][MAX_MAP_SIZE]) {
+    if (node_grid == NULL || *node_grid == NULL) {
+        printf("Failed to destroy Node Grid.\n");
+        return;
+    }
+    for (int i = 0; i < MAX_MAP_SIZE; i++) {
+        for (int j = 0; j < MAX_MAP_SIZE; j++) {
+            destroyNode(&(**node_grid)[i][j]);
+        }
+    }
+    free(*node_grid);
+    *node_grid = NULL;
 }
 
 void setEntityDirection(Entity* entity, const GameData* game_data) {
@@ -51,24 +82,25 @@ void setEntityDirection(Entity* entity, const GameData* game_data) {
 }
 
 static void setEntityPath(Entity* entity, const GameData* game_data, const Player* player) {
-    destroyEntityPath(&entity->path);
+    if (entity->path != NULL) destroyEntityPath(&entity->path);
     Node* start_node;
-    initDefaultNode(&start_node);
+    if (!initDefaultNode(&start_node)) return;
     Node* end_node;
-    initDefaultNode(&end_node);
-    initStartAndEndNodes(start_node, end_node, entity, player);
+    if (!initDefaultNode(&end_node)) {
+        destroyNode(&start_node);
+        return;
+    }
+    setStartAndEndNodes(start_node, end_node, entity, player);
     if (start_node->pos.x == end_node->pos.x && start_node->pos.y == end_node->pos.y) {
         destroyNode(&start_node);
         destroyNode(&end_node);
         return;
     }
-    Node* (*node_grid)[MAX_MAP_SIZE][MAX_MAP_SIZE] = malloc(sizeof(Node*) * MAX_MAP_SIZE * MAX_MAP_SIZE);
-    for (int i = 0; i < MAX_MAP_SIZE; i++) {
-        for (int j = 0; j < MAX_MAP_SIZE; j++) {
-            Node* node = NULL;
-            initDefaultNode(&node);
-            (*node_grid)[i][j] = node;
-        }
+    Node* (*node_grid)[MAX_MAP_SIZE][MAX_MAP_SIZE];
+    if (!initNodeGrid(&node_grid)) {
+        destroyNode(&start_node);
+        destroyNode(&end_node);
+        return;
     }
     destroyNode(&(*node_grid)[start_node->pos.y][start_node->pos.x]);
     (*node_grid)[start_node->pos.y][start_node->pos.x] = start_node;
@@ -98,12 +130,8 @@ static void setEntityPath(Entity* entity, const GameData* game_data, const Playe
             }
         }
         if (current_node == NULL) {
-            for (int i = 0; i < MAX_MAP_SIZE; i++) {
-                for (int j = 0; j < MAX_MAP_SIZE; j++) {
-                    destroyNode(&(*node_grid)[i][j]);
-                }
-            }
-            free(node_grid);
+            destroyNodeGrid(&node_grid);
+            destroyNode(&end_node);
             return;
         }
         if (current_node->pos.x == end_node->pos.x && current_node->pos.y == end_node->pos.y) {
@@ -116,15 +144,10 @@ static void setEntityPath(Entity* entity, const GameData* game_data, const Playe
         cycle++;
     }
     initEntityPath(&entity->path, end_node);
-    for (int i = 0; i < MAX_MAP_SIZE; i++) {
-        for (int j = 0; j < MAX_MAP_SIZE; j++) {
-            destroyNode(&(*node_grid)[i][j]);
-        }
-    }
-    free(node_grid);
+    destroyNodeGrid(&node_grid);
 }
 
-static void initStartAndEndNodes(Node* start_node, Node* end_node, const Entity* entity, const Player* player) {
+static void setStartAndEndNodes(Node* start_node, Node* end_node, const Entity* entity, const Player* player) {
     start_node->pos.x = (int) (entity->x / GRID_SIZE);
     start_node->pos.y = (int) (entity->y / GRID_SIZE);
     end_node->pos.x = (int) (player->x / GRID_SIZE);
@@ -170,6 +193,9 @@ static void addNode(Node* parent, const Node* end_node, Node* (*node_grid)[MAX_M
     int new_g_cost = parent->g_cost;
     if (direction.x == 0 || direction.y == 0) {
         new_g_cost += CARDINAL_DIST;
+    } else if (game_data->map_grid[new_node->pos.y][new_node->pos.x + direction.x] > 0 &&
+            game_data->map_grid[new_node->pos.y + direction.y][new_node->pos.x] > 0) {
+        return;
     } else {
         new_g_cost += DIAGONAL_DIST;
     }
@@ -196,7 +222,12 @@ static int getHCost(const Node* new_node, const Node* end_node) {
  *----------------------------------------------------------------------------------------------------------------------
  */
 
-void initEntityPath(EntityPath** path, const Node* end_node) {
+bool initEntityPath(EntityPath** path, const Node* end_node) {
+    *path = malloc(sizeof(EntityPath));
+    if (*path == NULL) {
+        printf("Error allocating memory for EntityPath.\n");
+        return false;
+    }
     uint16_t size = 0;
     const Node* current_node = end_node;
     while (current_node->parent_node != NULL) {
@@ -206,8 +237,11 @@ void initEntityPath(EntityPath** path, const Node* end_node) {
     PathNode* start_path_node = malloc(sizeof(PathNode));
     if (start_path_node == NULL) {
         printf("Error allocating memory for start_path_node.\n");
-        return;
+        destroyEntityPath(path);
+        return false;
     }
+    (*path)->size = size;
+    (*path)->start_node = start_path_node;
     PathNode* current_path_node = start_path_node;
     for (int i = size; i >= 0; i--) {
         current_node = end_node;
@@ -221,7 +255,8 @@ void initEntityPath(EntityPath** path, const Node* end_node) {
             PathNode* new_node = malloc(sizeof(PathNode));
             if (new_node == NULL) {
                 printf("Error allocating memory for new_node.\n");
-                return;
+                destroyEntityPath(path);
+                return false;
             }
             new_node->pos = current_node->pos;
             new_node->next_node = NULL;
@@ -229,17 +264,14 @@ void initEntityPath(EntityPath** path, const Node* end_node) {
             current_path_node = current_path_node->next_node;
         }
     }
-    *path = malloc(sizeof(EntityPath));
-    if (*path == NULL) {
-        printf("Error allocating memory for EntityPath.\n");
-        return;
-    }
-    (*path)->size = size;
-    (*path)->start_node = start_path_node;
+    return true;
 }
 
 void destroyEntityPath(EntityPath** path) {
-    if (path == NULL || *path == NULL) return;
+    if (path == NULL || *path == NULL) {
+        printf("Error destroying entity path.\n");
+        return;
+    }
     PathNode* current = (*path)->start_node;
     while (current != NULL) {
         PathNode* next = current->next_node;

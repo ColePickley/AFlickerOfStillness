@@ -25,15 +25,19 @@ struct Node {
     uint8_t node_state;
 };
 
-static void initDefaultNode(Node** node);
+static bool initDefaultNode(Node** node);
 
 static void destroyNode(Node** node);
+
+static bool initNodeGrid(Node* (**node_grid)[MAX_MAP_SIZE][MAX_MAP_SIZE]);
+
+static void destroyNodeGrid(Node* (**node_grid)[MAX_MAP_SIZE][MAX_MAP_SIZE]);
 
 void setEntityDirection(Entity* entity, const GameData* game_data);
 
 static void setEntityPath(Entity* entity, const GameData* game_data, const Player* player);
 
-static void initStartAndEndNodes(Node* start_node, Node* end_node, const Entity* entity, const Player* player);
+static void setStartAndEndNodes(Node* start_node, Node* end_node, const Entity* entity, const Player* player);
 
 static void closeNode(Node* node, const Node* end_node, Node* (*node_grid)[MAX_MAP_SIZE][MAX_MAP_SIZE],
     const GameData* game_data);
@@ -49,7 +53,7 @@ static int getHCost(const Node* new_node, const Node* end_node);
  *----------------------------------------------------------------------------------------------------------------------
  */
 
-void initEntityPath(EntityPath** path, const Node* end_node);
+bool initEntityPath(EntityPath** path, const Node* end_node);
 
 void destroyEntityPath(EntityPath** path);
 

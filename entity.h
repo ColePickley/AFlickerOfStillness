@@ -31,7 +31,7 @@ typedef struct {
     // universal data
     double x, y, vect_x, vect_y, vect_mag;
     int subtype_id, texture_id, scale, height;
-    uint64_t last_move_time, last_path_time;
+    uint64_t last_move_time, last_path_time, last_attack_time;
     // type-specific data
     int health_amount; // collectable health
     int weapon_index, ammo_count, mag_count; // collectable weapon
@@ -55,6 +55,9 @@ void moveEnemy(Entity* entity, int (*map_grid)[MAX_MAP_SIZE][MAX_MAP_SIZE], Enti
     int num_entities);
 
 void moveProjectile(Entity* entity, int (*map_grid)[MAX_MAP_SIZE][MAX_MAP_SIZE], bool* destroy_projectile);
+
+//returns the amount of damage the entity delt to the player
+int enemyMeleeAttack(Entity* entity);
 
 static void setEntityData(Entity* entity);
 

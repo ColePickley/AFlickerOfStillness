@@ -24,6 +24,7 @@ void initDefaultEntity(Entity** entity, const int texture_id, const double x, co
     (*entity)->texture_id = texture_id;
     (*entity)->last_move_time = 0;
     (*entity)->last_path_time = 0;
+    (*entity)->last_attack_time = 0;
     // type-specific data
     setEntityData(*entity);
     (*entity)->ammo_count = -1;
@@ -129,6 +130,13 @@ void moveProjectile(Entity* entity, int (*map_grid)[MAX_MAP_SIZE][MAX_MAP_SIZE],
         *destroy_projectile = true;
     }
     entity->last_move_time = SDL_GetTicks();
+}
+
+int enemyMeleeAttack(Entity* entity) {
+    const uint64_t time_elapsed = SDL_GetTicks() - entity->last_attack_time;
+    if (time_elapsed < entity->melee_cool_down) return 0;
+    entity->last_attack_time = SDL_GetTicks();
+    return entity->melee_damage;
 }
 
 static void setEntityData(Entity* entity) {

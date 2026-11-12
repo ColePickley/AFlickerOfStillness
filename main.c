@@ -95,7 +95,7 @@ int main() {
     while (program_running) {
         const uint64_t start_time = SDL_GetPerformanceCounter();
         // paint screen
-        paintScreen(screen_data->current_screen, screen_data, renderer, game_data, user_data, window);
+        paintScreen(screen_data->current_screen, false, screen_data, renderer, game_data, user_data, window);
         // update game
         int screen_change = -1;
         if (screen_data->current_screen == GAME_SCREEN) {
@@ -120,7 +120,7 @@ int main() {
         if (frame_count >= 15) {
             end_time = SDL_GetPerformanceCounter();
             time_elapsed = (double) (end_time - start_time) / (double) SDL_GetPerformanceFrequency();
-            printf("\rFPS: %.2f", 1.0 / time_elapsed);
+            // printf("\rFPS: %.2f", 1.0 / time_elapsed);
             fflush(stdout);
             frame_count = 0;
         }
@@ -230,7 +230,7 @@ static bool playerEntityCollisionCheck(GameData* game_data, const int entity_ind
             return true;
         case ENTITY_SUBTYPE_ENEMY_MELEE:
         case ENTITY_SUBTYPE_ENEMY_MELEE_AND_PROJECTILE:
-            game_data->player->health -= game_data->entities[entity_index]->melee_damage;
+            game_data->player->health -= enemyMeleeAttack(game_data->entities[entity_index]);
             return false;
         case ENTITY_SUBTYPE_PROJECTILE:
             game_data->player->health -= game_data->entities[entity_index]->projectile_damage;

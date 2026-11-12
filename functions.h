@@ -46,6 +46,9 @@ static bool isXCollision(const SDL_FPoint pos, int (*map_grid)[MAX_MAP_SIZE][MAX
     }
     const int grid_x = (int) ((pos.x + adjusted_delta_x) / 64);
     const int grid_y = (int) (pos.y / 64);
+    if (grid_x < 0 || grid_x >= MAX_MAP_SIZE || grid_y < 0 || grid_y >= MAX_MAP_SIZE) {
+        return true;
+    }
     if ((*map_grid)[grid_y][grid_x] == 1) {
         return true;
     }
@@ -65,6 +68,9 @@ static bool isYCollision(const SDL_FPoint pos, int (*map_grid)[MAX_MAP_SIZE][MAX
     }
     const int grid_x = (int) (pos.x / 64);
     const int grid_y = (int) ((pos.y + adjusted_delta_y) / 64);
+    if (grid_x < 0 || grid_x >= MAX_MAP_SIZE || grid_y < 0 || grid_y >= MAX_MAP_SIZE) {
+        return true;
+    }
     if ((*map_grid)[grid_y][grid_x] == 1) {
         return true;
     }
