@@ -7,6 +7,10 @@
 #include "entity.h"
 
 #define MAX_PLAYER_HEALTH 100
+#define MAX_SPRINT_TIME 10000
+#define SPRINT_COOLDOWN_TIME 3000
+#define SPRINT_REGEN_SPEED 50
+#define SPRINT_DEPLETION_SPEED 3
 
 typedef struct {
     double x;
@@ -26,12 +30,15 @@ typedef struct {
     bool a_pressed;
     bool s_pressed;
     bool d_pressed;
+    bool is_sprinting;
     bool primary_selected;
     bool attacking;
     bool pickup_enabled;
     uint8_t num_keys;
     uint64_t last_update_time;
+    uint64_t last_sprint_time;
     int health;
+    int sprint_time;
     double x_velocity;
     double y_velocity;
     double x;
@@ -50,6 +57,8 @@ void destroyKey(Key** key);
 void initPlayer(Player** player);
 
 void destroyPlayer(Player** player);
+
+void updatePlayer(Player* player, int (*map_grid)[MAX_MAP_SIZE][MAX_MAP_SIZE]);
 
 void movePlayer(Player* player, int (*map_grid)[MAX_MAP_SIZE][MAX_MAP_SIZE]);
 

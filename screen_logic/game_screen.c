@@ -1,6 +1,7 @@
 #include "game_screen.h"
 
 #include <math.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <SDL3_image/SDL_image.h>
 #include "../weapon.h"
@@ -11,8 +12,10 @@
 
 void initGameScreen(GameScreen** game_screen, GameData* game_data) {
     *game_screen = malloc(sizeof(GameScreen));
+    (*game_screen)->bob_down = false;
     (*game_screen)->num_map_textures = setMapSurfaces(*game_screen);
     (*game_screen)->num_entity_textures = setEntitySurfaces(*game_screen);
+    (*game_screen)->view_bob_state = MAX_WALKING_VIEW_BOB / 2.0f;
     setSkySurface(*game_screen, game_data->sky_texture_index);
     initPlayerUIPainter(&(*game_screen)->ui_painter, game_data);
 }
@@ -72,17 +75,18 @@ void destroyGameScreen(GameScreen** game_screen) {
  *----------------------------------------------------------------------------------------------------------------------
  */
 
-int paintGameScreen(const GameScreen* game_screen, SDL_Renderer* renderer, GameData* game_data,
+int paintGameScreen(GameScreen* game_screen, SDL_Renderer* renderer, GameData* game_data,
         const UserData* user_data) {
     drawSky(game_screen, renderer, game_data);
     setPlayerRays(game_data->player, game_data->num_map_rows, game_data->num_map_cols, game_data->map_grid);
+    setViewBobState(game_screen, game_data->player);
     for (int i = 0; i < NUM_RAYS; i++) {
         const double ray_length = game_data->player->rays[i].length;
         const double ray_degree = toRadians(game_data->player->rays[i].degree);
         const double adjusted_ray_length = max(0.0001, ray_length * cos(ray_degree));
         const float line_length = GRID_SIZE * WINDOW_HEIGHT / adjusted_ray_length;
 
-        const int y = (WINDOW_HEIGHT - (int) line_length) / 2;
+        int y = (WINDOW_HEIGHT - (int) line_length) / 2;
         const int x = i * LINE_WIDTH;
         const double angle = getRayAngle(game_data->player->rays[i].degree, game_data->player->rotation);
         const double pre_adjustment = (double) WINDOW_HEIGHT / 2.0 * (double) GRID_SIZE /
@@ -119,6 +123,45 @@ static void drawSky(const GameScreen* game_screen, SDL_Renderer* renderer, const
     SDL_RenderTexture(renderer, game_screen->sky_texture, NULL, &dst_rect2);
 }
 
+static void setViewBobState(GameScreen* game_screen, const Player* player) {
+    const bool is_moving = fabs(player->x_velocity) >= 0.5 || fabs(player->y_velocity) >= 0.5;
+    if (!is_moving) {
+        if (game_screen->view_bob_state <= WALKING_VIEW_BOB_SPEED &&
+                game_screen->view_bob_state >= -WALKING_VIEW_BOB_SPEED) {
+            return;
+        }
+        if (game_screen->view_bob_state > 0.0f) {
+            game_screen->view_bob_state -= WALKING_VIEW_BOB_SPEED;
+        } else {
+            game_screen->view_bob_state += WALKING_VIEW_BOB_SPEED;
+        }
+        if (game_screen->view_bob_state < WALKING_VIEW_BOB_SPEED &&
+                game_screen->view_bob_state > WALKING_VIEW_BOB_SPEED) {
+            game_screen->view_bob_state = 0.0f;
+        }
+        return;
+    }
+    if (player->is_sprinting) {
+        if (game_screen->bob_down) {
+            game_screen->view_bob_state -= SPRINTING_VIEW_BOB_SPEED;
+        } else {
+            game_screen->view_bob_state += SPRINTING_VIEW_BOB_SPEED;
+        }
+        if (game_screen->view_bob_state <= 0.0f || game_screen->view_bob_state >= MAX_SPRINTING_VIEW_BOB) {
+            game_screen->bob_down = !game_screen->bob_down;
+        }
+        return;
+    }
+    if (game_screen->bob_down) {
+        game_screen->view_bob_state -= WALKING_VIEW_BOB_SPEED;
+    } else {
+        game_screen->view_bob_state += WALKING_VIEW_BOB_SPEED;
+    }
+    if (game_screen->view_bob_state <= 0 || game_screen->view_bob_state >= MAX_WALKING_VIEW_BOB) {
+        game_screen->bob_down = !game_screen->bob_down;
+    }
+}
+
 static void drawCeilingLine(const GameScreen* game_screen, SDL_Renderer* renderer, const GameData* game_data,
         const int vert_res, const int ray_num, const int start_y, const double angle, const double pre_adjustment) {
     for (int y = start_y; y >= -LINE_WIDTH; y -= vert_res) {
@@ -134,7 +177,12 @@ static void drawCeilingLine(const GameScreen* game_screen, SDL_Renderer* rendere
         if (texture_index == 0) continue;
         SDL_Color color;
         setSurfacePixelColor(game_screen->map_surfaces[texture_index], texture_x, texture_y, &color);
-        SDL_FRect rect = {.x = (float) (ray_num * LINE_WIDTH), .y = (float) y, .w = LINE_WIDTH, .h = (float) vert_res};
+        SDL_FRect rect = {
+            .x = (float) (ray_num * LINE_WIDTH),
+            .y = (float) y + game_screen->view_bob_state,
+            .w = LINE_WIDTH,
+            .h = (float) vert_res
+        };
         SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
         SDL_RenderFillRect(renderer, &rect);
     }
@@ -156,7 +204,12 @@ static void drawFloorLine(const GameScreen* game_screen, SDL_Renderer* renderer,
         SDL_Color color;
         setSurfacePixelColor(game_screen->map_surfaces[texture_index], texture_x, texture_y, &color);
         SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
-        SDL_FRect rect = {.x = (float) (ray_num * LINE_WIDTH), .y = (float) y, .w = LINE_WIDTH, .h = (float) vert_res};
+        SDL_FRect rect = {
+            .x = (float) (ray_num * LINE_WIDTH),
+            .y = (float) y + game_screen->view_bob_state,
+            .w = LINE_WIDTH,
+            .h = (float) vert_res
+        };
         SDL_RenderFillRect(renderer, &rect);
     }
 }
@@ -177,7 +230,12 @@ static void drawWallLine(const GameScreen* game_screen, SDL_Renderer* renderer, 
         img_x = GRID_SIZE - 1 - img_x;
     }
     const SDL_FRect src_rect = {.x = img_x, .y = 0, .w = 1, .h = TEXTURE_RESOLUTION};
-    const SDL_FRect dst_rect = {.x = (float) x, .y = (float) y, .w = LINE_WIDTH, .h = line_length + LINE_WIDTH};
+    const SDL_FRect dst_rect = {
+        .x = (float) x,
+        .y = (float) y + game_screen->view_bob_state,
+        .w = LINE_WIDTH,
+        .h = line_length + LINE_WIDTH
+    };
     SDL_RenderTexture(renderer, texture, &src_rect, &dst_rect);
 }
 
@@ -217,7 +275,7 @@ static void drawEntities(const GameScreen* game_screen, SDL_Renderer* renderer, 
             };
             SDL_FRect dst_rect = {
                 .x = (float) (ray_num * LINE_WIDTH),
-                .y = (float) start_y + LINE_WIDTH / 2.0f,
+                .y = (float) start_y + LINE_WIDTH / 2.0f + game_screen->view_bob_state,
                 .w = LINE_WIDTH,
                 .h = (float) entity_size
             };
@@ -291,6 +349,9 @@ void gameScreenKeyPressed(const SDL_Keycode keycode, const GameData* game_data) 
         case SDLK_2:
             game_data->player->primary_selected = false;
             break;
+        case SDLK_LSHIFT:
+            if (game_data->player->sprint_time > 0) game_data->player->is_sprinting = true;
+            break;
         default:
             break;
     }
@@ -310,6 +371,9 @@ void gameScreenKeyReleased(const SDL_Keycode keycode, const GameData* game_data)
         case SDLK_D:
             game_data->player->d_pressed = false;
             break;
+        case SDLK_LSHIFT:
+            game_data->player->is_sprinting = false;
+            break;
         default:
             break;
     }
@@ -323,6 +387,9 @@ int gameScreenKeyClicked(const SDL_Keycode keycode, const GameData* game_data) {
             break;
         case SDLK_R:
             playerReload(game_data->player);
+            break;
+        case SDLK_TAB:
+            game_data->player->primary_selected = !game_data->player->primary_selected;
             break;
         default:
             break;

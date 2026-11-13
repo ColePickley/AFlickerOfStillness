@@ -38,6 +38,10 @@ void initDefaultEntity(Entity** entity, const int texture_id, const double x, co
 }
 
 void destroyEntity(Entity** entity) {
+    if (entity == NULL || *entity == NULL) {
+        printf("Failed to destroy entity.\n");
+        return;
+    }
     if ((*entity)->path != NULL) {
         destroyEntityPath(&(*entity)->path);
     }

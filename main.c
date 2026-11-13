@@ -138,6 +138,7 @@ int main() {
 }
 
 static int updateGame(GameData* game_data) {
+    updatePlayer(game_data->player, &game_data->map_grid);
     movePlayer(game_data->player, &game_data->map_grid);
     if (game_data->player->primary_selected && game_data->player->primary_weapon != NULL &&
             game_data->player->primary_weapon->type == WEAPON_AUTOMATIC && game_data->player->attacking) {

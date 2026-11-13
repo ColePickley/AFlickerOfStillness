@@ -7,9 +7,16 @@
 #include "../program_data.h"
 #include "../constants.h"
 
+#define MAX_WALKING_VIEW_BOB 15
+#define MAX_SPRINTING_VIEW_BOB 30
+#define WALKING_VIEW_BOB_SPEED 1.5f
+#define SPRINTING_VIEW_BOB_SPEED 3.0f
+
 typedef struct {
+    bool bob_down;
     int num_map_textures;
     int num_entity_textures;
+    float view_bob_state;
     SDL_Surface* map_surfaces[MAX_NUM_MAP_TEXTURES];
     SDL_Texture* map_textures[MAX_NUM_MAP_TEXTURES];
     SDL_Surface* entity_surfaces[MAX_NUM_MAP_TEXTURES];
@@ -31,10 +38,12 @@ void destroyGameScreen(GameScreen** game_screen);
  *----------------------------------------------------------------------------------------------------------------------
  */
 
-int paintGameScreen(const GameScreen* game_screen, SDL_Renderer* renderer, GameData* game_data,
+int paintGameScreen(GameScreen* game_screen, SDL_Renderer* renderer, GameData* game_data,
     const UserData* user_data);
 
 static void drawSky(const GameScreen* game_screen, SDL_Renderer* renderer, const GameData* game_data);
+
+static void setViewBobState(GameScreen* game_screen, const Player* player);
 
 static void drawCeilingLine(const GameScreen* game_screen, SDL_Renderer* renderer, const GameData* game_data,
     int vert_res, int ray_num, int start_y, double angle, double pre_adjustment);

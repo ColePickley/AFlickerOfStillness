@@ -187,8 +187,10 @@ void paintScreen(int screen_id, const bool is_recursive, ScreenData* screen_data
     }
 
     // clear screen
-    SDL_SetRenderDrawColor(renderer, 38, 31, 28, 255);
-    SDL_RenderClear(renderer);
+    if (!is_recursive) {
+        SDL_SetRenderDrawColor(renderer, 38, 31, 28, 255);
+        SDL_RenderClear(renderer);
+    }
 
     int screen_change = -1;
     switch (screen_id) {

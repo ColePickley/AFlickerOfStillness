@@ -91,6 +91,21 @@ void destroyPainterFonts() {
     }
 }
 
+void paintPolygon(SDL_Renderer* renderer, const int num_pts, const SDL_FPoint points[num_pts], const SDL_Color color) {
+    SDL_Vertex vertices[num_pts];
+    for (int i = 0; i < num_pts; i++) {
+        vertices[i].position = points[i];
+        vertices[i].color = (SDL_FColor) {
+            .r = (float) color.r / 255.0f,
+            .g = (float) color.g / 255.0f,
+            .b = (float) color.b / 255.0f,
+            .a = (float) color.a / 255.0f
+        };
+        vertices[i].tex_coord = (SDL_FPoint) {.x = 0.0f, .y = 0.0f};
+    }
+    SDL_RenderGeometry(renderer, NULL, vertices, num_pts, NULL, 0);
+}
+
 void paintFilledEllipse(SDL_Renderer* renderer, const Ellipse e, const SDL_Color color) {
     SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
     for (int x = (int) (e.x - e.rx); x <= (int) (e.x + e.rx); x++) {
@@ -115,6 +130,71 @@ void paintFilledCircle(SDL_Renderer* renderer, const Circle c, const SDL_Color c
             }
         }
     }
+}
+
+void paintSemiCircle(SDL_Renderer* renderer, const SemiCircle sc, const SDL_Color color) {
+    if (!renderer || sc.num_segments < 1 || sc.c.outer_radius <= 0.0f || sc.c.inner_radius < 0.0f ||
+            sc.c.inner_radius >= sc.c.outer_radius) {
+        return;
+    }
+    const float start_angle = (float) toRadians(sc.start_angle);
+    const float end_angle = (float) toRadians(sc.end_angle);
+
+    const int num_vertices = (sc.num_segments + 1) * 2;
+    const int num_indices = sc.num_segments * 6;
+
+    SDL_Vertex *vertices = SDL_malloc(sizeof(SDL_Vertex) * num_vertices);
+    int *indices = SDL_malloc(sizeof(int) * num_indices);
+    if (!vertices || !indices) {
+        SDL_free(vertices);
+        SDL_free(indices);
+        return;
+    }
+    const float angle_step = (end_angle - start_angle) / (float) sc.num_segments;
+    for (int i = 0; i <= sc.num_segments; ++i) {
+        const float angle = start_angle + (float) i * angle_step;
+        const float cos_a = cosf(angle);
+        const float sin_a = sinf(angle);
+        const int v_idx = i * 2;
+
+        vertices[v_idx].position.x = sc.c.x + sc.c.inner_radius * cos_a;
+        vertices[v_idx].position.y = sc.c.y + sc.c.inner_radius * sin_a;
+        vertices[v_idx].color = (SDL_FColor) {
+            .r = (float) color.r / 255.0f,
+            .g = (float) color.g / 255.0f,
+            .b = (float) color.b / 255.0f,
+            .a = (float) color.a / 255.0f
+        };
+        vertices[v_idx].tex_coord.x = 0.0f;
+        vertices[v_idx].tex_coord.y = 0.0f;
+
+        vertices[v_idx + 1].position.x = sc.c.x + sc.c.outer_radius * cos_a;
+        vertices[v_idx + 1].position.y = sc.c.y + sc.c.outer_radius * sin_a;
+        vertices[v_idx + 1].color = (SDL_FColor) {
+            .r = (float) color.r / 255.0f,
+            .g = (float) color.g / 255.0f,
+            .b = (float) color.b / 255.0f,
+            .a = (float) color.a / 255.0f
+        };
+        vertices[v_idx + 1].tex_coord.x = 0.0f;
+        vertices[v_idx + 1].tex_coord.y = 0.0f;
+    }
+    for (int i = 0; i < sc.num_segments; ++i) {
+        const int i_idx = i * 6;
+        const int v0 = i * 2;
+        const int v1 = v0 + 1;
+        const int v2 = v0 + 2;
+        const int v3 = v0 + 3;
+        indices[i_idx + 0] = v0;
+        indices[i_idx + 1] = v1;
+        indices[i_idx + 2] = v2;
+        indices[i_idx + 3] = v1;
+        indices[i_idx + 4] = v3;
+        indices[i_idx + 5] = v2;
+    }
+    SDL_RenderGeometry(renderer, NULL, vertices, num_vertices, indices, num_indices);
+    SDL_free(vertices);
+    SDL_free(indices);
 }
 
 void paintRightAngleSemiCircle(SDL_Renderer* renderer, const Circle circle, const int quadrant,

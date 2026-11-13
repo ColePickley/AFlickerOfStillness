@@ -88,6 +88,7 @@ void paintPlayerUI(PlayerUIPainter* ui_painter, SDL_Renderer* renderer, const Pl
 
 static void paintHotbar(const PlayerUIPainter* ui_painter, SDL_Renderer* renderer, const Player* player,
         SDL_Texture* const entity_textures[MAX_NUM_MAP_TEXTURES]) {
+    const SDL_Color background_color = {.r = 0, .g = 0, .b = 0, .a = 100};
 
     /*
      * POV Weapon
@@ -95,9 +96,9 @@ static void paintHotbar(const PlayerUIPainter* ui_painter, SDL_Renderer* rendere
 
     const SDL_FRect pov_weapon_rect = {
         .x = WINDOW_WIDTH - 700.0f,
-        .y = WINDOW_HEIGHT - HOTBAR_HEIGHT - 400.0f,
+        .y = WINDOW_HEIGHT / 4.0f,
         .w = 700.0f,
-        .h = 400.0f
+        .h = WINDOW_HEIGHT * 3.0f / 4.0f
     };
     if (player->primary_selected && player->primary_weapon != NULL) {
         SDL_RenderTexture(renderer, ui_painter->weapon_textures[player->primary_weapon->weapon_id], NULL,
@@ -108,124 +109,235 @@ static void paintHotbar(const PlayerUIPainter* ui_painter, SDL_Renderer* rendere
     }
 
     /*
-     * Hotbar Background
+     * Ammo and Mags
      */
 
-    const SDL_FRect hotbar_rect = {
-        .x = 0,
-        .y = WINDOW_HEIGHT - HOTBAR_HEIGHT,
-        .w = WINDOW_WIDTH,
-        .h = HOTBAR_HEIGHT
+    // background
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 100);
+    SDL_RenderFillRect(renderer, &(SDL_FRect) {.x = 0.0f, .y = WINDOW_HEIGHT - 200.0f, .w = 400.0f, .h = 200.0f});
+    const SDL_FPoint ammo_points[3] = {
+        (SDL_FPoint) {.x = 400.0f, .y = WINDOW_HEIGHT},
+        (SDL_FPoint) {.x = 400.0f, .y = WINDOW_HEIGHT - 200.0f},
+        (SDL_FPoint) {.x = 600.0f, .y = WINDOW_HEIGHT}
     };
-    SDL_SetRenderDrawColor(renderer, 150, 150, 150, 255);
-    SDL_RenderFillRect(renderer, &hotbar_rect);
-    // Ammo and Mag label text
-    if (player->primary_weapon != NULL) {
-        char ammo_label_text[6];
-        snprintf(ammo_label_text, sizeof (ammo_label_text), "%2d%s%2d", player->primary_weapon->ammo_count,
-            "/", player->primary_weapon->max_ammo_count);
-        char mag_label_text[6];
-        snprintf(mag_label_text, sizeof (mag_label_text), "%2d%s%2d", player->primary_weapon->mag_count,
-            "/", player->primary_weapon->max_mag_count);
-        for (int i = 0; i < 5; i++) {
-            ui_painter->hotbar_labels[0]->text_data.text[0][i] = ammo_label_text[i];
-            ui_painter->hotbar_labels[1]->text_data.text[0][i] = mag_label_text[i];
-        }
-        ui_painter->hotbar_labels[0]->text_data.text[0][5] = '\0';
-        ui_painter->hotbar_labels[1]->text_data.text[0][5] = '\0';
-    }
-    // weapon label background colors
-    if (player->primary_selected) {
-        ui_painter->hotbar_labels[2]->fill_color = (SDL_Color) {.r = 200, .g = 170, .b = 170, .a = 255};
-        ui_painter->hotbar_labels[3]->fill_color = (SDL_Color) {.r = 200, .g = 200, .b = 200, .a = 255};
-    } else {
-        ui_painter->hotbar_labels[2]->fill_color = (SDL_Color) {.r = 200, .g = 200, .b = 200, .a = 255};
-        ui_painter->hotbar_labels[3]->fill_color = (SDL_Color) {.r = 200, .g = 170, .b = 170, .a = 255};
-    }
-    // hotbar labels
-    for (int i = 0; i < 5; i++) {
-        paintLabel(renderer, ui_painter->hotbar_labels[i]);
-    }
+    paintPolygon(renderer, 3, ammo_points, background_color);
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    SDL_RenderLine(renderer, 400.0f, WINDOW_HEIGHT - 200.0f, 600.0f, WINDOW_HEIGHT);
+    SDL_RenderLine(renderer, 399.0f, WINDOW_HEIGHT - 200.0f, 599.0f, WINDOW_HEIGHT);
+    SDL_RenderFillRect(renderer, &(SDL_FRect) {.x = 0.0f, .y = WINDOW_HEIGHT - 201.0f, .w = 400.0f, .h = 2.0f});
+    SDL_RenderFillRect(renderer, &(SDL_FRect) {.x = 0.0f, .y = WINDOW_HEIGHT - 101.0f, .w = 500.0f, .h = 2.0f});
 
-    /*
-     * Ammo and Mag Textures
-     */
-
+    // textures
     const SDL_FRect ammo_rect = {
-        .x = 27.5f,
-        .y = WINDOW_HEIGHT - HOTBAR_HEIGHT + 27.5f,
-        .w = 120.0f,
-        .h = 120.0f,
+        .x = 5.0f,
+        .y = WINDOW_HEIGHT - 195.0f,
+        .w = 90.0f,
+        .h = 90.0f,
     };
     SDL_RenderTexture(renderer, ui_painter->ammo_texture, NULL, &ammo_rect);
-
     const SDL_FRect mag_rect = {
-        .x = 452.5f,
-        .y = WINDOW_HEIGHT - HOTBAR_HEIGHT + 27.5f,
-        .w = 120.0f,
-        .h = 120.0f,
+        .x = 80.0f,
+        .y = WINDOW_HEIGHT - 95.0f,
+        .w = 90.0f,
+        .h = 90.0f,
     };
     SDL_RenderTexture(renderer, ui_painter->mag_texture, NULL, &mag_rect);
+
+    // text
+    char ammo_text[6] = {'\0'};
+    char mag_text[6] = {'\0'};
+    if (player->primary_weapon == NULL) {
+        snprintf(ammo_text, sizeof(ammo_text), "%02d/%02d", 0, 0);
+        snprintf(mag_text, sizeof(mag_text), "%02d/%02d", 0, 0);
+    } else {
+        snprintf(ammo_text, sizeof(ammo_text), "%02d/%02d", player->primary_weapon->ammo_count,
+            player->primary_weapon->max_ammo_count);
+        snprintf(mag_text, sizeof(mag_text), "%02d/%02d", player->primary_weapon->mag_count,
+            player->primary_weapon->max_mag_count);
+    }
+    paintText(renderer, ammo_text, (SDL_FPoint) {.x = 110.0f, .y = WINDOW_HEIGHT - 195.0f}, 90.0f,
+            (SDL_Color) {.r = 255, .g = 255, .b = 255, .a = 255}, FONT_PIXELOID);
+    paintText(renderer, mag_text, (SDL_FPoint) {.x = 185.0f, .y = WINDOW_HEIGHT - 95.0f}, 90.0f,
+            (SDL_Color) {.r = 255, .g = 255, .b = 255, .a = 255}, FONT_PIXELOID);
 
     /*
      * Weapon textures
      */
 
+    // background
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 100);
+    SDL_RenderFillRect(renderer, &(SDL_FRect) {.x = 0.0f, .y = 0.0f, .w = 160.0f, .h = 160.0f});
+    SDL_RenderFillRect(renderer, &(SDL_FRect) {.x = 0.0f, .y = 160.0f, .w = 90.0f, .h = 90.0f});
+    const SDL_FPoint points_1[3] = {
+        (SDL_FPoint) {.x = 160.0f, .y = 0.0f},
+        (SDL_FPoint) {.x = 160.0f, .y = 160.0f},
+        (SDL_FPoint) {.x = 240.0f, .y = 0.0f}
+    };
+    paintPolygon(renderer, 3, points_1, background_color);
+    const SDL_FPoint points_2[3] = {
+        (SDL_FPoint) {.x = 90.0f, .y = 160.0f},
+        (SDL_FPoint) {.x = 90.0f, .y = 250.0f},
+        (SDL_FPoint) {.x = 135.0f, .y = 160.0f},
+    };
+    paintPolygon(renderer, 3, points_2, background_color);
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    SDL_RenderLine(renderer, 240.0f, 0.0f, 160.0f, 160.0f);
+    SDL_RenderLine(renderer, 239.0f, 0.0f, 159.0f, 160.0f);
+    SDL_RenderFillRect(renderer, &(SDL_FRect) {.x = 0.0f, .y = 159.0f, .w = 160.0f, .h = 2.0f});
+    SDL_RenderLine(renderer, 135.0f, 160.0f, 90.0f, 250.0f);
+    SDL_RenderLine(renderer, 134.0f, 160.0f, 89.0f, 250.0f);
+    SDL_RenderFillRect(renderer, &(SDL_FRect) {.x = 0.0f, .y = 249.0f, .w = 90.0f, .h = 2.0f});
+
+    // textures
+    const SDL_FRect selected_weapon_rect = {
+        .x = 5.0f,
+        .y = 5.0f,
+        .w = 150.0f,
+        .h = 150.0f,
+    };
+    const SDL_FRect deselected_weapon_rect = {
+        .x = 5.0f,
+        .y = 165.0f,
+        .w = 80.0f,
+        .h = 80.0f,
+    };
     if (player->primary_weapon != NULL) {
-        const SDL_FRect weapon_rect = {
-            .x = 887.5f,
-            .y = WINDOW_HEIGHT - HOTBAR_HEIGHT + 15.0f,
-            .w = 145.0f,
-            .h = HOTBAR_HEIGHT - 30,
-        };
-        SDL_RenderTexture(renderer, entity_textures[player->primary_weapon->entity_id], NULL,
-            &weapon_rect);
+        if (player->primary_selected) {
+            SDL_RenderTexture(renderer, entity_textures[player->primary_weapon->entity_id], NULL,
+                &selected_weapon_rect);
+        } else {
+            SDL_RenderTexture(renderer, entity_textures[player->primary_weapon->entity_id], NULL,
+                &deselected_weapon_rect);
+        }
     }
     if (player->secondary_weapon != NULL) {
-        const SDL_FRect weapon_rect = {
-            .x = 1142.5f,
-            .y = WINDOW_HEIGHT - HOTBAR_HEIGHT + 15.0f,
-            .w = 145.0f,
-            .h = HOTBAR_HEIGHT - 30,
-        };
-        SDL_RenderTexture(renderer, entity_textures[player->secondary_weapon->entity_id], NULL,
-            &weapon_rect);
+        if (player->primary_selected) {
+            SDL_RenderTexture(renderer, entity_textures[player->secondary_weapon->entity_id], NULL,
+                &deselected_weapon_rect);
+        } else {
+            SDL_RenderTexture(renderer, entity_textures[player->secondary_weapon->entity_id], NULL,
+                &selected_weapon_rect);
+        }
+    }
+
+    // text
+    const char primary_text[2] = {'1', '\0'};
+    const char secondary_text[2] = {'2', '\0'};
+    if (player->primary_selected) {
+        paintText(renderer, primary_text, (SDL_FPoint) {.x = 230.0f, .y = 60.0f}, 40.0f,
+            (SDL_Color) {.r = 0, .g = 0, .b = 0, .a = 255}, FONT_PIXELOID);
+        paintText(renderer, primary_text, (SDL_FPoint) {.x = 230.0f, .y = 60.0f}, 36.0f,
+            (SDL_Color) {.r = 255, .g = 255, .b = 255, .a = 255}, FONT_PIXELOID);
+        paintText(renderer, secondary_text, (SDL_FPoint) {.x = 125.0f, .y = 193.0f}, 22.5f,
+            (SDL_Color) {.r = 0, .g = 0, .b = 0, .a = 255}, FONT_PIXELOID);
+        paintText(renderer, secondary_text, (SDL_FPoint) {.x = 125.0f, .y = 193.0f}, 18.5f,
+            (SDL_Color) {.r = 255, .g = 255, .b = 255, .a = 255}, FONT_PIXELOID);
+    } else {
+        paintText(renderer, secondary_text, (SDL_FPoint) {.x = 230.0f, .y = 60.0f}, 40.0f,
+            (SDL_Color) {.r = 0, .g = 0, .b = 0, .a = 255}, FONT_PIXELOID);
+        paintText(renderer, secondary_text, (SDL_FPoint) {.x = 230.0f, .y = 60.0f}, 36.0f,
+            (SDL_Color) {.r = 255, .g = 255, .b = 255, .a = 255}, FONT_PIXELOID);
+        paintText(renderer, primary_text, (SDL_FPoint) {.x = 125.0f, .y = 193.0f}, 22.5f,
+            (SDL_Color) {.r = 0, .g = 0, .b = 0, .a = 255}, FONT_PIXELOID);
+        paintText(renderer, primary_text, (SDL_FPoint) {.x = 125.0f, .y = 193.0f}, 18.5f,
+            (SDL_Color) {.r = 255, .g = 255, .b = 255, .a = 255}, FONT_PIXELOID);
     }
 
     /*
      * Health bar
      */
 
-    const SDL_FRect health_bar_rect = {
-        .x = 1365.0f,
-        .y = WINDOW_HEIGHT - HOTBAR_HEIGHT + 25.0f,
-        .w = WINDOW_WIDTH - 1390.0f,
-        .h = HOTBAR_HEIGHT - 50.0f,
+    //background
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 100);
+    SDL_RenderFillRect(renderer, &(SDL_FRect) {.x = WINDOW_WIDTH - 700.0f, .y = 0.0f, .w = 700.0f, .h = 100.0f});
+    const SDL_FPoint health_points_1[3] = {
+        (SDL_FPoint) {.x = WINDOW_WIDTH - 800.0f, .y = 0.0f},
+        (SDL_FPoint) {.x = WINDOW_WIDTH - 700.0f, .y = 0.0f},
+        (SDL_FPoint) {.x = WINDOW_WIDTH - 700.0f, .y = 100.0f}
     };
-    SDL_SetRenderDrawColor(renderer, 50, 50, 50, 255);
-    SDL_RenderFillRect(renderer, &health_bar_rect);
+    paintPolygon(renderer, 3, health_points_1, background_color);
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    SDL_RenderLine(renderer, WINDOW_WIDTH - 800.0f, 0.0f, WINDOW_WIDTH - 700.0f, 100.0f);
+    SDL_RenderLine(renderer, WINDOW_WIDTH - 801.0f, 0.0f, WINDOW_WIDTH - 701.0f, 100.0f);
+    SDL_RenderFillRect(renderer, &(SDL_FRect) {.x = WINDOW_WIDTH - 700.0f, .y = 100.0f, .w = 700.0f, .h = 2.0f});
 
-    const int health_bar_y = (int) health_bar_rect.y + 5;
-    const int health_bar_width = (int) health_bar_rect.w - 10;
-    const int health_bar_height = (int) health_bar_rect.h - 10;
-    const int health_bar_start_y =
-        health_bar_y + (int) ((1.0f - (float) player->health / 100.0f) * (float) health_bar_height);
-    for (int i = health_bar_start_y; i < health_bar_y + health_bar_height; i++) {
-        const uint8_t r = (uint8_t) ((float) (i - health_bar_y) / (float) health_bar_height * 255.0f);
-        const uint8_t g = (uint8_t) ((1.0f - (float) (i - health_bar_y) / (float) health_bar_height) * 255.0f);
+    // outline
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    SDL_RenderFillRect(renderer, &(SDL_FRect) {.x = WINDOW_WIDTH - 690.0f, .y = 10.0f, .w = 690.0f, .h = 80.0f});
+    const SDL_FPoint health_points_2[3] = {
+        (SDL_FPoint) {.x = WINDOW_WIDTH - 770.0f, .y = 10.0f},
+        (SDL_FPoint) {.x = WINDOW_WIDTH - 690.0f, .y = 10.0f},
+        (SDL_FPoint) {.x = WINDOW_WIDTH - 690.0f, .y = 90.0f}
+    };
+    paintPolygon(renderer, 3, health_points_2, (SDL_Color) {.r = 255, .g = 255, .b = 255, .a = 255});
+
+    // health bar
+    const float health_bar_width = 755.0f;
+    const int health_bar_x = WINDOW_WIDTH - (int) health_bar_width;
+    const int health_bar_start_x = health_bar_x +
+        (int) ((1.0f - (float) player->health / 100.0f) * (float) health_bar_width);
+    for (int i = health_bar_start_x; i < WINDOW_WIDTH; i++) {
+        const uint8_t r = (uint8_t) ((float) (i - health_bar_x) / health_bar_width * 255.0f);
+        const uint8_t g = (uint8_t) ((1.0f - (float) (i - health_bar_x) / health_bar_width) * 255.0f);
         SDL_SetRenderDrawColor(renderer, min(255, r), min(255, g), 0, 255);
-        SDL_RenderLine(renderer, 1370.0f, (float) i, 1370.0f + (float) health_bar_width, (float) i);
+        const float y2 = 84.0f - max(0.0f, health_bar_width - (float) i + health_bar_x - 686.0f);
+        SDL_RenderLine(renderer, (float) i, 15.0f, (float) i, y2);
     }
+
+    /*
+     * Sprint bar
+     */
+
+    const Circle inner_circle = {
+        .x = WINDOW_WIDTH - 110.0f,
+        .y = WINDOW_HEIGHT - 110.0f,
+        .inner_radius = 0.0f,
+        .outer_radius = 198.0f
+    };
+    paintFilledCircle(renderer, inner_circle, background_color);
+    const Circle outer_circle = {
+        .x = WINDOW_WIDTH - 110.0f,
+        .y = WINDOW_HEIGHT - 110.0f,
+        .inner_radius = 199.0f,
+        .outer_radius = 200.0f
+    };
+    paintFilledCircle(renderer, outer_circle, (SDL_Color) {.r = 255, .g = 255, .b = 255, .a = 255});
+    const Circle sprint_meter_circle_1 = {
+        .x = WINDOW_WIDTH - 110.0f,
+        .y = WINDOW_HEIGHT - 110.0f,
+        .inner_radius = 95.0f,
+        .outer_radius = 155.0f
+    };
+    const SemiCircle sprint_meter_1 = {
+        .c = sprint_meter_circle_1,
+        .start_angle = 148.0f,
+        .end_angle = 302.0f,
+        .num_segments = 32
+    };
+    paintSemiCircle(renderer, sprint_meter_1, (SDL_Color) {.r = 255, .g = 255, .b = 255, .a = 255});
+    const Circle sprint_meter_circle_2 = {
+        .x = WINDOW_WIDTH - 110.0f,
+        .y = WINDOW_HEIGHT - 110.0f,
+        .inner_radius = 100.0f,
+        .outer_radius = 150.0f
+    };
+    const SemiCircle sprint_meter_2 = {
+        .c = sprint_meter_circle_2,
+        .start_angle = 150.0f,
+        .end_angle = 300.0f - (float) (MAX_SPRINT_TIME - player->sprint_time) / MAX_SPRINT_TIME * 150.0f,
+        .num_segments = 32
+    };
+    paintSemiCircle(renderer, sprint_meter_2, (SDL_Color) {.r = 0, .g = 0, .b = 255, .a = 255});
 }
 
 static void paintKeys(PlayerUIPainter* ui_painter, SDL_Renderer* renderer, const Player* player,
         SDL_Texture* const entity_textures[MAX_NUM_MAP_TEXTURES]) {
     for (int i = 0; i < player->num_keys; i++) {
         SDL_FRect dst_rect = {
-            .x = WINDOW_WIDTH - 100.0f,
-            .y = (float) i * 100.0f,
-            .w = 100.0f,
-            .h = 100.0f,
+            .x = 5.0f,
+            .y = (float) i * 75.0f + 255.0f,
+            .w = 75.0f,
+            .h = 75.0f
         };
         SDL_RenderTexture(renderer, entity_textures[player->keys[i]->entity_id], NULL, &dst_rect);
     }

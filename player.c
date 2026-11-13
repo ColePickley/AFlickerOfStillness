@@ -2,6 +2,7 @@
 
 #include <stdlib.h>
 #include <math.h>
+#include <stdio.h>
 #include <SDL3/SDL_timer.h>
 #include "functions.h"
 
@@ -31,12 +32,15 @@ void initPlayer(Player** player) {
     (*player)->a_pressed = false;
     (*player)->s_pressed = false;
     (*player)->d_pressed = false;
+    (*player)->is_sprinting = false;
     (*player)->primary_selected = true;
     (*player)->attacking = false;
     (*player)->pickup_enabled = true;
     (*player)->num_keys = 0;
     (*player)->last_update_time = -1;
+    (*player)->last_sprint_time = -1;
     (*player)->health = 100;
+    (*player)->sprint_time = MAX_SPRINT_TIME;
     (*player)->x_velocity = 0;
     (*player)->y_velocity = 0;
     (*player)->x = 0;
@@ -63,15 +67,37 @@ void destroyPlayer(Player** player) {
     *player = NULL;
 }
 
-void movePlayer(Player* player, int (*map_grid)[MAX_MAP_SIZE][MAX_MAP_SIZE]) {
-    setPlayerVelocity(player);
+void updatePlayer(Player* player, int (*map_grid)[MAX_MAP_SIZE][MAX_MAP_SIZE]) {
     if (player->last_update_time == -1) {
         player->last_update_time = SDL_GetTicks();
     }
+    movePlayer(player, map_grid);
+    if (player->is_sprinting) {
+        const uint64_t time_elapsed = SDL_GetTicks() - player->last_update_time;
+        player->sprint_time = max(0, player->sprint_time - (int) time_elapsed * SPRINT_DEPLETION_SPEED);
+        player->last_sprint_time = SDL_GetTicks();
+    } else if (SPRINT_COOLDOWN_TIME < SDL_GetTicks() - player->last_sprint_time &&
+            player->sprint_time < MAX_SPRINT_TIME) {
+        player->sprint_time = min(MAX_SPRINT_TIME, player->sprint_time + SPRINT_REGEN_SPEED);
+    }
+    if (player->sprint_time == 0 && player->is_sprinting) {
+        player->is_sprinting = false;
+    }
+    printf("%d\n", player->sprint_time);
+    player->last_update_time = SDL_GetTicks();
+}
+
+void movePlayer(Player* player, int (*map_grid)[MAX_MAP_SIZE][MAX_MAP_SIZE]) {
+    setPlayerVelocity(player);
     const int grid_x = (int) player->x / 64;
     const int grid_y = (int) player->y / 64;
     const uint64_t time_elapsed = SDL_GetTicks() - player->last_update_time;
-    const double speed = (double) time_elapsed / 15.0;
+    double speed;
+    if (player->is_sprinting) {
+        speed = (double) time_elapsed / 10.0;
+    } else {
+        speed = (double) time_elapsed / 15.0;
+    }
     const double delta_x = player->x_velocity * speed;
     const double delta_y = player->y_velocity * speed;
     if (!isXCollision((SDL_FPoint) {.x = (float) player->x, .y = (float) player->y}, map_grid, delta_x, 10)) {
@@ -80,7 +106,6 @@ void movePlayer(Player* player, int (*map_grid)[MAX_MAP_SIZE][MAX_MAP_SIZE]) {
     if (!isYCollision((SDL_FPoint) {.x = (float) player->x, .y = (float) player->y}, map_grid, delta_y, 10)) {
         player->y += delta_y;
     }
-    player->last_update_time = SDL_GetTicks();
     if (((int) player->y / 64 != grid_y || (int) player->x / 64 != grid_x) && !player->pickup_enabled) {
         player->pickup_enabled = true;
     }
@@ -100,6 +125,7 @@ void rotatePlayer(Player* player, const int sensitivity, const double mouse_delt
 }
 
 Entity* playerRangedAttack(const Player* player, Entity* const (*entities)[MAX_NUM_ENTITIES], const int num_entities) {
+    if (player->is_sprinting) return NULL;
     if ((SDL_GetTicks() - player->primary_weapon->last_attack_time) / 40 < player->primary_weapon->attack_cool_down) {
         return NULL;
     }
@@ -128,6 +154,7 @@ Entity* playerRangedAttack(const Player* player, Entity* const (*entities)[MAX_N
 }
 
 void playerMeleeAttack(const Player* player, Entity* const (*entities)[MAX_NUM_ENTITIES], const int num_entities) {
+    if (player->is_sprinting) return;
     for (int i = 0; i < num_entities; i++) {
         if ((*entities)[i]->in_scope && (*entities)[i]->vect_mag <= player->secondary_weapon->range) {
             (*entities)[i]->health -= player->secondary_weapon->damage;
