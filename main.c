@@ -66,7 +66,7 @@ int main() {
      * Initialize painter
      */
 
-    if (!initPainterFonts()) {
+    if (!initPainter()) {
         SDL_Log("Critical Failure loading TrueType Font Engine!");
         SDL_Quit();
         return 1;
@@ -120,7 +120,7 @@ int main() {
         if (frame_count >= 15) {
             end_time = SDL_GetPerformanceCounter();
             time_elapsed = (double) (end_time - start_time) / (double) SDL_GetPerformanceFrequency();
-            // printf("\rFPS: %.2f", 1.0 / time_elapsed);
+            printf("\rFPS: %.2f", 1.0 / time_elapsed);
             fflush(stdout);
             frame_count = 0;
         }
@@ -131,7 +131,7 @@ int main() {
     destroyUserData(&user_data);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
-    destroyPainterFonts();
+    destroyPainter();
     SDL_Quit();
     printf("\nProgram run successfully!\n");
     return 0;

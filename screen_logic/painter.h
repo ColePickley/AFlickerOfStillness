@@ -4,6 +4,8 @@
 #include "../functions.h"
 #include "stb_truetype.h"
 
+#define MAX_ARC_SEGMENTS 32
+
 enum {
     FONT_KLARISSA, FONT_PIXELOID
 };
@@ -27,9 +29,9 @@ extern stbtt_fontinfo g_font_klarissa;
 extern uint8_t* g_font_buffer_pixeloid;
 extern stbtt_fontinfo g_font_pixeloid;
 
-bool initPainterFonts();
+bool initPainter();
 
-void destroyPainterFonts();
+void destroyPainter();
 
 void paintPolygon(SDL_Renderer* renderer, int num_pts, const SDL_FPoint points[num_pts], SDL_Color color);
 

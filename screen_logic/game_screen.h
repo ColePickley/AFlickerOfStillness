@@ -7,13 +7,14 @@
 #include "../program_data.h"
 #include "../constants.h"
 
-#define MAX_WALKING_VIEW_BOB 15
-#define MAX_SPRINTING_VIEW_BOB 30
-#define WALKING_VIEW_BOB_SPEED 1.5f
-#define SPRINTING_VIEW_BOB_SPEED 3.0f
+#define MAX_WALKING_VIEW_BOB 10.0f
+#define MAX_SPRINTING_VIEW_BOB 20.0f
+#define WALKING_VIEW_BOB_SPEED 0.06f
+#define SPRINTING_VIEW_BOB_SPEED 0.12f
 
 typedef struct {
     bool bob_down;
+    uint64_t last_paint_time;
     int num_map_textures;
     int num_entity_textures;
     float view_bob_state;

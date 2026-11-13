@@ -83,7 +83,6 @@ void updatePlayer(Player* player, int (*map_grid)[MAX_MAP_SIZE][MAX_MAP_SIZE]) {
     if (player->sprint_time == 0 && player->is_sprinting) {
         player->is_sprinting = false;
     }
-    printf("%d\n", player->sprint_time);
     player->last_update_time = SDL_GetTicks();
 }
 

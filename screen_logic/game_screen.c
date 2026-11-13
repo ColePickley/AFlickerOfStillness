@@ -1,7 +1,6 @@
 #include "game_screen.h"
 
 #include <math.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <SDL3_image/SDL_image.h>
 #include "../weapon.h"
@@ -13,6 +12,7 @@
 void initGameScreen(GameScreen** game_screen, GameData* game_data) {
     *game_screen = malloc(sizeof(GameScreen));
     (*game_screen)->bob_down = false;
+    (*game_screen)->last_paint_time = 0;
     (*game_screen)->num_map_textures = setMapSurfaces(*game_screen);
     (*game_screen)->num_entity_textures = setEntitySurfaces(*game_screen);
     (*game_screen)->view_bob_state = MAX_WALKING_VIEW_BOB / 2.0f;
@@ -124,47 +124,59 @@ static void drawSky(const GameScreen* game_screen, SDL_Renderer* renderer, const
 }
 
 static void setViewBobState(GameScreen* game_screen, const Player* player) {
+    if (game_screen->last_paint_time == 0) {
+        game_screen->last_paint_time = SDL_GetTicks();
+    }
     const bool is_moving = fabs(player->x_velocity) >= 0.5 || fabs(player->y_velocity) >= 0.5;
+    const uint64_t time_elapsed = SDL_GetTicks() - game_screen->last_paint_time;
+    float view_bob_adjustment;
     if (!is_moving) {
-        if (game_screen->view_bob_state <= WALKING_VIEW_BOB_SPEED &&
-                game_screen->view_bob_state >= -WALKING_VIEW_BOB_SPEED) {
+        if (game_screen->view_bob_state <= 0.1f && game_screen->view_bob_state >= -0.1f) {
             return;
         }
         if (game_screen->view_bob_state > 0.0f) {
-            game_screen->view_bob_state -= WALKING_VIEW_BOB_SPEED;
+            view_bob_adjustment = -WALKING_VIEW_BOB_SPEED * (float) time_elapsed;
         } else {
-            game_screen->view_bob_state += WALKING_VIEW_BOB_SPEED;
+            view_bob_adjustment = WALKING_VIEW_BOB_SPEED * (float) time_elapsed;
         }
         if (game_screen->view_bob_state < WALKING_VIEW_BOB_SPEED &&
-                game_screen->view_bob_state > WALKING_VIEW_BOB_SPEED) {
+                game_screen->view_bob_state > -WALKING_VIEW_BOB_SPEED) {
             game_screen->view_bob_state = 0.0f;
         }
-        return;
+    } else if (player->is_sprinting) {
+        if (game_screen->bob_down) {
+            view_bob_adjustment = -SPRINTING_VIEW_BOB_SPEED * (float) time_elapsed;
+        } else {
+            view_bob_adjustment = SPRINTING_VIEW_BOB_SPEED * (float) time_elapsed;
+        }
+    } else {
+        if (game_screen->bob_down) {
+            view_bob_adjustment = -WALKING_VIEW_BOB_SPEED * (float) time_elapsed;
+        } else {
+            view_bob_adjustment = WALKING_VIEW_BOB_SPEED * (float) time_elapsed;
+        }
     }
     if (player->is_sprinting) {
-        if (game_screen->bob_down) {
-            game_screen->view_bob_state -= SPRINTING_VIEW_BOB_SPEED;
-        } else {
-            game_screen->view_bob_state += SPRINTING_VIEW_BOB_SPEED;
-        }
-        if (game_screen->view_bob_state <= 0.0f || game_screen->view_bob_state >= MAX_SPRINTING_VIEW_BOB) {
+        game_screen->view_bob_state = min(MAX_SPRINTING_VIEW_BOB,
+            max(-MAX_SPRINTING_VIEW_BOB, game_screen->view_bob_state + view_bob_adjustment));
+        if (game_screen->view_bob_state <= -MAX_SPRINTING_VIEW_BOB ||
+                game_screen->view_bob_state >= MAX_SPRINTING_VIEW_BOB) {
             game_screen->bob_down = !game_screen->bob_down;
         }
-        return;
-    }
-    if (game_screen->bob_down) {
-        game_screen->view_bob_state -= WALKING_VIEW_BOB_SPEED;
     } else {
-        game_screen->view_bob_state += WALKING_VIEW_BOB_SPEED;
+        game_screen->view_bob_state = min(MAX_WALKING_VIEW_BOB,
+            max(-MAX_WALKING_VIEW_BOB, game_screen->view_bob_state + view_bob_adjustment));
+        if (game_screen->view_bob_state <= -MAX_WALKING_VIEW_BOB ||
+                game_screen->view_bob_state >= MAX_WALKING_VIEW_BOB) {
+            game_screen->bob_down = !game_screen->bob_down;
+        }
     }
-    if (game_screen->view_bob_state <= 0 || game_screen->view_bob_state >= MAX_WALKING_VIEW_BOB) {
-        game_screen->bob_down = !game_screen->bob_down;
-    }
+    game_screen->last_paint_time = SDL_GetTicks();
 }
 
 static void drawCeilingLine(const GameScreen* game_screen, SDL_Renderer* renderer, const GameData* game_data,
         const int vert_res, const int ray_num, const int start_y, const double angle, const double pre_adjustment) {
-    for (int y = start_y; y >= -LINE_WIDTH; y -= vert_res) {
+    for (int y = start_y; y >= -LINE_WIDTH - (int) MAX_SPRINTING_VIEW_BOB; y -= vert_res) {
         const double dy = (double) WINDOW_HEIGHT / 2.0 - (double) y;
         const double post_adjustment = pre_adjustment / dy;
         int ceiling_x = getFloorX(game_data, angle, post_adjustment);
@@ -191,7 +203,7 @@ static void drawCeilingLine(const GameScreen* game_screen, SDL_Renderer* rendere
 static void drawFloorLine(const GameScreen* game_screen, SDL_Renderer* renderer, const GameData* game_data,
         const int vert_res, const int ray_num, const float line_length, const int start_y, const double angle,
         const double pre_adjustment) {
-    for (int y = start_y + (int) line_length; y < WINDOW_HEIGHT; y += vert_res) {
+    for (int y = start_y + (int) line_length; y < WINDOW_HEIGHT + (int) MAX_SPRINTING_VIEW_BOB; y += vert_res) {
         const double dy = y - WINDOW_HEIGHT / 2.0;
         const double post_adjustment = pre_adjustment / dy;
         int floor_x = getFloorX(game_data, angle, post_adjustment);
