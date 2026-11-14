@@ -132,73 +132,48 @@ void paintFilledCircle(SDL_Renderer* renderer, const Circle c, const SDL_Color c
     }
 }
 
-void paintSemiCircle(SDL_Renderer* renderer, const SemiCircle sc, const SDL_Color color) {
-    if (!renderer || sc.num_segments < 1 || sc.num_segments > MAX_ARC_SEGMENTS ||
-            sc.c.outer_radius <= 0.0f || sc.c.inner_radius < 0.0f ||
-            sc.c.inner_radius >= sc.c.outer_radius) {
+void paintSemiCircle(SDL_Renderer* renderer, const SemiCircle* sc, const SDL_Color color) {
+    if (renderer == NULL || sc == NULL || sc->num_segments <= 0 || sc->num_segments > MAX_ARC_SEGMENTS) {
         return;
     }
-
-    /* Build index buffer once across the entire program lifetime */
-    static int indices[MAX_ARC_SEGMENTS * 6];
-    static bool indices_initialized = false;
-    if (!indices_initialized) {
-        for (int i = 0; i < MAX_ARC_SEGMENTS; ++i) {
-            const int i_idx = i * 6;
-            const int v0 = i * 2;
-            indices[i_idx + 0] = v0;
-            indices[i_idx + 1] = v0 + 1;
-            indices[i_idx + 2] = v0 + 2;
-            indices[i_idx + 3] = v0 + 1;
-            indices[i_idx + 4] = v0 + 3;
-            indices[i_idx + 5] = v0 + 2;
-        }
-        indices_initialized = true;
-    }
-
-    const float start_angle = (float) toRadians(sc.start_angle);
-    const float end_angle = (float) toRadians(sc.end_angle);
-    const float angle_step = (end_angle - start_angle) / (float) sc.num_segments;
-
-    /* Compute sin/cos only twice instead of (num_segments + 1) * 2 times */
-    float cos_a = cosf(start_angle);
-    float sin_a = sinf(start_angle);
-    const float cos_step = cosf(angle_step);
-    const float sin_step = sinf(angle_step);
-
     const SDL_FColor fcolor = {
         .r = (float) color.r / 255.0f,
         .g = (float) color.g / 255.0f,
         .b = (float) color.b / 255.0f,
         .a = (float) color.a / 255.0f
     };
-
     SDL_Vertex vertices[(MAX_ARC_SEGMENTS + 1) * 2];
-
-    for (int i = 0; i <= sc.num_segments; ++i) {
-        const int v_idx = i * 2;
-
-        vertices[v_idx].position.x = sc.c.x + sc.c.inner_radius * cos_a;
-        vertices[v_idx].position.y = sc.c.y + sc.c.inner_radius * sin_a;
-        vertices[v_idx].color = fcolor;
-        vertices[v_idx].tex_coord.x = 0.0f;
-        vertices[v_idx].tex_coord.y = 0.0f;
-
-        vertices[v_idx + 1].position.x = sc.c.x + sc.c.outer_radius * cos_a;
-        vertices[v_idx + 1].position.y = sc.c.y + sc.c.outer_radius * sin_a;
-        vertices[v_idx + 1].color = fcolor;
-        vertices[v_idx + 1].tex_coord.x = 0.0f;
-        vertices[v_idx + 1].tex_coord.y = 0.0f;
-
-        /* Advance angle via rotation matrix (no trig calls) */
-        const float next_cos = cos_a * cos_step - sin_a * sin_step;
-        const float next_sin = sin_a * cos_step + cos_a * sin_step;
-        cos_a = next_cos;
-        sin_a = next_sin;
+    int indices[MAX_ARC_SEGMENTS * 6];
+    const float angle_step = (sc->end_angle - sc->start_angle) / (float) sc->num_segments;
+    for (int i = 0; i <= sc->num_segments; i++) {\
+        const float angle = (float) ((sc->start_angle + (double) i * angle_step) * (PI / 180.0));
+        const float cos_angle = cosf(angle);
+        const float sin_angle = sinf(angle);
+        const int v = i * 2;
+        vertices[v].position = (SDL_FPoint) {
+            .x = sc->c.x + cos_angle * sc->c.outer_radius,
+            .y = sc->c.y + sin_angle * sc->c.outer_radius
+        };
+        vertices[v + 1].position = (SDL_FPoint) {
+            .x = sc->c.x + cos_angle * sc->c.inner_radius,
+            .y = sc->c.y + sin_angle * sc->c.inner_radius
+        };
+        vertices[v].color = fcolor;
+        vertices[v + 1].color = fcolor;
+        vertices[v].tex_coord = (SDL_FPoint) {.x = 0, .y = 0};
+        vertices[v + 1].tex_coord = (SDL_FPoint) {.x = 0, .y = 0};
+        if (i < sc->num_segments) {
+            const int idx = i * 6;
+            indices[idx] = v;
+            indices[idx + 1] = v + 1;
+            indices[idx + 2] = v + 2;
+            indices[idx + 3] = v + 2;
+            indices[idx + 4] = v + 1;
+            indices[idx + 5] = v + 3;
+        }
     }
-
-    SDL_RenderGeometry(renderer, NULL, vertices, (sc.num_segments + 1) * 2,
-        indices, sc.num_segments * 6);
+    SDL_RenderGeometry(renderer, NULL, vertices, (sc->num_segments + 1) * 2,
+        indices, sc->num_segments * 6);
 }
 
 void paintRightAngleSemiCircle(SDL_Renderer* renderer, const Circle circle, const int quadrant,

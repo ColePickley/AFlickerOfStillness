@@ -10,7 +10,7 @@
 #define MAX_WALKING_VIEW_BOB 10.0f
 #define MAX_SPRINTING_VIEW_BOB 20.0f
 #define WALKING_VIEW_BOB_SPEED 0.06f
-#define SPRINTING_VIEW_BOB_SPEED 0.12f
+#define SPRINTING_VIEW_BOB_SPEED 0.15f
 
 typedef struct {
     bool bob_down;

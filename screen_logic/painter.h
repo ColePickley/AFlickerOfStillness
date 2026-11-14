@@ -4,7 +4,7 @@
 #include "../functions.h"
 #include "stb_truetype.h"
 
-#define MAX_ARC_SEGMENTS 32
+#define MAX_ARC_SEGMENTS 64
 
 enum {
     FONT_KLARISSA, FONT_PIXELOID
@@ -39,7 +39,7 @@ void paintFilledEllipse(SDL_Renderer* renderer, Ellipse e, SDL_Color color);
 
 void paintFilledCircle(SDL_Renderer* renderer, Circle c, SDL_Color color);
 
-void paintSemiCircle(SDL_Renderer* renderer, SemiCircle sc, SDL_Color color);
+void paintSemiCircle(SDL_Renderer* renderer, const SemiCircle* sc, SDL_Color color);
 
 void paintRightAngleSemiCircle(SDL_Renderer* renderer, Circle circle, int quadrant, SDL_Color color);
 
