@@ -72,13 +72,17 @@ void updatePlayer(Player* player, int (*map_grid)[MAX_MAP_SIZE][MAX_MAP_SIZE]) {
         player->last_update_time = SDL_GetTicks();
     }
     movePlayer(player, map_grid);
-    if (player->is_sprinting) {
-        const uint64_t time_elapsed = SDL_GetTicks() - player->last_update_time;
+    bool is_moving = false;
+    if (player->x_velocity != 0.0 || player->y_velocity != 0.0) {
+        is_moving = true;
+    }
+    const uint64_t time_elapsed = SDL_GetTicks() - player->last_update_time;
+    if (player->is_sprinting && is_moving) {
         player->sprint_time = max(0, player->sprint_time - (int) time_elapsed * SPRINT_DEPLETION_SPEED);
         player->last_sprint_time = SDL_GetTicks();
-    } else if (SPRINT_COOLDOWN_TIME < SDL_GetTicks() - player->last_sprint_time &&
+    } else if (!player->is_sprinting && SPRINT_COOLDOWN_TIME < SDL_GetTicks() - player->last_sprint_time &&
             player->sprint_time < MAX_SPRINT_TIME) {
-        player->sprint_time = min(MAX_SPRINT_TIME, player->sprint_time + SPRINT_REGEN_SPEED);
+        player->sprint_time = min(MAX_SPRINT_TIME, player->sprint_time + (int) time_elapsed * SPRINT_REGEN_SPEED);
     }
     if (player->sprint_time == 0 && player->is_sprinting) {
         player->is_sprinting = false;

@@ -131,16 +131,17 @@ static void setViewBobState(GameScreen* game_screen, const Player* player) {
     const uint64_t time_elapsed = SDL_GetTicks() - game_screen->last_paint_time;
     float view_bob_adjustment;
     if (!is_moving) {
-        if (game_screen->view_bob_state <= 0.1f && game_screen->view_bob_state >= -0.1f) {
+        if (game_screen->view_bob_state <= 1.0f && game_screen->view_bob_state >= -1.0f) {
+            game_screen->last_paint_time = SDL_GetTicks();
             return;
         }
         if (game_screen->view_bob_state > 0.0f) {
-            view_bob_adjustment = -WALKING_VIEW_BOB_SPEED * (float) time_elapsed;
+            view_bob_adjustment = -1.0f * min(2.0f, WALKING_VIEW_BOB_SPEED * (float) time_elapsed);
         } else {
-            view_bob_adjustment = WALKING_VIEW_BOB_SPEED * (float) time_elapsed;
+            view_bob_adjustment = min(2.0f, WALKING_VIEW_BOB_SPEED * (float) time_elapsed);
         }
-        if (game_screen->view_bob_state < WALKING_VIEW_BOB_SPEED &&
-                game_screen->view_bob_state > -WALKING_VIEW_BOB_SPEED) {
+        if (game_screen->view_bob_state < 2.0f &&
+                game_screen->view_bob_state > -2.0f) {
             game_screen->view_bob_state = 0.0f;
         }
     } else if (player->is_sprinting) {
