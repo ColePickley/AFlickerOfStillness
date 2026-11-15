@@ -118,51 +118,39 @@ void paintFilledEllipse(SDL_Renderer* renderer, const Ellipse e, const SDL_Color
     }
 }
 
-void paintFilledCircle(SDL_Renderer* renderer, const Circle c, const SDL_Color color) {
-    SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
-    const double outer_radius_squared = pow(c.outer_radius, 2);
-    const double inner_radius_squared = pow(c.inner_radius, 2);
-    for (int x = (int) (c.x - c.outer_radius); x <= (int) (c.x + c.outer_radius); x++) {
-        for (int y = (int) (c.y - c.outer_radius); y <= (int) (c.y + c.outer_radius); y++) {
-            const double check = pow((float) y - c.y, 2) + pow((float) x - c.x, 2);
-            if (check <= outer_radius_squared && check >= inner_radius_squared) {
-                SDL_RenderPoint(renderer, (float) x, (float) y);
-            }
-        }
-    }
-}
-
-void paintSemiCircle(SDL_Renderer* renderer, const SemiCircle* sc, const SDL_Color color) {
-    if (renderer == NULL || sc == NULL || sc->num_segments <= 0 || sc->num_segments > MAX_ARC_SEGMENTS) {
+void paintCircle(SDL_Renderer* renderer, const Circle* c, const SDL_Color color) {
+    if (renderer == NULL || c == NULL || c->num_segments <= 0 || c->num_segments > MAX_ARC_SEGMENTS) {
         return;
     }
+    //convert SDL_Color to SDL_FColor
     const SDL_FColor fcolor = {
         .r = (float) color.r / 255.0f,
         .g = (float) color.g / 255.0f,
         .b = (float) color.b / 255.0f,
         .a = (float) color.a / 255.0f
     };
+    //Create vertex and index arrays
     SDL_Vertex vertices[(MAX_ARC_SEGMENTS + 1) * 2];
     int indices[MAX_ARC_SEGMENTS * 6];
-    const float angle_step = (sc->end_angle - sc->start_angle) / (float) sc->num_segments;
-    for (int i = 0; i <= sc->num_segments; i++) {\
-        const float angle = (float) ((sc->start_angle + (double) i * angle_step) * (PI / 180.0));
+    const float angle_step = (c->end_angle - c->start_angle) / (float) c->num_segments;
+    for (int i = 0; i <= c->num_segments; i++) {\
+        const float angle = (float) ((c->start_angle + (double) i * angle_step) * (PI / 180.0));
         const float cos_angle = cosf(angle);
         const float sin_angle = sinf(angle);
         const int v = i * 2;
         vertices[v].position = (SDL_FPoint) {
-            .x = sc->c.x + cos_angle * sc->c.outer_radius,
-            .y = sc->c.y + sin_angle * sc->c.outer_radius
+            .x = c->x + cos_angle * c->outer_radius,
+            .y = c->y + sin_angle * c->outer_radius
         };
         vertices[v + 1].position = (SDL_FPoint) {
-            .x = sc->c.x + cos_angle * sc->c.inner_radius,
-            .y = sc->c.y + sin_angle * sc->c.inner_radius
+            .x = c->x + cos_angle * c->inner_radius,
+            .y = c->y + sin_angle * c->inner_radius
         };
         vertices[v].color = fcolor;
         vertices[v + 1].color = fcolor;
         vertices[v].tex_coord = (SDL_FPoint) {.x = 0, .y = 0};
         vertices[v + 1].tex_coord = (SDL_FPoint) {.x = 0, .y = 0};
-        if (i < sc->num_segments) {
+        if (i < c->num_segments) {
             const int idx = i * 6;
             indices[idx] = v;
             indices[idx + 1] = v + 1;
@@ -172,57 +160,8 @@ void paintSemiCircle(SDL_Renderer* renderer, const SemiCircle* sc, const SDL_Col
             indices[idx + 5] = v + 3;
         }
     }
-    SDL_RenderGeometry(renderer, NULL, vertices, (sc->num_segments + 1) * 2,
-        indices, sc->num_segments * 6);
-}
-
-void paintRightAngleSemiCircle(SDL_Renderer* renderer, const Circle circle, const int quadrant,
-        const SDL_Color color) {
-    SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
-    float start_x, end_x, start_y, end_y;
-    switch (quadrant) {
-        case 0: {
-            start_x = circle.x;
-            end_x = circle.x + circle.outer_radius;
-            start_y = circle.y;
-            end_y = circle.y + circle.outer_radius;
-            break;
-        }
-        case 1: {
-            start_x = circle.x - circle.outer_radius;
-            end_x = circle.x;
-            start_y = circle.y;
-            end_y = circle.y + circle.outer_radius;
-            break;
-        }
-        case 2: {
-            start_x = circle.x - circle.outer_radius;
-            end_x = circle.x;
-            start_y = circle.y - circle.outer_radius;
-            end_y = circle.y;
-            break;
-        }
-        case 3: {
-            start_x = circle.x;
-            end_x = circle.x + circle.outer_radius;
-            start_y = circle.y - circle.outer_radius;
-            end_y = circle.y;
-            break;
-        }
-        default: {
-            return;
-        }
-    }
-    const float outer_radius_squared = circle.outer_radius * circle.outer_radius;
-    const float inner_radius_squared = circle.inner_radius * circle.inner_radius;
-    for (int x = (int) start_x; x <= (int) end_x; x++) {
-        for (int y = (int) start_y; y <= (int) end_y; y++) {
-            const double distance_squared = pow((float) x - circle.x, 2) + pow((float) y - circle.y, 2);
-            if (distance_squared < outer_radius_squared && distance_squared >= inner_radius_squared) {
-                SDL_RenderPoint(renderer, (float) x, (float) y);
-            }
-        }
-    }
+    SDL_RenderGeometry(renderer, NULL, vertices, (c->num_segments + 1) * 2,
+        indices, c->num_segments * 6);
 }
 
 void paintText(SDL_Renderer* renderer, const char* text, const SDL_FPoint p, const float font_size,

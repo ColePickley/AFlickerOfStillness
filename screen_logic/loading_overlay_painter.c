@@ -28,9 +28,12 @@ void paintLoadingOverlay(SDL_Renderer *renderer) {
         .y = WINDOW_HEIGHT / 2.0f,
         .outer_radius = radius1 + 15,
         .inner_radius = radius1,
+        .start_angle = 0.0f,
+        .end_angle = 360.0f,
+        .num_segments = 32
     };
     const int color1 = max(0, min(255, (int) (radius1 / 100.0f * 255.0f)));
-    paintFilledCircle(renderer, circle1, (SDL_Color) {.r = color1, .g = color1, .b = color1, .a = 255});
+    paintCircle(renderer, &circle1, (SDL_Color) {.r = color1, .g = color1, .b = color1, .a = 255});
 
     const float radius2 = 100.0f - radius1;
     const Circle circle2 = {
@@ -38,9 +41,12 @@ void paintLoadingOverlay(SDL_Renderer *renderer) {
         .y = WINDOW_HEIGHT / 2.0f,
         .outer_radius = radius2 + 15,
         .inner_radius = radius2,
+        .start_angle = 0.0f,
+        .end_angle = 360.0f,
+        .num_segments = 32
     };
     const int color2 = max(0, min(255, (int) (radius2 / 100.0f * 255.0f)));
-    paintFilledCircle(renderer, circle2, (SDL_Color) {.r = color2, .g = color2, .b = color2, .a = 255});
+    paintCircle(renderer, &circle2, (SDL_Color) {.r = color2, .g = color2, .b = color2, .a = 255});
 
     char* text;
     if (g_animation_state <= 66.67f) {

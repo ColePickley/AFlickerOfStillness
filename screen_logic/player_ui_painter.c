@@ -283,58 +283,46 @@ static void paintBottomRightCorner(const PlayerUIPainter* ui_painter, SDL_Render
      */
 
     const SDL_Color background_color = {.r = 0, .g = 0, .b = 0, .a = 100};
-    const Circle inner_circle = {
+    const Circle inner_semi_circle = {
         .x = WINDOW_WIDTH - 110.0f,
         .y = WINDOW_HEIGHT - 110.0f,
         .inner_radius = 0.0f,
-        .outer_radius = 198.0f
-    };
-    const SemiCircle inner_semi_circle = {
-        .c = inner_circle,
+        .outer_radius = 198.0f,
         .start_angle = 0.0f,
         .end_angle = 360.0f,
         .num_segments = 64
     };
-    paintSemiCircle(renderer, &inner_semi_circle, background_color);
-    const Circle outer_circle = {
+    paintCircle(renderer, &inner_semi_circle, background_color);
+    const Circle outer_semi_circle = {
         .x = WINDOW_WIDTH - 110.0f,
         .y = WINDOW_HEIGHT - 110.0f,
         .inner_radius = 199.0f,
-        .outer_radius = 200.0f
-    };
-    const SemiCircle outer_semi_circle = {
-        .c = outer_circle,
+        .outer_radius = 200.0f,
         .start_angle = 0.0f,
         .end_angle = 360.0f,
         .num_segments = 64
     };
-    paintSemiCircle(renderer, &outer_semi_circle, (SDL_Color) {.r = 255, .g = 255, .b = 255, .a = 255});
-    const Circle sprint_meter_circle_1 = {
+    paintCircle(renderer, &outer_semi_circle, (SDL_Color) {.r = 255, .g = 255, .b = 255, .a = 255});
+    const Circle sprint_meter_1 = {
         .x = WINDOW_WIDTH - 110.0f,
         .y = WINDOW_HEIGHT - 110.0f,
         .inner_radius = 95.0f,
-        .outer_radius = 155.0f
-    };
-    const SemiCircle sprint_meter_1 = {
-        .c = sprint_meter_circle_1,
+        .outer_radius = 155.0f,
         .start_angle = 148.0f,
         .end_angle = 302.0f,
         .num_segments = 32
     };
-    paintSemiCircle(renderer, &sprint_meter_1, (SDL_Color) {.r = 255, .g = 255, .b = 255, .a = 255});
-    const Circle sprint_meter_circle_2 = {
+    paintCircle(renderer, &sprint_meter_1, (SDL_Color) {.r = 255, .g = 255, .b = 255, .a = 255});
+    const Circle sprint_meter_2 = {
         .x = WINDOW_WIDTH - 110.0f,
         .y = WINDOW_HEIGHT - 110.0f,
         .inner_radius = 100.0f,
-        .outer_radius = 150.0f
-    };
-    const SemiCircle sprint_meter_2 = {
-        .c = sprint_meter_circle_2,
+        .outer_radius = 150.0f,
         .start_angle = 150.0f,
         .end_angle = 300.0f - (float) (MAX_SPRINT_TIME - player->sprint_time) / MAX_SPRINT_TIME * 150.0f,
         .num_segments = 32
     };
-    paintSemiCircle(renderer, &sprint_meter_2, (SDL_Color) {.r = 0, .g = 0, .b = 255, .a = 255});
+    paintCircle(renderer, &sprint_meter_2, (SDL_Color) {.r = 0, .g = 0, .b = 255, .a = 255});
 }
 
 static void paintKeys(PlayerUIPainter* ui_painter, SDL_Renderer* renderer, const Player* player,

@@ -184,36 +184,48 @@ static void paintBeveledLabelRect(SDL_Renderer* renderer, const Label* label) {
     SDL_RenderFillRect(renderer, &rect3);
     //upper left circle
     const Circle circle1 = {
-        .x = label->rect.x + label->style_data.bevel_radius - 1.0f,
-        .y = label->rect.y + label->style_data.bevel_radius - 1.0f,
+        .x = label->rect.x + label->style_data.bevel_radius,
+        .y = label->rect.y + label->style_data.bevel_radius,
         .inner_radius = 0,
-        .outer_radius = label->style_data.bevel_radius - label->style_data.border_thickness
+        .outer_radius = label->style_data.bevel_radius - label->style_data.border_thickness,
+        .start_angle = 180.0f,
+        .end_angle = 270.0f,
+        .num_segments = 32
     };
-    paintRightAngleSemiCircle(renderer, circle1, 2, label->fill_color);
+    paintCircle(renderer, &circle1, label->fill_color);
     //upper right circle
     const Circle circle2 = {
         .x = label->rect.x + label->rect.w - label->style_data.bevel_radius,
-        .y = label->rect.y + label->style_data.bevel_radius - 1.0f,
+        .y = label->rect.y + label->style_data.bevel_radius,
         .inner_radius = 0,
-        .outer_radius = label->style_data.bevel_radius - label->style_data.border_thickness
+        .outer_radius = label->style_data.bevel_radius - label->style_data.border_thickness,
+        .start_angle = 270.0f,
+        .end_angle = 360.0f,
+        .num_segments = 32
     };
-    paintRightAngleSemiCircle(renderer, circle2, 3, label->fill_color);
+    paintCircle(renderer, &circle2, label->fill_color);
     //bottom right circle
     const Circle circle3 = {
         .x = label->rect.x + label->rect.w - label->style_data.bevel_radius,
         .y = label->rect.y + label->rect.h - label->style_data.bevel_radius,
         .inner_radius = 0,
-        .outer_radius = label->style_data.bevel_radius - label->style_data.border_thickness
+        .outer_radius = label->style_data.bevel_radius - label->style_data.border_thickness,
+        .start_angle = 0.0f,
+        .end_angle = 90.0f,
+        .num_segments = 32
     };
-    paintRightAngleSemiCircle(renderer, circle3, 0, label->fill_color);
+    paintCircle(renderer, &circle3, label->fill_color);
     //bottom left circle
     const Circle circle4 = {
-        .x = label->rect.x + label->style_data.bevel_radius - 1.0f,
+        .x = label->rect.x + label->style_data.bevel_radius,
         .y = label->rect.y + label->rect.h - label->style_data.bevel_radius,
         .inner_radius = 0,
-        .outer_radius = label->style_data.bevel_radius - label->style_data.border_thickness
+        .outer_radius = label->style_data.bevel_radius - label->style_data.border_thickness,
+        .start_angle = 90.0f,
+        .end_angle = 180.0f,
+        .num_segments = 32
     };
-    paintRightAngleSemiCircle(renderer, circle4, 1, label->fill_color);
+    paintCircle(renderer, &circle4, label->fill_color);
 }
 
 static void paintLabelBorder(SDL_Renderer* renderer, const Label* label) {
@@ -296,36 +308,48 @@ static void paintBeveledLabelBorder(SDL_Renderer* renderer, const Label* label) 
     SDL_RenderFillRect(renderer, &rect4);
     //upper left circle
     const Circle circle1 = {
-        .x = label->rect.x + label->style_data.bevel_radius - 1.0f,
-        .y = label->rect.y + label->style_data.bevel_radius - 1.0f,
+        .x = label->rect.x + label->style_data.bevel_radius,
+        .y = label->rect.y + label->style_data.bevel_radius,
         .inner_radius = label->style_data.bevel_radius - label->style_data.border_thickness,
-        .outer_radius = label->style_data.bevel_radius
+        .outer_radius = label->style_data.bevel_radius,
+        .start_angle = 180.0f,
+        .end_angle = 270.0f,
+        .num_segments = 32
     };
-    paintRightAngleSemiCircle(renderer, circle1, 2, label->style_data.border_color);
+    paintCircle(renderer, &circle1, label->style_data.border_color);
     //upper right circle
     const Circle circle2 = {
         .x = label->rect.x + label->rect.w - label->style_data.bevel_radius,
-        .y = label->rect.y + label->style_data.bevel_radius - 1.0f,
+        .y = label->rect.y + label->style_data.bevel_radius,
         .inner_radius = label->style_data.bevel_radius - label->style_data.border_thickness,
-        .outer_radius = label->style_data.bevel_radius
+        .outer_radius = label->style_data.bevel_radius,
+        .start_angle = 270.0f,
+        .end_angle = 360.0f,
+        .num_segments = 32
     };
-    paintRightAngleSemiCircle(renderer, circle2, 3, label->style_data.border_color);
+    paintCircle(renderer, &circle2, label->style_data.border_color);
     //bottom right circle
     const Circle circle3 = {
         .x = label->rect.x + label->rect.w - label->style_data.bevel_radius,
         .y = label->rect.y + label->rect.h - label->style_data.bevel_radius,
         .inner_radius = label->style_data.bevel_radius - label->style_data.border_thickness,
-        .outer_radius = label->style_data.bevel_radius
+        .outer_radius = label->style_data.bevel_radius,
+        .start_angle = 0.0f,
+        .end_angle = 90.0f,
+        .num_segments = 32
     };
-    paintRightAngleSemiCircle(renderer, circle3, 0, label->style_data.border_color);
+    paintCircle(renderer, &circle3, label->style_data.border_color);
     //bottom left circle
     const Circle circle4 = {
-        .x = label->rect.x + label->style_data.bevel_radius - 1.0f,
+        .x = label->rect.x + label->style_data.bevel_radius,
         .y = label->rect.y + label->rect.h - label->style_data.bevel_radius,
         .inner_radius = label->style_data.bevel_radius - label->style_data.border_thickness,
-        .outer_radius = label->style_data.bevel_radius
+        .outer_radius = label->style_data.bevel_radius,
+        .start_angle = 90.0f,
+        .end_angle = 180.0f,
+        .num_segments = 32
     };
-    paintRightAngleSemiCircle(renderer, circle4, 1, label->style_data.border_color);
+    paintCircle(renderer, &circle4, label->style_data.border_color);
 }
 
 /*

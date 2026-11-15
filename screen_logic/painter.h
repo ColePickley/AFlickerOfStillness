@@ -15,14 +15,9 @@ typedef struct {
 }Ellipse;
 
 typedef struct {
-    float x, y, inner_radius, outer_radius;
-}Circle;
-
-typedef struct {
-    Circle c;
-    float start_angle, end_angle;
+    float x, y, inner_radius, outer_radius, start_angle, end_angle;
     int num_segments;
-}SemiCircle;
+}Circle;
 
 extern uint8_t* g_font_buffer_klarissa;
 extern stbtt_fontinfo g_font_klarissa;
@@ -37,11 +32,7 @@ void paintPolygon(SDL_Renderer* renderer, int num_pts, const SDL_FPoint points[n
 
 void paintFilledEllipse(SDL_Renderer* renderer, Ellipse e, SDL_Color color);
 
-void paintFilledCircle(SDL_Renderer* renderer, Circle c, SDL_Color color);
-
-void paintSemiCircle(SDL_Renderer* renderer, const SemiCircle* sc, SDL_Color color);
-
-void paintRightAngleSemiCircle(SDL_Renderer* renderer, Circle circle, int quadrant, SDL_Color color);
+void paintCircle(SDL_Renderer* renderer, const Circle* c, SDL_Color color);
 
 void paintText(SDL_Renderer* renderer, const char* text, SDL_FPoint p, float font_size, SDL_Color color, int font);
 
