@@ -34,6 +34,8 @@ void paintFilledEllipse(SDL_Renderer* renderer, Ellipse e, SDL_Color color);
 
 void paintCircle(SDL_Renderer* renderer, const Circle* c, SDL_Color color);
 
+void paintGradientCircle(SDL_Renderer* renderer, const Circle* c, SDL_Color start_color, SDL_Color end_color);
+
 void paintText(SDL_Renderer* renderer, const char* text, SDL_FPoint p, float font_size, SDL_Color color, int font);
 
 #endif //AFLICKEROFSTILLNESS_PAINTER_H

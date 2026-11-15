@@ -283,7 +283,7 @@ static void paintBottomRightCorner(const PlayerUIPainter* ui_painter, SDL_Render
      */
 
     const SDL_Color background_color = {.r = 0, .g = 0, .b = 0, .a = 100};
-    const Circle inner_semi_circle = {
+    const Circle inner_circle = {
         .x = WINDOW_WIDTH - 110.0f,
         .y = WINDOW_HEIGHT - 110.0f,
         .inner_radius = 0.0f,
@@ -292,8 +292,8 @@ static void paintBottomRightCorner(const PlayerUIPainter* ui_painter, SDL_Render
         .end_angle = 360.0f,
         .num_segments = 64
     };
-    paintCircle(renderer, &inner_semi_circle, background_color);
-    const Circle outer_semi_circle = {
+    paintCircle(renderer, &inner_circle, background_color);
+    const Circle outer_circle = {
         .x = WINDOW_WIDTH - 110.0f,
         .y = WINDOW_HEIGHT - 110.0f,
         .inner_radius = 199.0f,
@@ -302,7 +302,7 @@ static void paintBottomRightCorner(const PlayerUIPainter* ui_painter, SDL_Render
         .end_angle = 360.0f,
         .num_segments = 64
     };
-    paintCircle(renderer, &outer_semi_circle, (SDL_Color) {.r = 255, .g = 255, .b = 255, .a = 255});
+    paintCircle(renderer, &outer_circle, (SDL_Color) {.r = 255, .g = 255, .b = 255, .a = 255});
     const Circle sprint_meter_1 = {
         .x = WINDOW_WIDTH - 110.0f,
         .y = WINDOW_HEIGHT - 110.0f,
@@ -322,7 +322,9 @@ static void paintBottomRightCorner(const PlayerUIPainter* ui_painter, SDL_Render
         .end_angle = 300.0f - (float) (MAX_SPRINT_TIME - player->sprint_time) / MAX_SPRINT_TIME * 150.0f,
         .num_segments = 32
     };
-    paintCircle(renderer, &sprint_meter_2, (SDL_Color) {.r = 0, .g = 0, .b = 255, .a = 255});
+    paintGradientCircle(renderer, &sprint_meter_2,
+        (SDL_Color) {.r = 200, .g = 0, .b = 155, .a = 255},
+        (SDL_Color) {.r = 0, .g = 0, .b = 255, .a = 255});
 }
 
 static void paintKeys(PlayerUIPainter* ui_painter, SDL_Renderer* renderer, const Player* player,

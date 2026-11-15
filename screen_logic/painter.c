@@ -164,6 +164,71 @@ void paintCircle(SDL_Renderer* renderer, const Circle* c, const SDL_Color color)
         indices, c->num_segments * 6);
 }
 
+void paintGradientCircle(SDL_Renderer* renderer, const Circle* c, const SDL_Color start_color,
+        const SDL_Color end_color) {
+    if (renderer == NULL || c == NULL || c->num_segments <= 0 || c->num_segments > MAX_ARC_SEGMENTS) {
+        return;
+    }
+    //convert SDL_Color to SDL_FColor
+    const SDL_FColor start_fcolor = {
+        .r = (float) start_color.r / 255.0f,
+        .g = (float) start_color.g / 255.0f,
+        .b = (float) start_color.b / 255.0f,
+        .a = (float) start_color.a / 255.0f
+    };
+    const SDL_FColor end_fcolor = {
+        .r = (float) end_color.r / 255.0f,
+        .g = (float) end_color.g / 255.0f,
+        .b = (float) end_color.b / 255.0f,
+        .a = (float) end_color.a / 255.0f
+    };
+    const SDL_FColor step_fcolor = {
+        .r = (end_fcolor.r - start_fcolor.r) / (float) c->num_segments,
+        .g = (end_fcolor.g - start_fcolor.g) / (float) c->num_segments,
+        .b = (end_fcolor.b - start_fcolor.b) / (float) c->num_segments,
+        .a = (end_fcolor.a - start_fcolor.a) / (float) c->num_segments
+    };
+    //Create vertex and index arrays
+    SDL_Vertex vertices[(MAX_ARC_SEGMENTS + 1) * 2];
+    int indices[MAX_ARC_SEGMENTS * 6];
+    const float angle_step = (c->end_angle - c->start_angle) / (float) c->num_segments;
+    for (int i = 0; i <= c->num_segments; i++) {\
+        const float angle = (float) ((c->start_angle + (double) i * angle_step) * (PI / 180.0));
+        const float cos_angle = cosf(angle);
+        const float sin_angle = sinf(angle);
+        const int v = i * 2;
+        vertices[v].position = (SDL_FPoint) {
+            .x = c->x + cos_angle * c->outer_radius,
+            .y = c->y + sin_angle * c->outer_radius
+        };
+        vertices[v + 1].position = (SDL_FPoint) {
+            .x = c->x + cos_angle * c->inner_radius,
+            .y = c->y + sin_angle * c->inner_radius
+        };
+        const SDL_FColor new_fcolor = {
+            .r = start_fcolor.r + step_fcolor.r * (float) i,
+            .g = start_fcolor.g + step_fcolor.g * (float) i,
+            .b = start_fcolor.b + step_fcolor.b * (float) i,
+            .a = start_fcolor.a + step_fcolor.a * (float) i
+        };
+        vertices[v].color = new_fcolor;
+        vertices[v + 1].color = new_fcolor;
+        vertices[v].tex_coord = (SDL_FPoint) {.x = 0, .y = 0};
+        vertices[v + 1].tex_coord = (SDL_FPoint) {.x = 0, .y = 0};
+        if (i < c->num_segments) {
+            const int idx = i * 6;
+            indices[idx] = v;
+            indices[idx + 1] = v + 1;
+            indices[idx + 2] = v + 2;
+            indices[idx + 3] = v + 2;
+            indices[idx + 4] = v + 1;
+            indices[idx + 5] = v + 3;
+        }
+    }
+    SDL_RenderGeometry(renderer, NULL, vertices, (c->num_segments + 1) * 2,
+        indices, c->num_segments * 6);
+}
+
 void paintText(SDL_Renderer* renderer, const char* text, const SDL_FPoint p, const float font_size,
         const SDL_Color color, const int font) {
     if (font == FONT_KLARISSA && !g_font_buffer_klarissa || font == FONT_PIXELOID && !g_font_buffer_pixeloid) {
