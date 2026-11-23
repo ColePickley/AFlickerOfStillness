@@ -2,6 +2,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
+#include "cmake-build-debug/_deps/sdl3-src/src/video/directx/SDL_d3d12.h"
 
 void initGameData(GameData** game_data) {
     *game_data = malloc(sizeof(GameData));
@@ -90,4 +92,128 @@ void removeEntity(GameData* game_data, const int entity_index) {
     }
     game_data->num_entities--;
     game_data->entities[game_data->num_entities] = NULL;
+}
+
+
+/*
+ *----------------------------------------------------------------------------------------------------------------------
+ * Entity Collection Functions
+ *----------------------------------------------------------------------------------------------------------------------
+ */
+
+static bool collectAmmo(const GameData* game_data, const int entity_index) {
+    if (game_data->player->primary_weapon == NULL) return false;
+    if (game_data->player->primary_weapon->mag_count == game_data->player->primary_weapon->max_mag_count) return false;
+    if (game_data->entities[entity_index]->ammo_type == game_data->player->primary_weapon->ammo_type) {
+        game_data->player->primary_weapon->mag_count += game_data->entities[entity_index]->mag_amount;
+        game_data->player->primary_weapon->mag_count =
+            min(game_data->player->primary_weapon->max_mag_count,
+            game_data->player->primary_weapon->mag_count);
+        return true;
+    }
+    return false;
+}
+
+static bool collectWeapon(GameData* game_data, const int entity_index) {
+    if (!game_data->player->pickup_enabled) return false;
+    Weapon* new_weapon;
+    initWeapon(&new_weapon, game_data->entities[entity_index]->weapon_index,
+        game_data->entities[entity_index]->texture_id, game_data->entities[entity_index]->mag_count,
+        game_data->entities[entity_index]->ammo_count);
+    Weapon* old_weapon;
+    if (isPrimaryWeapon(new_weapon)) {
+        old_weapon = game_data->player->primary_weapon;
+        game_data->player->primary_weapon = new_weapon;
+    } else {
+        old_weapon = game_data->player->secondary_weapon;
+        game_data->player->secondary_weapon = new_weapon;
+    }
+    if (old_weapon != NULL) {
+        Entity* new_entity;
+        initDefaultEntity(&new_entity, old_weapon->entity_id, game_data->entities[entity_index]->x,
+            game_data->entities[entity_index]->y);
+        new_entity->mag_count = old_weapon->mag_count;
+        new_entity->ammo_count = old_weapon->ammo_count;
+        addEntity(game_data, new_entity);
+        game_data->player->pickup_enabled = false;
+    }
+    removeEntity(game_data, entity_index);
+    return true;
+}
+
+static bool collectHealth(GameData* game_data, const int entity_index) {
+    if (game_data->player->health < MAX_PLAYER_HEALTH) {
+        game_data->player->health += game_data->entities[entity_index]->health_amount;
+        game_data->player->health = min(game_data->player->health, MAX_PLAYER_HEALTH);
+        removeEntity(game_data, entity_index);
+        return true;
+    }
+    return false;
+}
+
+static void collectKey(GameData* game_data, const int entity_index) {
+    if (game_data->player->num_keys < MAX_NUM_KEYS) {
+        const int entity_id = game_data->entities[entity_index]->texture_id;
+        const int grid_y = (int) (game_data->entities[entity_index]->y / 64);
+        const int grid_x = (int) (game_data->entities[entity_index]->x / 64);
+        const int chunk = game_data->chunk_grid[grid_y][grid_x];
+        Key* new_key;
+        initKey(&new_key, entity_id, chunk);
+        game_data->player->keys[game_data->player->num_keys] = new_key;
+        game_data->player->num_keys++;
+        removeEntity(game_data, entity_index);
+    }
+}
+
+/*
+ *----------------------------------------------------------------------------------------------------------------------
+ * Collision Checking
+ *----------------------------------------------------------------------------------------------------------------------
+ */
+
+static bool playerEntityCollisionCheck(GameData* game_data, const int entity_index) {
+    const bool is_collision = fabs(game_data->entities[entity_index]->x - game_data->player->x) < 10 &&
+        fabs(game_data->entities[entity_index]->y - game_data->player->y) < 10;
+    if (!is_collision) return false;
+    switch (game_data->entities[entity_index]->subtype_id) {
+        case ENTITY_SUBTYPE_AESTHETIC:
+        case ENTITY_SUBTYPE_ENEMY_PROJECTILE:
+            return false;
+        case ENTITY_SUBTYPE_COLLECTABLE_AMMO:
+            return collectAmmo(game_data, entity_index);
+        case ENTITY_SUBTYPE_COLLECTABLE_HEALTH:
+            return collectHealth(game_data, entity_index);
+        case ENTITY_SUBTYPE_COLLECTABLE_WEAPON:
+            return collectWeapon(game_data, entity_index);
+        case ENTITY_SUBTYPE_COLLECTABLE_KEY:
+            collectKey(game_data, entity_index);
+            return true;
+        case ENTITY_SUBTYPE_ENEMY_MELEE:
+        case ENTITY_SUBTYPE_ENEMY_MELEE_AND_PROJECTILE:
+            game_data->player->health -= enemyMeleeAttack(game_data->entities[entity_index]);
+            return false;
+        case ENTITY_SUBTYPE_PROJECTILE:
+            game_data->player->health -= game_data->entities[entity_index]->projectile_damage;
+            removeEntity(game_data, entity_index);
+            return true;
+        default:
+            return false;
+    }
+}
+
+static bool entityEntityCollisionCheck(GameData* game_data, const int entity_index1, const int entity_index2) {
+    const double max_collision_distance =
+        (game_data->entities[entity_index1]->scale + game_data->entities[entity_index2]->scale) / 8.0;
+    const double x_distance = fabs(game_data->entities[entity_index2]->x - game_data->entities[entity_index1]->x);
+    const double y_distance = fabs(game_data->entities[entity_index2]->y - game_data->entities[entity_index1]->y);
+    const bool is_collision = x_distance <= max_collision_distance && y_distance <= max_collision_distance;
+    if (!is_collision) return false;
+    const int type1 = getEntityType(game_data->entities[entity_index1]);
+    const int type2 = getEntityType(game_data->entities[entity_index2]);
+    if (type1 == ENTITY_TYPE_PROJECTILE && type2 == ENTITY_TYPE_ENEMY) {
+        game_data->entities[entity_index2]->health -= game_data->entities[entity_index1]->projectile_damage;
+        removeEntity(game_data, entity_index1);
+        return true;
+    }
+    return false;
 }

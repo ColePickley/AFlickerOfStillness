@@ -44,4 +44,34 @@ void addEntity(GameData* game_data, Entity* entity);
 
 void removeEntity(GameData* game_data, int entity_index);
 
+/*
+ *----------------------------------------------------------------------------------------------------------------------
+ * Entity Collection Functions
+ *----------------------------------------------------------------------------------------------------------------------
+ */
+
+// returns true if an entity is picked up
+static bool collectAmmo(const GameData* game_data, int entity_index);
+
+// returns true if an entity is picked up
+static bool collectHealth(GameData* game_data, int entity_index);
+
+// returns true if an entity is picked up
+static bool collectWeapon(GameData* game_data, int entity_index);
+
+// returns true if an entity is picked up
+static void collectKey(GameData* game_data, int entity_index);
+
+/*
+ *----------------------------------------------------------------------------------------------------------------------
+ * Collision Checking
+ *----------------------------------------------------------------------------------------------------------------------
+ */
+
+// returns true if an entity is removed
+static bool playerEntityCollisionCheck(GameData* game_data, int entity_index);
+
+// returns true if an entity is removed
+static bool entityEntityCollisionCheck(GameData* game_data, int entity_index1, int entity_index2);
+
 #endif //AFLICKEROFSTILLNESS_PROGRAM_DATA_H
