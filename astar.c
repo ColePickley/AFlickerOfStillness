@@ -17,7 +17,6 @@ static bool initDefaultNode(Node** node) {
     (*node)->g_cost = 0;
     (*node)->h_cost = 0;
     (*node)->f_cost = 0;
-    (*node)->node_state = NODE_INACTIVE;
     return true;
 }
 
@@ -30,44 +29,13 @@ static void destroyNode(Node** node) {
     *node = NULL;
 }
 
-static bool initNodeGrid(Node* (**node_grid)[MAX_MAP_SIZE][MAX_MAP_SIZE]) {
-    *node_grid = malloc(sizeof(Node*) * MAX_MAP_SIZE * MAX_MAP_SIZE);
-    if (node_grid == NULL || *node_grid == NULL) {
-        printf("Failed to allocate Node Grid.\n");
-        return false;
-    }
-    for (int i = 0; i < MAX_MAP_SIZE; i++) {
-        for (int j = 0; j < MAX_MAP_SIZE; j++) {
-            Node* node = NULL;
-            initDefaultNode(&node);
-            (**node_grid)[i][j] = node;
-        }
-    }
-    return true;
-}
-
-static void destroyNodeGrid(Node* (**node_grid)[MAX_MAP_SIZE][MAX_MAP_SIZE]) {
-    if (node_grid == NULL || *node_grid == NULL) {
-        printf("Failed to destroy Node Grid.\n");
-        return;
-    }
-    for (int i = 0; i < MAX_MAP_SIZE; i++) {
-        for (int j = 0; j < MAX_MAP_SIZE; j++) {
-            destroyNode(&(**node_grid)[i][j]);
-        }
-    }
-    free(*node_grid);
-    *node_grid = NULL;
-}
-
 void setEntityDirection(Entity* entity, const GameData* game_data) {
     if (entity->last_path_time == -1) {
         entity->last_path_time = SDL_GetTicks();
     }
     const uint64_t time_elapsed = SDL_GetTicks() - entity->last_path_time;
-    if (time_elapsed < 1000) {
-        return;
-    }
+    if (time_elapsed < 1000) return;
+
     const SDL_FPoint cell_pos = {.x = (float) fmod(entity->x, 64), .y = (float) fmod(entity->y, 64)};
     if (cell_pos.x <= 32 + 4 && cell_pos.x >= 32 - 4 && cell_pos.y <= 32 + 4 && cell_pos.y >= 32 - 4) {
         setEntityPath(entity, game_data, game_data->player);
@@ -84,10 +52,10 @@ void setEntityDirection(Entity* entity, const GameData* game_data) {
 static void setEntityPath(Entity* entity, const GameData* game_data, const Player* player) {
     if (entity->path != NULL) destroyEntityPath(&entity->path);
     Node* start_node;
-    if (!initDefaultNode(&start_node)) return;
     Node* end_node;
-    if (!initDefaultNode(&end_node)) {
+    if (!initDefaultNode(&start_node) || !initDefaultNode(&end_node)) {
         destroyNode(&start_node);
+        destroyNode(&end_node);
         return;
     }
     setStartAndEndNodes(start_node, end_node, entity, player);
@@ -96,41 +64,17 @@ static void setEntityPath(Entity* entity, const GameData* game_data, const Playe
         destroyNode(&end_node);
         return;
     }
-    Node* (*node_grid)[MAX_MAP_SIZE][MAX_MAP_SIZE];
-    if (!initNodeGrid(&node_grid)) {
-        destroyNode(&start_node);
-        destroyNode(&end_node);
-        return;
-    }
-    destroyNode(&(*node_grid)[start_node->pos.y][start_node->pos.x]);
-    (*node_grid)[start_node->pos.y][start_node->pos.x] = start_node;
-    closeNode(start_node, end_node, node_grid, game_data);
+    SDL_Point closed_nodes[MAX_NUM_NODES];
+    uint16_t num_closed_nodes = 0;
+    MinHeap* open_nodes;
+    initMinHeap(&open_nodes);
+    closeNode(start_node, end_node, open_nodes, &closed_nodes, &num_closed_nodes, game_data);
     bool path_found = false;
     int cycle = 0;
     while (!path_found) {
-        uint16_t min_f_cost = 65535;
-        Node* current_node = NULL;
-        for (int y = 0; y < game_data->num_map_rows; y++) {
-            for (int x = 0; x < game_data->num_map_cols; x++) {
-                const bool valid_node = (*node_grid)[y][x]->parent_node != NULL &&
-                    (*node_grid)[y][x]->node_state == NODE_OPEN;
-                if (!valid_node) continue;
-                const bool new_min_f = (*node_grid)[y][x]->f_cost < min_f_cost;
-                const bool equal_min_f = (*node_grid)[y][x]->f_cost == min_f_cost;
-                bool lower_h;
-                if (current_node == NULL) {
-                    lower_h = false;
-                } else {
-                    lower_h = (*node_grid)[y][x]->h_cost < current_node->h_cost;
-                }
-                if (new_min_f || (equal_min_f && lower_h)) {
-                    min_f_cost = (*node_grid)[y][x]->f_cost;
-                    current_node = (*node_grid)[y][x];
-                }
-            }
-        }
+        Node* current_node = popNode(open_nodes);
         if (current_node == NULL) {
-            destroyNodeGrid(&node_grid);
+            destroyMinHeap(&open_nodes);
             destroyNode(&end_node);
             return;
         }
@@ -138,13 +82,15 @@ static void setEntityPath(Entity* entity, const GameData* game_data, const Playe
             path_found = true;
             destroyNode(&end_node);
             end_node = current_node;
-        } else {
-            closeNode(current_node, end_node, node_grid, game_data);
+        } else if (closeNode(current_node, end_node, open_nodes, &closed_nodes, &num_closed_nodes, game_data)) {
+            destroyMinHeap(&open_nodes);
+            destroyNode(&end_node);
+            return;
         }
         cycle++;
     }
     initEntityPath(&entity->path, end_node);
-    destroyNodeGrid(&node_grid);
+    destroyMinHeap(&open_nodes);
 }
 
 static void setStartAndEndNodes(Node* start_node, Node* end_node, const Entity* entity, const Player* player) {
@@ -161,53 +107,66 @@ static void setStartAndEndNodes(Node* start_node, Node* end_node, const Entity* 
     end_node->g_cost = start_node->h_cost;
     start_node->f_cost = start_node->h_cost;
     end_node->f_cost = end_node->g_cost;
-    start_node->node_state = NODE_OPEN;
-    end_node->node_state = NODE_CLOSED;
 }
 
-static void closeNode(Node* node, const Node* end_node, Node* (*node_grid)[MAX_MAP_SIZE][MAX_MAP_SIZE],
-        const GameData* game_data) {
-    node->node_state = NODE_CLOSED;
-    addNode(node, end_node, node_grid, game_data, (SDL_Point) {.x = 1, .y = -1});
-    addNode(node, end_node, node_grid, game_data, (SDL_Point) {.x = 1, .y = 0});
-    addNode(node, end_node, node_grid, game_data, (SDL_Point) {.x = 1, .y = 1});
-    addNode(node, end_node, node_grid, game_data, (SDL_Point) {.x = 0, .y = -1});
-    addNode(node, end_node, node_grid, game_data, (SDL_Point) {.x = 0, .y = 1});
-    addNode(node, end_node, node_grid, game_data, (SDL_Point) {.x = -1, .y = -1});
-    addNode(node, end_node, node_grid, game_data, (SDL_Point) {.x = -1, .y = 0});
-    addNode(node, end_node, node_grid, game_data, (SDL_Point) {.x = -1, .y = 1});
+static bool closeNode(Node* node, const Node* end_node, MinHeap* heap, SDL_Point (*closed_nodes)[MAX_NUM_NODES],
+        uint16_t* num_closed_nodes, const GameData* game_data) {
+    *num_closed_nodes += 1;
+    if (*num_closed_nodes >= MAX_NUM_NODES) return true;
+    (*closed_nodes)[*num_closed_nodes - 1] = node->pos;
+    bool heap_full = false;
+    if (addNode(node, end_node, heap, closed_nodes, num_closed_nodes, game_data, (SDL_Point) {.x = 1, .y = -1}))
+        heap_full = true;
+    if (addNode(node, end_node, heap, closed_nodes, num_closed_nodes, game_data, (SDL_Point) {.x = 1, .y = 0}))
+        heap_full = true;
+    if (addNode(node, end_node, heap, closed_nodes, num_closed_nodes, game_data, (SDL_Point) {.x = 1, .y = 1}))
+        heap_full = true;
+    if (addNode(node, end_node, heap, closed_nodes, num_closed_nodes, game_data, (SDL_Point) {.x = 0, .y = -1}))
+        heap_full = true;
+    if (addNode(node, end_node, heap, closed_nodes, num_closed_nodes, game_data, (SDL_Point) {.x = 0, .y = 1}))
+        heap_full = true;
+    if (addNode(node, end_node, heap, closed_nodes, num_closed_nodes, game_data, (SDL_Point) {.x = -1, .y = -1}))
+        heap_full = true;
+    if (addNode(node, end_node, heap, closed_nodes, num_closed_nodes, game_data, (SDL_Point) {.x = -1, .y = 0}))
+        heap_full = true;
+    if (addNode(node, end_node, heap, closed_nodes, num_closed_nodes, game_data, (SDL_Point) {.x = -1, .y = 1}))
+        heap_full = true;
+    return heap_full;
 }
 
-static void addNode(Node* parent, const Node* end_node, Node* (*node_grid)[MAX_MAP_SIZE][MAX_MAP_SIZE],
-        const GameData* game_data, const SDL_Point direction) {
+static bool addNode(Node* parent, const Node* end_node, MinHeap* heap, const SDL_Point (*closed_nodes)[MAX_NUM_NODES],
+        const uint16_t* num_closed_nodes, const GameData* game_data, const SDL_Point direction) {
     const SDL_Point new_node_pos = {.x = parent->pos.x + direction.x, .y = parent->pos.y + direction.y};
     if (new_node_pos.x < 1 || new_node_pos.y < 1 || new_node_pos.x >= game_data->num_map_cols - 1 ||
             new_node_pos.y >= game_data->num_map_rows - 1) {
-        return;
+        return false;
     }
     if (game_data->map_grid[new_node_pos.y][new_node_pos.x] > 0) {
-        return;
+        return false;
     }
-    Node* new_node = (*node_grid)[new_node_pos.y][new_node_pos.x];
+    for (int i = 0; i < *num_closed_nodes; i++) {
+        if (new_node_pos.x == (*closed_nodes)[i].x && new_node_pos.y == (*closed_nodes)[i].y) {
+            return false;
+        }
+    }
+    if (direction.x != 0 && direction.y != 0 && (game_data->map_grid[parent->pos.y][parent->pos.x + direction.x] > 0 ||
+            game_data->map_grid[parent->pos.y + direction.y][parent->pos.x] > 0)) {
+        return false;
+    }
+    Node* new_node;
+    initDefaultNode(&new_node);
     new_node->pos = new_node_pos;
     int new_g_cost = parent->g_cost;
     if (direction.x == 0 || direction.y == 0) {
         new_g_cost += CARDINAL_DIST;
-    } else if (game_data->map_grid[new_node->pos.y][new_node->pos.x + direction.x] > 0 &&
-            game_data->map_grid[new_node->pos.y + direction.y][new_node->pos.x] > 0) {
-        return;
     } else {
         new_g_cost += DIAGONAL_DIST;
-    }
-    if (new_node->node_state != NODE_INACTIVE && new_g_cost >= new_node->g_cost) {
-        return;
     }
     new_node->g_cost = new_g_cost;
     new_node->h_cost = getHCost(new_node, end_node);
     new_node->f_cost = new_node->g_cost + new_node->h_cost;
     new_node->parent_node = parent;
-    new_node->node_state = NODE_OPEN;
-    (*node_grid)[new_node->pos.y][new_node->pos.x] = new_node;
+    return !pushNode(heap, new_node);
 }
 
 static int getHCost(const Node* new_node, const Node* end_node) {
@@ -280,4 +239,79 @@ void destroyEntityPath(EntityPath** path) {
     }
     free(*path);
     *path = NULL;
+}
+
+/*
+ *----------------------------------------------------------------------------------------------------------------------
+ * Min Heap Functions
+ *----------------------------------------------------------------------------------------------------------------------
+ */
+
+bool initMinHeap(MinHeap** min_heap) {
+    *min_heap = malloc(sizeof(MinHeap));
+    if (*min_heap == NULL) {
+        printf("Error allocating memory for MinHeap.\n");
+        return false;
+    }
+    for (int i = 0; i < MAX_NUM_NODES; i++) {
+        (*min_heap)->nodes[i] = NULL;
+    }
+    (*min_heap)->size = 0;
+    return true;
+}
+
+void destroyMinHeap(MinHeap** min_heap) {
+    for (int i = 0; i < (*min_heap)->size; i++) {
+        if ((*min_heap)->nodes[i] != NULL) {
+            free((*min_heap)->nodes[i]);
+        }
+    }
+    free(*min_heap);
+    *min_heap = NULL;
+}
+
+bool pushNode(MinHeap* min_heap, Node* new_node) {
+    if (min_heap->size == MAX_NUM_NODES) { printf("Heap is full.\n"); return false; }
+    int i = min_heap->size++;
+    min_heap->nodes[i] = new_node;
+    while (i > 0) {
+        const int parent = (i - 1) / 2;
+        if (min_heap->nodes[i]->f_cost >= min_heap->nodes[parent]->f_cost) break;
+        swap_nodes(&min_heap->nodes[i], &min_heap->nodes[parent]);
+        i = parent;
+    }
+    return true;
+}
+
+Node* popNode(MinHeap* min_heap) {
+    if (min_heap->size == 0) return NULL;
+    Node* min = min_heap->nodes[0];
+    min_heap->size--;
+    min_heap->nodes[0] = min_heap->nodes[min_heap->size];
+    min_heap->nodes[min_heap->size] = NULL;          // avoid stale pointers (double free later)
+    int i = 0;
+    while (true) {
+        const int l = 2 * i + 1;
+        const int r = 2 * i + 2;
+        int s = i;
+        if (l < min_heap->size && min_heap->nodes[l]->f_cost < min_heap->nodes[s]->f_cost) s = l;
+        if (r < min_heap->size && min_heap->nodes[r]->f_cost < min_heap->nodes[s]->f_cost) s = r;
+        if (s == i) break;
+        swap_nodes(&min_heap->nodes[i], &min_heap->nodes[s]);
+        i = s;
+    }
+    return min;
+}
+
+Node* peekNode(const MinHeap* min_heap) {
+    if (min_heap->size == 0) {
+        return NULL;
+    }
+    return min_heap->nodes[0];
+}
+
+void swap_nodes(Node** node1, Node** node2) {
+    Node *temp = *node1;
+    *node1 = *node2;
+    *node2 = temp;
 }

@@ -179,7 +179,7 @@ static int updateGame(GameData* game_data) {
     }
 
     /*
-     * Check if player had died
+     * Check if player has died
      */
 
     int screen_change = -1;

@@ -8,11 +8,7 @@
 #define CARDINAL_DIST 10
 #define DIAGONAL_DIST 14
 
-#define MAX_NODE_GRID_SIZE 127
-
-enum {
-    NODE_OPEN, NODE_CLOSED, NODE_INACTIVE
-};
+#define MAX_NUM_NODES 128
 
 typedef struct Node Node;
 
@@ -22,16 +18,16 @@ struct Node {
     uint16_t g_cost; // how far away this node is from the start node
     uint16_t h_cost; // how far away this node is from the end node
     uint16_t f_cost; // g_cost + h_cost
-    uint8_t node_state;
 };
+
+typedef struct {
+    Node* nodes[MAX_NUM_NODES];
+    uint16_t size;
+}MinHeap;
 
 static bool initDefaultNode(Node** node);
 
 static void destroyNode(Node** node);
-
-static bool initNodeGrid(Node* (**node_grid)[MAX_MAP_SIZE][MAX_MAP_SIZE]);
-
-static void destroyNodeGrid(Node* (**node_grid)[MAX_MAP_SIZE][MAX_MAP_SIZE]);
 
 void setEntityDirection(Entity* entity, const GameData* game_data);
 
@@ -39,11 +35,11 @@ static void setEntityPath(Entity* entity, const GameData* game_data, const Playe
 
 static void setStartAndEndNodes(Node* start_node, Node* end_node, const Entity* entity, const Player* player);
 
-static void closeNode(Node* node, const Node* end_node, Node* (*node_grid)[MAX_MAP_SIZE][MAX_MAP_SIZE],
-    const GameData* game_data);
+static bool closeNode(Node* node, const Node* end_node, MinHeap* heap, SDL_Point (*closed_nodes)[MAX_NUM_NODES],
+    uint16_t* num_closed_nodes, const GameData* game_data);
 
-static void addNode(Node* parent, const Node* end_node, Node* (*node_grid)[MAX_MAP_SIZE][MAX_MAP_SIZE],
-    const GameData* game_data, SDL_Point direction);
+static bool addNode(Node* parent, const Node* end_node, MinHeap* heap, const SDL_Point (*closed_nodes)[MAX_NUM_NODES],
+    const uint16_t* num_closed_nodes, const GameData* game_data, SDL_Point direction);
 
 static int getHCost(const Node* new_node, const Node* end_node);
 
@@ -56,5 +52,23 @@ static int getHCost(const Node* new_node, const Node* end_node);
 bool initEntityPath(EntityPath** path, const Node* end_node);
 
 void destroyEntityPath(EntityPath** path);
+
+/*
+ *----------------------------------------------------------------------------------------------------------------------
+ * Min Heap Functions
+ *----------------------------------------------------------------------------------------------------------------------
+ */
+
+bool initMinHeap(MinHeap** min_heap);
+
+void destroyMinHeap(MinHeap** min_heap);
+
+bool pushNode(MinHeap* min_heap, Node* new_node);
+
+Node* popNode(MinHeap* min_heap);
+
+Node* peekNode(const MinHeap* min_heap);
+
+void swap_nodes(Node** node1, Node** node2);
 
 #endif //AFLICKEROFSTILLNESS_ASTAR_H

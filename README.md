@@ -9,7 +9,7 @@ inner-workings of the specific implementation that I created for this game engin
 ## Table of Contents:
 - [Prerequisites](#Prerequisites)
 - [Build Instructions](#Build-Instructions)
-- [Files](#Files)
+- [Custom File Layouts](#Custom-File-Layouts)
   - [Map Files](#Map-Files)
   - [Save Files](#Save-Files)
   - [Entity Info File](#Entity-Info-File)
@@ -17,6 +17,9 @@ inner-workings of the specific implementation that I created for this game engin
   - [Settings File](#Settings-File)
 
 ## Prerequisites
+
+---
+
 - **CMake**: Version 3.20 or higher.
 - **C Compiler**: A 64 bit standard C compiler that supports C99.
 - **Ninja**: The build system required to successfully build the application.
@@ -63,6 +66,8 @@ Installation:
 
 ## Build Instructions
 
+---
+
 ### Building via Command Line
 
 1. **Check to make sure all of your prerequisites are properly installed:**
@@ -97,7 +102,9 @@ Installation:
         ./build/AFlickerOfStillness
         ```
 
-## Files
+## Custom File Layouts
+
+---
 
 ### Map Files
 
