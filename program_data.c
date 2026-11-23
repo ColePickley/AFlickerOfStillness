@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include "cmake-build-debug/_deps/sdl3-src/src/video/directx/SDL_d3d12.h"
+#include "functions.h"
 
 void initGameData(GameData** game_data) {
     *game_data = malloc(sizeof(GameData));
@@ -101,7 +101,7 @@ void removeEntity(GameData* game_data, const int entity_index) {
  *----------------------------------------------------------------------------------------------------------------------
  */
 
-static bool collectAmmo(const GameData* game_data, const int entity_index) {
+bool collectAmmo(const GameData* game_data, const int entity_index) {
     if (game_data->player->primary_weapon == NULL) return false;
     if (game_data->player->primary_weapon->mag_count == game_data->player->primary_weapon->max_mag_count) return false;
     if (game_data->entities[entity_index]->ammo_type == game_data->player->primary_weapon->ammo_type) {
@@ -114,7 +114,7 @@ static bool collectAmmo(const GameData* game_data, const int entity_index) {
     return false;
 }
 
-static bool collectWeapon(GameData* game_data, const int entity_index) {
+bool collectWeapon(GameData* game_data, const int entity_index) {
     if (!game_data->player->pickup_enabled) return false;
     Weapon* new_weapon;
     initWeapon(&new_weapon, game_data->entities[entity_index]->weapon_index,
@@ -141,7 +141,7 @@ static bool collectWeapon(GameData* game_data, const int entity_index) {
     return true;
 }
 
-static bool collectHealth(GameData* game_data, const int entity_index) {
+bool collectHealth(GameData* game_data, const int entity_index) {
     if (game_data->player->health < MAX_PLAYER_HEALTH) {
         game_data->player->health += game_data->entities[entity_index]->health_amount;
         game_data->player->health = min(game_data->player->health, MAX_PLAYER_HEALTH);
@@ -151,7 +151,7 @@ static bool collectHealth(GameData* game_data, const int entity_index) {
     return false;
 }
 
-static void collectKey(GameData* game_data, const int entity_index) {
+void collectKey(GameData* game_data, const int entity_index) {
     if (game_data->player->num_keys < MAX_NUM_KEYS) {
         const int entity_id = game_data->entities[entity_index]->texture_id;
         const int grid_y = (int) (game_data->entities[entity_index]->y / 64);
@@ -171,7 +171,7 @@ static void collectKey(GameData* game_data, const int entity_index) {
  *----------------------------------------------------------------------------------------------------------------------
  */
 
-static bool playerEntityCollisionCheck(GameData* game_data, const int entity_index) {
+bool playerEntityCollisionCheck(GameData* game_data, const int entity_index) {
     const bool is_collision = fabs(game_data->entities[entity_index]->x - game_data->player->x) < 10 &&
         fabs(game_data->entities[entity_index]->y - game_data->player->y) < 10;
     if (!is_collision) return false;
@@ -201,7 +201,7 @@ static bool playerEntityCollisionCheck(GameData* game_data, const int entity_ind
     }
 }
 
-static bool entityEntityCollisionCheck(GameData* game_data, const int entity_index1, const int entity_index2) {
+bool entityEntityCollisionCheck(GameData* game_data, const int entity_index1, const int entity_index2) {
     const double max_collision_distance =
         (game_data->entities[entity_index1]->scale + game_data->entities[entity_index2]->scale) / 8.0;
     const double x_distance = fabs(game_data->entities[entity_index2]->x - game_data->entities[entity_index1]->x);

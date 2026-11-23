@@ -51,16 +51,16 @@ void removeEntity(GameData* game_data, int entity_index);
  */
 
 // returns true if an entity is picked up
-static bool collectAmmo(const GameData* game_data, int entity_index);
+bool collectAmmo(const GameData* game_data, int entity_index);
 
 // returns true if an entity is picked up
-static bool collectHealth(GameData* game_data, int entity_index);
+bool collectHealth(GameData* game_data, int entity_index);
 
 // returns true if an entity is picked up
-static bool collectWeapon(GameData* game_data, int entity_index);
+bool collectWeapon(GameData* game_data, int entity_index);
 
 // returns true if an entity is picked up
-static void collectKey(GameData* game_data, int entity_index);
+void collectKey(GameData* game_data, int entity_index);
 
 /*
  *----------------------------------------------------------------------------------------------------------------------
@@ -69,9 +69,9 @@ static void collectKey(GameData* game_data, int entity_index);
  */
 
 // returns true if an entity is removed
-static bool playerEntityCollisionCheck(GameData* game_data, int entity_index);
+bool playerEntityCollisionCheck(GameData* game_data, int entity_index);
 
 // returns true if an entity is removed
-static bool entityEntityCollisionCheck(GameData* game_data, int entity_index1, int entity_index2);
+bool entityEntityCollisionCheck(GameData* game_data, int entity_index1, int entity_index2);
 
 #endif //AFLICKEROFSTILLNESS_PROGRAM_DATA_H
