@@ -122,7 +122,7 @@ void checkpointMousePressed(const SDL_FPoint mouse_pos) {
     buttonPressCheck(done_button, mouse_pos);
 }
 
-void checkpointMouseReleased(const SDL_FPoint mouse_pos, Checkpoint* checkpoint, Player* player) {
+void checkpointMouseReleased(const SDL_FPoint mouse_pos, Checkpoint* checkpoint, Player* player, SDL_Window* window) {
     if (buttonReleaseCheck(back_button, mouse_pos) && checkpoint->current_page->prev_page != NULL) {
         checkpoint->current_page = checkpoint->current_page->prev_page;
     }
@@ -132,6 +132,9 @@ void checkpointMouseReleased(const SDL_FPoint mouse_pos, Checkpoint* checkpoint,
     } else if (buttonReleaseCheck(done_button, mouse_pos) && checkpoint->current_page->next_page == NULL) {
         player->checkpoint_active = false;
         player->force_checkpoint_inactive = true;
+        if (!SDL_SetWindowRelativeMouseMode(window, true)) {
+            SDL_Log("Could not enable relative mouse mode: %s", SDL_GetError());
+        }
     }
 }
 

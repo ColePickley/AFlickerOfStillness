@@ -283,7 +283,7 @@ void mouseReleased(ScreenData* screen_data, const SDL_FPoint pt, SDL_Renderer* r
             screen_change = savesScreenMouseReleased(screen_data->saves_screen, pt, *game_data);
             break;
         case GAME_SCREEN:
-            screen_change = gameScreenMouseReleased(screen_data->game_screen, pt, *game_data);
+            screen_change = gameScreenMouseReleased(screen_data->game_screen, pt, *game_data, window);
             break;
         case PAUSE_SCREEN:
             screen_change = pauseScreenMouseReleased(screen_data->pause_screen, pt, game_data);

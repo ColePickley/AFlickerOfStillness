@@ -65,7 +65,8 @@ static void drawEntities(const GameScreen* game_screen, SDL_Renderer* renderer, 
 
 void gameScreenMousePressed(GameScreen* game_screen, SDL_FPoint mouse_pos, const GameData* game_data);
 
-int gameScreenMouseReleased(GameScreen* game_screen, SDL_FPoint mouse_pos, const GameData* game_data);
+int gameScreenMouseReleased(GameScreen* game_screen, SDL_FPoint mouse_pos, const GameData* game_data,
+    SDL_Window* window);
 
 void gameScreenMouseClicked(GameScreen* game_screen, SDL_FPoint mouse_pos, GameData* game_data);
 

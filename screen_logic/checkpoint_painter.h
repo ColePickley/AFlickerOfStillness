@@ -22,7 +22,7 @@ void paintCheckpoint(SDL_Renderer* renderer, const Checkpoint* checkpoint);
 
 void checkpointMousePressed(SDL_FPoint mouse_pos);
 
-void checkpointMouseReleased(SDL_FPoint mouse_pos, Checkpoint* checkpoint, Player* player);
+void checkpointMouseReleased(SDL_FPoint mouse_pos, Checkpoint* checkpoint, Player* player, SDL_Window* window);
 
 void checkpointMouseDragged(SDL_FPoint mouse_pos);
 

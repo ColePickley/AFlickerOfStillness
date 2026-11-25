@@ -8,6 +8,7 @@
 #include "constants.h"
 #include "event_handling.h"
 #include "program_data.h"
+#include "file_handling/save_handling.h"
 #include "screen_logic/screen_logic.h"
 
 static int updateGame(GameData* game_data, SDL_Window* window);
@@ -156,6 +157,7 @@ static int updateGame(GameData* game_data, SDL_Window* window) {
             }
         }
         if (new_checkpoint) {
+            writeSave(game_data);
             game_data->player->checkpoint_active = true;
             if (game_data->last_checkpoint != NULL) {
                 destroyCheckpoint(&game_data->last_checkpoint);

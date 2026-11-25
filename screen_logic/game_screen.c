@@ -321,9 +321,10 @@ void gameScreenMousePressed(GameScreen* game_screen, const SDL_FPoint mouse_pos,
     game_data->player->attacking = true;
 }
 
-int gameScreenMouseReleased(GameScreen* game_screen, const SDL_FPoint mouse_pos, const GameData* game_data) {
+int gameScreenMouseReleased(GameScreen* game_screen, const SDL_FPoint mouse_pos, const GameData* game_data,
+        SDL_Window* window) {
     if (game_data->player->checkpoint_active) {
-        checkpointMouseReleased(mouse_pos, game_data->current_checkpoint, game_data->player);
+        checkpointMouseReleased(mouse_pos, game_data->current_checkpoint, game_data->player, window);
         return -1;
     }
     game_data->player->attacking = false;
