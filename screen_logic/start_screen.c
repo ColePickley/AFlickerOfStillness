@@ -1,5 +1,6 @@
 #include "start_screen.h"
 
+#include <stdio.h>
 #include <stdlib.h>
 
 #include "SDL3/SDL.h"
@@ -36,9 +37,9 @@ void setStartScreenTextures(const StartScreen* start_screen, SDL_Renderer* rende
 void destroyStartScreen(StartScreen** start_screen) {
     if (*start_screen == NULL) return;
     destroyLabel(&(*start_screen)->game_label);
-    destroyButton((*start_screen)->play_button);
-    destroyButton((*start_screen)->settings_button);
-    destroyButton((*start_screen)->exit_button);
+    destroyButton(&(*start_screen)->play_button);
+    destroyButton(&(*start_screen)->settings_button);
+    destroyButton(&(*start_screen)->exit_button);
     SDL_DestroyTexture((*start_screen)->textures->background_texture);
     SDL_DestroyTexture((*start_screen)->textures->left_panel_texture);
     SDL_DestroyTexture((*start_screen)->textures->right_panel_texture);

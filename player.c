@@ -2,7 +2,6 @@
 
 #include <stdlib.h>
 #include <math.h>
-#include <stdio.h>
 #include <SDL3/SDL_timer.h>
 #include "functions.h"
 
@@ -36,6 +35,8 @@ void initPlayer(Player** player) {
     (*player)->primary_selected = true;
     (*player)->attacking = false;
     (*player)->pickup_enabled = true;
+    (*player)->checkpoint_active = false;
+    (*player)->force_checkpoint_inactive = false;
     (*player)->num_keys = 0;
     (*player)->last_update_time = -1;
     (*player)->last_sprint_time = -1;

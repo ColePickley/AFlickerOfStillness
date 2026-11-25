@@ -13,7 +13,7 @@ void initGameData(GameData** game_data) {
     }
     (*game_data)->level_index = 0;
     (*game_data)->save_index = 0;
-    (*game_data)->num_checkpoints_hit = 0;
+    (*game_data)->num_hit_checkpoints = 0;
     (*game_data)->num_map_rows = 0;
     (*game_data)->num_map_cols = 0;
     for (int i = 0; i < MAX_MAP_SIZE; i++) {
@@ -32,6 +32,8 @@ void initGameData(GameData** game_data) {
     CheckpointQueue* checkpoint_queue;
     initCheckpointQueue(&checkpoint_queue);
     (*game_data)->checkpoint_queue = checkpoint_queue;
+    (*game_data)->current_checkpoint = NULL;
+    (*game_data)->last_checkpoint = NULL;
     (*game_data)->player = NULL;
 }
 

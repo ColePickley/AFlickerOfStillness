@@ -310,26 +310,26 @@ void mouseClicked(const ScreenData* screen_data, const SDL_FPoint pt, GameData* 
     }
 }
 
-void mouseDragged(const ScreenData* screen_data, const SDL_FPoint motion_pt, const SDL_FPoint screen_pt,
-        const GameData* game_data, UserData* user_data) {
+void mouseDragged(const ScreenData* screen_data, const SDL_FPoint screen_pt, const GameData* game_data,
+        UserData* user_data) {
     switch (screen_data->current_screen) {
         case START_SCREEN:
-            startScreenMouseDragged(screen_data->start_screen, motion_pt);
+            startScreenMouseDragged(screen_data->start_screen, screen_pt);
             break;
         case SAVES_SCREEN:
-            savesScreenMouseDragged(screen_data->saves_screen, motion_pt);
+            savesScreenMouseDragged(screen_data->saves_screen, screen_pt);
             break;
         case GAME_SCREEN:
-            gameScreenMouseDragged(screen_data->game_screen, motion_pt, game_data, user_data);
+            gameScreenMouseDragged(screen_data->game_screen, screen_pt, game_data, user_data);
             break;
         case PAUSE_SCREEN:
-            pauseScreenMouseDragged(screen_data->pause_screen, motion_pt);
+            pauseScreenMouseDragged(screen_data->pause_screen, screen_pt);
             break;
         case SETTINGS_SCREEN:
             settingsScreenMouseDragged(screen_data->settings_screen, screen_pt, user_data);
             break;
         case DEATH_SCREEN:
-            deathScreenMouseDragged(screen_data->death_screen, motion_pt);
+            deathScreenMouseDragged(screen_data->death_screen, screen_pt);
             break;
         default:
             break;

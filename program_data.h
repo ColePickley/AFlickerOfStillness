@@ -9,6 +9,10 @@ enum {
     GRAPHICS_QUALITY_LOW, GRAPHICS_QUALITY_MEDIUM, GRAPHICS_QUALITY_HIGH
 };
 
+enum {
+    CELL_OPEN_DOOR = -2, CELL_CHECKPOINT = -1, CELL_EMPTY = 0, CELL_WALL = 1, CELL_CLOSED_DOOR = 2
+};
+
 typedef struct {
     bool fullscreen;
     uint8_t frame_rate_cap;
@@ -19,7 +23,7 @@ typedef struct {
 typedef struct {
     uint8_t level_index, save_index;
     uint8_t num_map_rows, num_map_cols;
-    uint8_t num_checkpoints_hit;
+    uint8_t num_hit_checkpoints;
     int map_grid[MAX_MAP_SIZE][MAX_MAP_SIZE];
     int chunk_grid[MAX_MAP_SIZE][MAX_MAP_SIZE];
     uint8_t texture_locations[MAX_MAP_SIZE][MAX_MAP_SIZE][6];
@@ -27,6 +31,9 @@ typedef struct {
     uint8_t num_entities;
     Entity* entities[MAX_NUM_ENTITIES];
     CheckpointQueue* checkpoint_queue;
+    SDL_Point hit_checkpoints[MAX_NUM_CHECKPOINTS];
+    Checkpoint* current_checkpoint;
+    Checkpoint* last_checkpoint;
     Player* player;
 }GameData;
 

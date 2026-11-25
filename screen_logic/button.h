@@ -21,7 +21,7 @@ typedef struct {
 
 void initButton(Button** button, Label* label, ButtonColorData color_data);
 
-void destroyButton(Button* button);
+void destroyButton(Button** button);
 
 bool isPointWithinButton(const Button* button, SDL_FPoint mouse_pos);
 

@@ -306,7 +306,7 @@ void writeSave(const GameData* game_data) {
         }
         fprintf(file, "\n");
     }
-    fprintf(file, "\"\"\n%d\n\"\"\n", game_data->num_checkpoints_hit);
+    fprintf(file, "\"\"\n%d\n\"\"\n", game_data->num_hit_checkpoints);
     for (int i = 0; i < game_data->num_entities; i++) {
         if (game_data->entities[i] == NULL) {
             perror("entity is null");

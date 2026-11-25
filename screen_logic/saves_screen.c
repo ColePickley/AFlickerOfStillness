@@ -44,12 +44,12 @@ void destroySavesScreen(SavesScreen** saves_screen) {
     destroyLabel(&(*saves_screen)->left_panel_label);
     destroyLabel(&(*saves_screen)->right_panel_label);
     destroyLabel(&(*saves_screen)->select_save_label);
-    destroyButton((*saves_screen)->back_button);
-    destroyButton((*saves_screen)->play_button);
+    destroyButton(&(*saves_screen)->back_button);
+    destroyButton(&(*saves_screen)->play_button);
     for (int i = 0; i < 3; i++) {
-        destroyButton((*saves_screen)->save_buttons[i]);
+        destroyButton(&(*saves_screen)->save_buttons[i]);
     }
-    destroyButton((*saves_screen)->delete_save_button);
+    destroyButton(&(*saves_screen)->delete_save_button);
     SDL_DestroyTexture((*saves_screen)->textures->background_texture);
     SDL_DestroyTexture((*saves_screen)->textures->left_panel_texture);
     SDL_DestroyTexture((*saves_screen)->textures->right_panel_texture);
@@ -174,12 +174,12 @@ int savesScreenMouseReleased(SavesScreen* saves_screen, const SDL_FPoint mouse_p
         }
     } else if (buttonReleaseCheck(saves_screen->delete_save_button, mouse_pos)) {
         deleteSave(game_data->save_index);
-        destroyButton(saves_screen->back_button);
-        destroyButton(saves_screen->play_button);
+        destroyButton(&saves_screen->back_button);
+        destroyButton(&saves_screen->play_button);
         for (int i = 0; i < 3; i++) {
-            destroyButton(saves_screen->save_buttons[i]);
+            destroyButton(&saves_screen->save_buttons[i]);
         }
-        destroyButton(saves_screen->delete_save_button);
+        destroyButton(&saves_screen->delete_save_button);
         setSavesScreenButtons(saves_screen);
     }
 

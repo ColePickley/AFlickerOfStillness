@@ -1,16 +1,22 @@
 #ifndef AFLICKEROFSTILLNESS_CHECKPOINTS_H
 #define AFLICKEROFSTILLNESS_CHECKPOINTS_H
+#include "screen_logic/button.h"
 #include "screen_logic/label.h"
 
-typedef struct {
-    Label* label;
-}DialogueBox;
+#define CHECKPOINT_PAGE_WIDTH 1000
+#define CHECKPOINT_PAGE_HEIGHT 600
+#define CHECKPOINT_PAGE_X ((WINDOW_WIDTH - CHECKPOINT_PAGE_WIDTH) / 2.0f)
+#define CHECKPOINT_PAGE_Y ((WINDOW_HEIGHT - CHECKPOINT_PAGE_HEIGHT) / 2.0f)
+#define DIALOGUE_BOX_WIDTH 500
+#define DIALOGUE_BOX_SPACING 10
+#define DIALOGUE_FONT_SIZE 20
+#define DIALOGUE_LINE_SPACING 5
+#define MAX_NUM_PAGE_LABELS 10
 
 typedef struct CheckpointPage CheckpointPage;
 
 struct CheckpointPage {
-    Label* label;
-    const DialogueBox* page_dialogue[10];
+    const Label* page_labels[10];
     CheckpointPage* prev_page;
     CheckpointPage* next_page;
 };
@@ -18,7 +24,7 @@ struct CheckpointPage {
 typedef struct {
     int x;
     int y;
-    CheckpointPage* start_page;
+    CheckpointPage* current_page;
 }Checkpoint;
 
 typedef struct CheckpointQueueNode CheckpointQueueNode;
@@ -34,11 +40,9 @@ typedef struct {
     CheckpointQueueNode* back;
 }CheckpointQueue;
 
-void initDialogueBox(DialogueBox* dialogue_box, SDL_FRect rect, const char* text, int alignment, SDL_Color color);
+void initPageLabel(Label** label, SDL_FRect rect, const char* text, int alignment, SDL_Color color);
 
-void destroyDialogueBox(DialogueBox* dialogue_box);
-
-void initCheckpointPage(CheckpointPage** checkpoint_page, DialogueBox* page_dialogue[10], CheckpointPage* prev_page,
+void initCheckpointPage(CheckpointPage** checkpoint_page, Label* page_labels[10], CheckpointPage* prev_page,
     CheckpointPage* next_page);
 
 void destroyCheckpointPage(CheckpointPage* checkpoint_page);

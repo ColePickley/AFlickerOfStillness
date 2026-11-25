@@ -153,7 +153,7 @@ static void setCheckpoint(const GameData* game_data, char line[500], int* file_s
     int num_pages = 0;
     CheckpointPage* start_page = NULL;
     CheckpointPage* current_page = NULL;
-    DialogueBox* page_dialogue[10];
+    Label* page_dialogue[10];
     for (int i = 0; i < 10; i++) {
         page_dialogue[i] = NULL;
     }
@@ -199,7 +199,7 @@ static void setCheckpoint(const GameData* game_data, char line[500], int* file_s
 }
 
 static void setCheckpointPage(int* page_num, int* dialogue_num, int* alignment, const int token_num,
-        const int token_as_int, char* token, char** text, SDL_Color* color, DialogueBox* (*page_dialogue)[10],
+        const int token_as_int, char* token, char** text, SDL_Color* color, Label* (*page_dialogue)[10],
         CheckpointPage** start_page, CheckpointPage** current_page) {
     const int adjusted_token_num = token_num - 3;
     switch (adjusted_token_num % 6) {
@@ -237,9 +237,9 @@ static void setCheckpointPage(int* page_num, int* dialogue_num, int* alignment, 
             break;
         case 5:
             color->b = token_as_int;
-            DialogueBox* box = malloc(sizeof(DialogueBox));
-            const SDL_FRect dialogue_rect = getDialogueBoxRect(box, *page_dialogue, *dialogue_num, *text, *alignment);
-            initDialogueBox(box, dialogue_rect, *text, *alignment, *color);
+            const SDL_FRect dialogue_rect = getPageLabelRect(*page_dialogue, *dialogue_num, *text, *alignment);
+            Label* box;
+            initPageLabel(&box, dialogue_rect, *text, *alignment, *color);
             (*page_dialogue)[*dialogue_num] = box;
             *dialogue_num += 1;
             break;
@@ -258,7 +258,7 @@ static int getAlignment(const char* alignment) {
     return ALIGN_RIGHT;
 }
 
-static SDL_FRect getDialogueBoxRect(DialogueBox* box, DialogueBox* page_dialogue[10], const int dialogue_num,
+static SDL_FRect getPageLabelRect(Label* page_labels[10], const int dialogue_num,
         const char* text, const int alignment) {
     float x = CHECKPOINT_PAGE_X;
     float y = CHECKPOINT_PAGE_Y + DIALOGUE_BOX_SPACING;
@@ -274,7 +274,7 @@ static SDL_FRect getDialogueBoxRect(DialogueBox* box, DialogueBox* page_dialogue
     }
 
     for (int i = 0; i < dialogue_num; i++) {
-        y += page_dialogue[i]->label->rect.h + DIALOGUE_BOX_SPACING;
+        y += page_labels[i]->rect.h + DIALOGUE_BOX_SPACING;
     }
 
     const SDL_FRect rect = {.x = x, .y = y, .w = DIALOGUE_BOX_WIDTH, .h = h};

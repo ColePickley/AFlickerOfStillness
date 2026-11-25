@@ -18,12 +18,12 @@ static void setTextureLocations(GameData* game_data, char line[500], int* file_s
 static void setCheckpoint(const GameData* game_data, char line[500], int* file_section);
 
 static void setCheckpointPage(int* page_num, int* dialogue_num, int* alignment, int token_num, int token_as_int,
-    char* token, char** text, SDL_Color* color, DialogueBox* (*page_dialogue)[10], CheckpointPage** start_page,
+    char* token, char** text, SDL_Color* color, Label* (*page_dialogue)[10], CheckpointPage** start_page,
     CheckpointPage** current_page);
 
 static int getAlignment(const char* alignment);
 
-static SDL_FRect getDialogueBoxRect(DialogueBox* box, DialogueBox* page_dialogue[10], int dialogue_num, const char* text, int alignment);
+static SDL_FRect getPageLabelRect(Label* page_labels[10], int dialogue_num, const char* text, int alignment);
 
 static void setEntities(GameData* game_data, char line[500], int* file_section);
 

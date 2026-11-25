@@ -10,7 +10,7 @@
 #include "program_data.h"
 #include "screen_logic/screen_logic.h"
 
-static int updateGame(GameData* game_data);
+static int updateGame(GameData* game_data, SDL_Window* window);
 
 static void printGameData(const GameData* game_data);
 
@@ -83,7 +83,7 @@ int main() {
         // update game
         int screen_change = -1;
         if (screen_data->current_screen == GAME_SCREEN) {
-            screen_change = updateGame(game_data);
+            screen_change = updateGame(game_data, window);
         }
         if (screen_change != -1) {
             changeScreen(screen_data, screen_change, renderer, game_data, user_data);
@@ -121,12 +121,64 @@ int main() {
     return 0;
 }
 
-static int updateGame(GameData* game_data) {
+static int updateGame(GameData* game_data, SDL_Window* window) {
     updatePlayer(game_data->player, &game_data->map_grid);
     movePlayer(game_data->player, &game_data->map_grid);
     if (game_data->player->primary_selected && game_data->player->primary_weapon != NULL &&
             game_data->player->primary_weapon->type == WEAPON_AUTOMATIC && game_data->player->attacking) {
         playerRangedAttack(game_data->player, &game_data->entities, game_data->num_entities);
+    }
+
+    /*
+     * Check if the player has hit a checkpoint
+     */
+
+    const SDL_Point player_pos = {
+        .x = (int) game_data->player->x / GRID_SIZE,
+        .y = (int) game_data->player->y / GRID_SIZE
+    };
+    if (game_data->map_grid[player_pos.y][player_pos.x] == CELL_CHECKPOINT &&
+            !game_data->player->force_checkpoint_inactive) {
+        bool new_checkpoint = true;
+        if (game_data->current_checkpoint != NULL && game_data->current_checkpoint->x != player_pos.x &&
+                game_data->current_checkpoint->y != player_pos.y) {
+            for (int i = 0; i < game_data->num_hit_checkpoints; i++) {
+                if (game_data->hit_checkpoints[i].x == player_pos.x &&
+                        game_data->hit_checkpoints[i].y == player_pos.y) {
+                    new_checkpoint = false;
+                }
+            }
+        } else if (game_data->current_checkpoint != NULL) {
+            game_data->player->checkpoint_active = true;
+            new_checkpoint = false;
+            if (!SDL_SetWindowRelativeMouseMode(window, false)) {
+                SDL_Log("Could not enable relative mouse mode: %s", SDL_GetError());
+            }
+        }
+        if (new_checkpoint) {
+            game_data->player->checkpoint_active = true;
+            if (game_data->last_checkpoint != NULL) {
+                destroyCheckpoint(&game_data->last_checkpoint);
+            }
+            if (game_data->current_checkpoint != NULL) {
+                game_data->last_checkpoint = game_data->current_checkpoint;
+            }
+            game_data->current_checkpoint = dequeueCheckpoint(game_data->checkpoint_queue);
+            game_data->hit_checkpoints[game_data->num_hit_checkpoints] = (SDL_Point) {
+                .x = game_data->current_checkpoint->x,
+                .y = game_data->current_checkpoint->y
+            };
+            game_data->num_hit_checkpoints++;
+            if (!SDL_SetWindowRelativeMouseMode(window, false)) {
+                SDL_Log("Could not enable relative mouse mode: %s", SDL_GetError());
+            }
+        }
+    } else if (game_data->map_grid[player_pos.y][player_pos.x] != CELL_CHECKPOINT) {
+        game_data->player->checkpoint_active = false;
+        game_data->player->force_checkpoint_inactive = false;
+        if (!SDL_SetWindowRelativeMouseMode(window, true)) {
+            SDL_Log("Could not enable relative mouse mode: %s", SDL_GetError());
+        }
     }
 
     /*
@@ -229,13 +281,13 @@ static void printGameData(const GameData* game_data) {
         Checkpoint* current_checkpoint = dequeueCheckpoint(game_data->checkpoint_queue);
         enqueueCheckpoint(temp_queue, current_checkpoint);
         printf("\t\t x: %d, y: %d\n", current_checkpoint->x, current_checkpoint->y);
-        const CheckpointPage* current_page = current_checkpoint->start_page;
+        const CheckpointPage* current_page = current_checkpoint->current_page;
         int page_num = 0;
         while (current_page != NULL) {
             printf("\t\t\t Page: %d\n", page_num);
-            for (int i = 0; current_page->page_dialogue[i] != NULL; i++) {
-                for (int j = 0; j < current_page->page_dialogue[i]->label->text_data.num_lines; j++) {
-                    printf("\t\t\t\t %s\n", current_page->page_dialogue[i]->label->text_data.text[j]);
+            for (int i = 0; current_page->page_labels[i] != NULL; i++) {
+                for (int j = 0; j < current_page->page_labels[i]->text_data.num_lines; j++) {
+                    printf("\t\t\t\t %s\n", current_page->page_labels[i]->text_data.text[j]);
                 }
                 printf("\n");
             }

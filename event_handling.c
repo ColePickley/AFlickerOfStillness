@@ -35,7 +35,7 @@ static void mouseButtonDown(SDL_Renderer* renderer, EventData* event_data, SDL_E
     const SDL_FPoint pt = { .x = event.button.x, .y = event.button.y };
     const bool mouse_in_bounds = pt.x >= 0 && pt.y >= 0 && pt.x <= WINDOW_WIDTH && pt.y <= WINDOW_HEIGHT;
     event_data->mouse_down = true;
-    if (event.button.button == SDL_BUTTON_LEFT && mouse_in_bounds) {
+    if (mouse_in_bounds) {
         mousePressed(screen_data, pt, game_data);
         event_data->mouse_down_time = SDL_GetPerformanceCounter();
     }
@@ -47,7 +47,7 @@ static void mouseButtonUp(SDL_Renderer* renderer, EventData* event_data, SDL_Eve
     const SDL_FPoint pt = { .x = event.button.x, .y = event.button.y };
     const bool mouse_in_bounds = pt.x >= 0 && pt.y >= 0 && pt.x <= WINDOW_WIDTH && pt.y <= WINDOW_HEIGHT;
     event_data->mouse_down = false;
-    if (event.button.button == SDL_BUTTON_LEFT && mouse_in_bounds) {
+    if (mouse_in_bounds) {
         mouseReleased(screen_data, pt, renderer, program_running, game_data, user_data, window);
         const uint64_t mouse_up_time = SDL_GetPerformanceCounter();
         const double time_elapsed = (double) (mouse_up_time - event_data->mouse_down_time) /
@@ -63,11 +63,11 @@ static void mouseMotion(SDL_Renderer* renderer, const EventData* event_data, SDL
     SDL_ConvertEventToRenderCoordinates(renderer, &event);
     const SDL_FPoint motion_pt = {.x = event.motion.xrel, .y = event.motion.yrel};
     const SDL_FPoint screen_pt = {.x = event.motion.x, .y = event.motion.y};
-    const bool motion_in_bounds = motion_pt.x >= 0 && motion_pt.y >= 0 &&
-        motion_pt.x <= WINDOW_WIDTH && motion_pt.y <= WINDOW_HEIGHT;
+    const bool motion_in_bounds = screen_pt.x >= 0 && screen_pt.y >= 0 &&
+        screen_pt.x <= WINDOW_WIDTH && screen_pt.y <= WINDOW_HEIGHT;
     mouseMoved(screen_data, motion_pt, game_data, user_data);
     if (event_data->mouse_down && motion_in_bounds) {
-        mouseDragged(screen_data, motion_pt, screen_pt, game_data, user_data);
+        mouseDragged(screen_data, screen_pt, game_data, user_data);
     }
 }
 
@@ -83,9 +83,9 @@ static void keyUp(SDL_Renderer* renderer, const EventData* event_data, const SDL
     keyReleased(screen_data, event.key.key, game_data);
     if (event.key.key == event_data->current_keycode) {
         const uint64_t key_up_time = SDL_GetPerformanceCounter();
-        const double time_elapsed = (double) (key_up_time - event_data->mouse_down_time) /
+        const double time_elapsed = (double) (key_up_time - event_data->key_press_time) /
             (double) SDL_GetPerformanceFrequency();
-        if (time_elapsed < 100.0) {
+        if (time_elapsed < 0.2) {
             keyClicked(screen_data, event_data->current_keycode, renderer, game_data, user_data);
         }
     }

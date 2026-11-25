@@ -11,12 +11,12 @@ void initButton(Button** button, Label* label, const ButtonColorData color_data)
     (*button)->is_selected = false;
 }
 
-void destroyButton(Button* button) {
-    destroyLabel(&button->label);
-    button->label = NULL;
-    if (button != NULL) {
-        free(button);
-        button = NULL;
+void destroyButton(Button** button) {
+    destroyLabel(&(*button)->label);
+    (*button)->label = NULL;
+    if (button != NULL && *button != NULL) {
+        free(*button);
+        *button = NULL;
     }
 }
 

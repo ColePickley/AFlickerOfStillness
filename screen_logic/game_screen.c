@@ -3,6 +3,8 @@
 #include <math.h>
 #include <stdlib.h>
 #include <SDL3_image/SDL_image.h>
+
+#include "checkpoint_painter.h"
 #include "../weapon.h"
 #include "../constants.h"
 #include "../functions.h"
@@ -18,6 +20,7 @@ void initGameScreen(GameScreen** game_screen, GameData* game_data) {
     (*game_screen)->view_bob_state = MAX_WALKING_VIEW_BOB / 2.0f;
     setSkySurface(*game_screen, game_data->sky_texture_index);
     initPlayerUIPainter(&(*game_screen)->ui_painter, game_data);
+    initCheckpointPainter();
 }
 
 void setGameScreenTextures(GameScreen* game_screen, SDL_Renderer* renderer) {
@@ -65,6 +68,7 @@ void destroyGameScreen(GameScreen** game_screen) {
     }
     SDL_DestroyTexture((*game_screen)->sky_texture);
     destroyPlayerUIPainter(&(*game_screen)->ui_painter);
+    destroyCheckpointPainter();
     free(*game_screen);
     *game_screen = NULL;
 }
@@ -103,6 +107,9 @@ int paintGameScreen(GameScreen* game_screen, SDL_Renderer* renderer, GameData* g
     }
     drawEntities(game_screen, renderer, game_data);
     paintPlayerUI(game_screen->ui_painter, renderer, game_data->player, game_screen->entity_textures);
+    if (game_data->player->checkpoint_active) {
+        paintCheckpoint(renderer, game_data->current_checkpoint);
+    }
     return -1;
 }
 
@@ -303,20 +310,27 @@ static void drawEntities(const GameScreen* game_screen, SDL_Renderer* renderer, 
  *----------------------------------------------------------------------------------------------------------------------
  */
 
-void gameScreenMousePressed(GameScreen* game_screen, SDL_FPoint mouse_pos, const GameData* game_data) {
-    if (game_data->player == NULL || !game_data->player->primary_selected) return;
+void gameScreenMousePressed(GameScreen* game_screen, const SDL_FPoint mouse_pos, const GameData* game_data) {
+    if (game_data->player->checkpoint_active) {
+        checkpointMousePressed(mouse_pos);
+        return;
+    }
+    if (!game_data->player->primary_selected) return;
     if (game_data->player->primary_weapon == NULL || game_data->player->primary_weapon->ammo_count == 0) return;
     if (game_data->player->primary_weapon->type != WEAPON_AUTOMATIC) return;
     game_data->player->attacking = true;
 }
 
-int gameScreenMouseReleased(GameScreen* game_screen, SDL_FPoint mouse_pos, const GameData* game_data) {
+int gameScreenMouseReleased(GameScreen* game_screen, const SDL_FPoint mouse_pos, const GameData* game_data) {
+    if (game_data->player->checkpoint_active) {
+        checkpointMouseReleased(mouse_pos, game_data->current_checkpoint, game_data->player);
+        return -1;
+    }
     game_data->player->attacking = false;
     return -1;
 }
 
 void gameScreenMouseClicked(GameScreen* game_screen, SDL_FPoint mouse_pos, GameData* game_data) {
-    if (game_data->player == NULL) return;
     if (game_data->player->primary_selected && (game_data->player->primary_weapon == NULL ||
         game_data->player->primary_weapon->ammo_count == 0)) return;
     if (!game_data->player->primary_selected && game_data->player->secondary_weapon == NULL) return;
@@ -334,12 +348,16 @@ void gameScreenMouseClicked(GameScreen* game_screen, SDL_FPoint mouse_pos, GameD
 
 void gameScreenMouseDragged(GameScreen* game_screen, const SDL_FPoint mouse_pos, const GameData* game_data,
         const UserData* user_data) {
-
+    if (game_data->player->checkpoint_active) {
+        checkpointMouseDragged(mouse_pos);
+    }
 }
 
 void gameScreenMouseMoved(GameScreen* game_screen, const SDL_FPoint mouse_pos, const GameData* game_data,
         const UserData* user_data) {
-    rotatePlayer(game_data->player, user_data->sensitivity, mouse_pos.x);
+    if (!game_data->player->checkpoint_active) {
+        rotatePlayer(game_data->player, user_data->sensitivity, mouse_pos.x);
+    }
 }
 
 void gameScreenKeyPressed(const SDL_Keycode keycode, const GameData* game_data) {

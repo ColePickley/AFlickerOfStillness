@@ -2,6 +2,7 @@
 #define AFLICKEROFSTILLNESS_PLAYER_H
 #include <stdbool.h>
 #include <stdint.h>
+
 #include "constants.h"
 #include "weapon.h"
 #include "entity.h"
@@ -34,6 +35,8 @@ typedef struct {
     bool primary_selected;
     bool attacking;
     bool pickup_enabled;
+    bool checkpoint_active;
+    bool force_checkpoint_inactive;
     uint8_t num_keys;
     uint64_t last_update_time;
     uint64_t last_sprint_time;
