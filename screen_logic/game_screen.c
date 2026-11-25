@@ -332,9 +332,11 @@ int gameScreenMouseReleased(GameScreen* game_screen, const SDL_FPoint mouse_pos,
 }
 
 void gameScreenMouseClicked(GameScreen* game_screen, SDL_FPoint mouse_pos, GameData* game_data) {
+    if (game_data->player->checkpoint_active) return;
     if (game_data->player->primary_selected && (game_data->player->primary_weapon == NULL ||
         game_data->player->primary_weapon->ammo_count == 0)) return;
     if (!game_data->player->primary_selected && game_data->player->secondary_weapon == NULL) return;
+
     if (game_data->player->primary_selected && game_data->player->primary_weapon->type != WEAPON_AUTOMATIC) {
         Entity* entity = playerRangedAttack(game_data->player, &game_data->entities, game_data->num_entities);
         if (entity != NULL) {

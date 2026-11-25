@@ -19,10 +19,18 @@ void initSettingsScreen(SettingsScreen** settings_screen, const UserData* user_d
     (*settings_screen)->last_paint_time = 0;
     (*settings_screen)->do_entrance_animation = false;
     (*settings_screen)->do_exit_animation = false;
-    (*settings_screen)->left_background_rect = (SDL_FRect) {.x = -2.0f * WINDOW_WIDTH / 3, .y = 0,
-        .w = WINDOW_WIDTH, .h = WINDOW_HEIGHT};
-    (*settings_screen)->right_background_rect = (SDL_FRect) {.x = 2.0f * WINDOW_WIDTH / 3, .y = 0,
-        .w = WINDOW_WIDTH, .h = WINDOW_HEIGHT};
+    (*settings_screen)->left_background_rect = (SDL_FRect) {
+        .x = -2.0f * WINDOW_WIDTH / 3,
+        .y = 0,
+        .w = WINDOW_WIDTH,
+        .h = WINDOW_HEIGHT
+    };
+    (*settings_screen)->right_background_rect = (SDL_FRect) {
+        .x = 2.0f * WINDOW_WIDTH / 3,
+        .y = 0,
+        .w = WINDOW_WIDTH,
+        .h = WINDOW_HEIGHT
+    };
     (*settings_screen)->prev_screen = prev_screen;
 }
 

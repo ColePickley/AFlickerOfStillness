@@ -76,6 +76,8 @@ static int asyncScreenChange(void* data) {
     } else if (args->screen_data->current_screen == DEATH_SCREEN) {
         if (args->screen_id == START_SCREEN) {
             initSavesScreen(&args->screen_data->saves_screen);
+        } else if (args->screen_id == GAME_SCREEN) {
+            initPauseScreen(&args->screen_data->pause_screen);
         }
     }
     SDL_SetAtomicInt(&args->is_done, 1);
@@ -152,6 +154,7 @@ void loadScreenTextures(ScreenData* screen_data, SDL_Renderer* renderer, SDL_Win
         if (screen_data->current_screen == GAME_SCREEN) {
             destroySettingsScreen(&screen_data->settings_screen);
             destroyStartScreen(&screen_data->start_screen);
+            setPauseScreenTextures(screen_data->pause_screen, renderer);
             if (!SDL_SetWindowRelativeMouseMode(window, true)) {
                 SDL_Log("Could not enable relative mouse mode: %s", SDL_GetError());
             }
@@ -219,7 +222,8 @@ void paintScreen(int screen_id, const bool is_recursive, ScreenData* screen_data
             break;
         case SETTINGS_SCREEN:
             if (screen_data->settings_screen == NULL) return;
-            if (screen_data->settings_screen->do_entrance_animation || screen_data->settings_screen->do_exit_animation) {
+            if (screen_data->settings_screen->do_entrance_animation ||
+                    screen_data->settings_screen->do_exit_animation) {
                 paintScreen(screen_data->settings_screen->prev_screen, true, screen_data, renderer, game_data,
                     user_data, window);
             }
@@ -228,9 +232,11 @@ void paintScreen(int screen_id, const bool is_recursive, ScreenData* screen_data
         case DEATH_SCREEN:
             if (screen_data->death_screen == NULL) return;
             if (screen_data->death_screen->do_entrance_animation)
-                paintScreen(GAME_SCREEN, true, screen_data, renderer, game_data, user_data, window);
+                paintScreen(screen_data->prev_screen, true, screen_data, renderer, game_data, user_data,
+                    window);
             if (screen_data->death_screen->do_exit_animation)
-                paintScreen(START_SCREEN, true, screen_data, renderer, game_data, user_data, window);
+                paintScreen(screen_data->death_screen->next_screen, true, screen_data, renderer, game_data,
+                    user_data, window);
             screen_change = paintDeathScreen(screen_data->death_screen, renderer);
         default:
             break;

@@ -1,7 +1,8 @@
 #include "death_screen.h"
 
 #include <stdlib.h>
-
+#include "../file_handling/map_reader.h"
+#include "../file_handling/save_handling.h"
 #include "../functions.h"
 
 void initDeathScreen(DeathScreen** death_screen) {
@@ -209,10 +210,21 @@ void deathScreenMousePressed(const DeathScreen* death_screen, const SDL_FPoint m
 
 int deathScreenMouseReleased(DeathScreen* death_screen, const SDL_FPoint mouse_pos, GameData** game_data) {
     if (buttonReleaseCheck(death_screen->last_checkpoint_button, mouse_pos)) {
-
+        death_screen->next_screen = GAME_SCREEN;
+        death_screen->do_exit_animation = true;
+        destroyGameData(game_data);
+        initGameData(game_data);
+        readMap(*game_data);
+        loadSave(*game_data);
     }
     if (buttonReleaseCheck(death_screen->restart_level_button, mouse_pos)) {
-
+        death_screen->next_screen = GAME_SCREEN;
+        death_screen->do_exit_animation = true;
+        destroyGameData(game_data);
+        initGameData(game_data);
+        readMap(*game_data);
+        writeSave(*game_data);
+        loadSave(*game_data);
     }
     if (buttonReleaseCheck(death_screen->settings_button, mouse_pos)) {
         return SETTINGS_SCREEN;

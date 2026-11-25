@@ -1,8 +1,9 @@
 #include "pause_screen.h"
 
 #include <stdio.h>
-
 #include "../functions.h"
+#include "../file_handling/map_reader.h"
+#include "../file_handling/save_handling.h"
 #include <stdlib.h>
 #include <SDL3_image/SDL_image.h>
 
@@ -178,10 +179,21 @@ int pauseScreenMouseReleased(PauseScreen* pause_screen, const SDL_FPoint mouse_p
         pause_screen->do_exit_animation = true;
     }
     if (buttonReleaseCheck(pause_screen->last_checkpoint_button, mouse_pos)) {
-
+        pause_screen->next_screen = GAME_SCREEN;
+        pause_screen->do_exit_animation = true;
+        destroyGameData(game_data);
+        initGameData(game_data);
+        readMap(*game_data);
+        loadSave(*game_data);
     }
     if (buttonReleaseCheck(pause_screen->restart_level_button, mouse_pos)) {
-
+        pause_screen->next_screen = GAME_SCREEN;
+        pause_screen->do_exit_animation = true;
+        destroyGameData(game_data);
+        initGameData(game_data);
+        readMap(*game_data);
+        writeSave(*game_data);
+        loadSave(*game_data);
     }
     if (buttonReleaseCheck(pause_screen->settings_button, mouse_pos)) {
         return SETTINGS_SCREEN;
