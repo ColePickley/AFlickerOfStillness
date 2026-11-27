@@ -19,8 +19,6 @@ typedef struct {
 
 typedef struct {
     bool do_entrance_animation;
-    bool do_exit_animation;
-    int next_screen;
     float animation_state;
     float animation_speed;
     uint64_t last_paint_time;
@@ -43,7 +41,7 @@ void shuffleBackgroundTextures(SDL_Texture* (*textures)[24]);
 
 void shuffleTextureSet(SDL_Texture* (*textures)[12]);
 
-int paintPauseScreen(PauseScreen* pause_screen, SDL_Renderer* renderer);
+ScreenChange paintPauseScreen(PauseScreen* pause_screen, SDL_Renderer* renderer, bool* do_exit_animation);
 
 /*
  *----------------------------------------------------------------------------------------------------------------------
@@ -53,7 +51,7 @@ int paintPauseScreen(PauseScreen* pause_screen, SDL_Renderer* renderer);
 
 void pauseScreenMousePressed(const PauseScreen* pause_screen, SDL_FPoint mouse_pos);
 
-int pauseScreenMouseReleased(PauseScreen* pause_screen, SDL_FPoint mouse_pos, GameData** game_data);
+ScreenChange pauseScreenMouseReleased(const PauseScreen* pause_screen, SDL_FPoint mouse_pos, GameData** game_data);
 
 void pauseScreenMouseDragged(const PauseScreen* pause_screen, SDL_FPoint mouse_pos);
 

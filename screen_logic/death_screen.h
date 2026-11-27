@@ -5,14 +5,12 @@
 
 typedef struct {
     bool do_entrance_animation;
-    bool do_exit_animation;
     Label* game_over_label;
     Button* last_checkpoint_button;
     Button* restart_level_button;
     Button* settings_button;
     Button* exit_button;
-    uint8_t next_screen;
-    uint8_t last_paint_time;
+    uint64_t last_paint_time;
     double screen_alpha;
     float animation_speed;
     SDL_Surface* background_surface;
@@ -25,7 +23,7 @@ void initDeathScreen(DeathScreen** death_screen);
 
 void destroyDeathScreen(DeathScreen** death_screen);
 
-int paintDeathScreen(DeathScreen* death_screen, SDL_Renderer* renderer);
+ScreenChange paintDeathScreen(DeathScreen* death_screen, SDL_Renderer* renderer, bool* do_exit_animation);
 
 void doPrimaryAnimation(DeathScreen* death_screen);
 
@@ -39,7 +37,7 @@ void doExitAnimation(DeathScreen* death_screen);
 
 void deathScreenMousePressed(const DeathScreen* death_screen, SDL_FPoint mouse_pos);
 
-int deathScreenMouseReleased(DeathScreen* death_screen, SDL_FPoint mouse_pos, GameData** game_data);
+ScreenChange deathScreenMouseReleased(const DeathScreen* death_screen, SDL_FPoint mouse_pos, GameData** game_data);
 
 void deathScreenMouseDragged(const DeathScreen* death_screen, SDL_FPoint mouse_pos);
 

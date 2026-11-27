@@ -51,7 +51,7 @@ void destroyStartScreen(StartScreen** start_screen) {
     *start_screen = NULL;
 }
 
-int paintStartScreen(const StartScreen* start_screen, SDL_Renderer* renderer) {
+ScreenChange paintStartScreen(const StartScreen* start_screen, SDL_Renderer* renderer) {
     SDL_RenderTexture(renderer, start_screen->textures->left_panel_texture, NULL,
         &start_screen->left_panel_rect);
     SDL_RenderTexture(renderer, start_screen->textures->right_panel_texture, NULL,
@@ -69,7 +69,7 @@ int paintStartScreen(const StartScreen* start_screen, SDL_Renderer* renderer) {
     paintLabel(renderer, start_screen->play_button->label);
     paintLabel(renderer, start_screen->settings_button->label);
     paintLabel(renderer, start_screen->exit_button->label);
-    return -1;
+    return NO_CHANGE;
 }
 
 /*
@@ -84,7 +84,8 @@ void startScreenMousePressed(const StartScreen* start_screen, const SDL_FPoint m
     buttonPressCheck(start_screen->exit_button, mouse_pos);
 }
 
-int startScreenMouseReleased(const StartScreen* start_screen, const SDL_FPoint mouse_pos, bool* program_running) {
+ScreenChange startScreenMouseReleased(const StartScreen* start_screen, const SDL_FPoint mouse_pos,
+        bool* program_running) {
     if (buttonReleaseCheck(start_screen->play_button, mouse_pos)) {
         return SAVES_SCREEN;
     }
@@ -94,7 +95,7 @@ int startScreenMouseReleased(const StartScreen* start_screen, const SDL_FPoint m
     if (buttonReleaseCheck(start_screen->exit_button, mouse_pos)) {
         *program_running = false;
     }
-    return -1;
+    return NO_CHANGE;
 }
 
 void startScreenMouseDragged(const StartScreen* start_screen, const SDL_FPoint mouse_pos) {

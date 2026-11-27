@@ -20,7 +20,6 @@ void initDeathScreen(DeathScreen** death_screen) {
     (*death_screen)->last_points_2[2] = (SDL_FPoint) {.x = WINDOW_WIDTH, .y = WINDOW_HEIGHT};
     (*death_screen)->last_points_2[3] = (SDL_FPoint) {.x = 0.0f, .y = WINDOW_HEIGHT};
     (*death_screen)->do_entrance_animation = false;
-    (*death_screen)->do_exit_animation = false;
     (*death_screen)->last_paint_time = 0;
     setDeathScreenLabel(*death_screen);
     setDeathScreenButtons(*death_screen);
@@ -34,8 +33,8 @@ void destroyDeathScreen(DeathScreen** death_screen) {
     *death_screen = NULL;
 }
 
-int paintDeathScreen(DeathScreen* death_screen, SDL_Renderer* renderer) {
-    int screen_change = -1;
+ScreenChange paintDeathScreen(DeathScreen* death_screen, SDL_Renderer* renderer, bool* do_exit_animation) {
+    ScreenChange screen_change = NO_CHANGE;
 
     /*
      * checking for entrance animation
@@ -44,7 +43,7 @@ int paintDeathScreen(DeathScreen* death_screen, SDL_Renderer* renderer) {
     if (death_screen->last_paint_time == 0) {
         death_screen->last_paint_time = SDL_GetTicks();
         death_screen->do_entrance_animation = true;
-        death_screen->animation_speed = 0.0001f;
+        death_screen->animation_speed = 0.5f;
         death_screen->screen_alpha = 1.0f;
         SDL_SetRenderDrawBlendMode(death_screen->background_renderer, SDL_BLENDMODE_BLEND);
     }
@@ -65,7 +64,7 @@ int paintDeathScreen(DeathScreen* death_screen, SDL_Renderer* renderer) {
             death_screen->screen_alpha = 255;
             death_screen->do_entrance_animation = false;
         }
-    } else if (death_screen->do_exit_animation) {
+    } else if (*do_exit_animation) {
         iterations = 10;
         const uint64_t time_elapsed = SDL_GetTicks() - death_screen->last_paint_time;
         death_screen->screen_alpha -= (double) time_elapsed * death_screen->animation_speed;
@@ -73,7 +72,7 @@ int paintDeathScreen(DeathScreen* death_screen, SDL_Renderer* renderer) {
             death_screen->screen_alpha = 0;
         }
     }
-    if (!death_screen->do_exit_animation) {
+    if (!*do_exit_animation) {
         for (int i = 0; i < iterations; i++) {
             doPrimaryAnimation(death_screen);
         }
@@ -92,7 +91,7 @@ int paintDeathScreen(DeathScreen* death_screen, SDL_Renderer* renderer) {
      * Draw buttons and labels
      */
 
-    if (!death_screen->do_entrance_animation && !death_screen->do_exit_animation) {
+    if (!death_screen->do_entrance_animation && !*do_exit_animation) {
         paintLabel(renderer, death_screen->game_over_label);
         paintLabel(renderer, death_screen->last_checkpoint_button->label);
         paintLabel(renderer, death_screen->restart_level_button->label);
@@ -100,10 +99,10 @@ int paintDeathScreen(DeathScreen* death_screen, SDL_Renderer* renderer) {
         paintLabel(renderer, death_screen->exit_button->label);
     }
 
-    if (death_screen->do_exit_animation && death_screen->screen_alpha == 0.0f) {
-        death_screen->do_exit_animation = false;
+    if (*do_exit_animation && death_screen->screen_alpha == 0.0f) {
+        *do_exit_animation = false;
         death_screen->last_paint_time = 0;
-        screen_change = death_screen->next_screen;
+        screen_change = ANIMATION_FINISHED;
     }
 
     if (death_screen->last_paint_time != 0) {
@@ -208,18 +207,20 @@ void deathScreenMousePressed(const DeathScreen* death_screen, const SDL_FPoint m
     buttonPressCheck(death_screen->exit_button, mouse_pos);
 }
 
-int deathScreenMouseReleased(DeathScreen* death_screen, const SDL_FPoint mouse_pos, GameData** game_data) {
+ScreenChange deathScreenMouseReleased(const DeathScreen* death_screen, const SDL_FPoint mouse_pos,
+        GameData** game_data) {
+    ScreenChange screen_change = NO_CHANGE;
     if (buttonReleaseCheck(death_screen->last_checkpoint_button, mouse_pos)) {
-        death_screen->next_screen = GAME_SCREEN;
-        death_screen->do_exit_animation = true;
+        screen_change = GAME_SCREEN;
+        SDL_SetRenderDrawBlendMode(death_screen->background_renderer, SDL_BLENDMODE_NONE);
         destroyGameData(game_data);
         initGameData(game_data);
         readMap(*game_data);
         loadSave(*game_data);
     }
     if (buttonReleaseCheck(death_screen->restart_level_button, mouse_pos)) {
-        death_screen->next_screen = GAME_SCREEN;
-        death_screen->do_exit_animation = true;
+        screen_change = GAME_SCREEN;
+        SDL_SetRenderDrawBlendMode(death_screen->background_renderer, SDL_BLENDMODE_NONE);
         destroyGameData(game_data);
         initGameData(game_data);
         readMap(*game_data);
@@ -227,16 +228,15 @@ int deathScreenMouseReleased(DeathScreen* death_screen, const SDL_FPoint mouse_p
         loadSave(*game_data);
     }
     if (buttonReleaseCheck(death_screen->settings_button, mouse_pos)) {
-        return SETTINGS_SCREEN;
+        screen_change = SETTINGS_SCREEN;
     }
     if (buttonReleaseCheck(death_screen->exit_button, mouse_pos)) {
-        death_screen->next_screen = START_SCREEN;
-        death_screen->do_exit_animation = true;
+        screen_change = START_SCREEN;
         SDL_SetRenderDrawBlendMode(death_screen->background_renderer, SDL_BLENDMODE_NONE);
         destroyGameData(game_data);
         initGameData(game_data);
     }
-    return -1;
+    return screen_change;
 }
 
 void deathScreenMouseDragged(const DeathScreen* death_screen, const SDL_FPoint mouse_pos) {

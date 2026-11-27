@@ -96,6 +96,13 @@ void removeEntity(GameData* game_data, const int entity_index) {
     game_data->entities[game_data->num_entities] = NULL;
 }
 
+void resetEntityClocks(const GameData* game_data) {
+    for (int i = 0; i < game_data->num_entities; i++) {
+        game_data->entities[i]->last_melee_attack_time = SDL_GetTicks();
+        game_data->entities[i]->last_move_time = SDL_GetTicks();
+        game_data->entities[i]->last_path_time = SDL_GetTicks();
+    }
+}
 
 /*
  *----------------------------------------------------------------------------------------------------------------------
@@ -195,8 +202,10 @@ bool playerEntityCollisionCheck(GameData* game_data, const int entity_index) {
             game_data->player->health -= enemyMeleeAttack(game_data->entities[entity_index]);
             return false;
         case ENTITY_SUBTYPE_PROJECTILE:
-            game_data->player->health -= game_data->entities[entity_index]->projectile_damage;
-            removeEntity(game_data, entity_index);
+            if (!game_data->entities[entity_index]->is_friendly) {
+                game_data->player->health -= game_data->entities[entity_index]->projectile_damage;
+                removeEntity(game_data, entity_index);
+            }
             return true;
         default:
             return false;
@@ -212,7 +221,8 @@ bool entityEntityCollisionCheck(GameData* game_data, const int entity_index1, co
     if (!is_collision) return false;
     const int type1 = getEntityType(game_data->entities[entity_index1]);
     const int type2 = getEntityType(game_data->entities[entity_index2]);
-    if (type1 == ENTITY_TYPE_PROJECTILE && type2 == ENTITY_TYPE_ENEMY) {
+    if (type1 == ENTITY_TYPE_PROJECTILE && type2 == ENTITY_TYPE_ENEMY &&
+            game_data->entities[entity_index1]->is_friendly) {
         game_data->entities[entity_index2]->health -= game_data->entities[entity_index1]->projectile_damage;
         removeEntity(game_data, entity_index1);
         return true;

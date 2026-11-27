@@ -7,11 +7,10 @@
 #include "astar.h"
 #include "constants.h"
 #include "event_handling.h"
+#include "game_updates.h"
 #include "program_data.h"
 #include "file_handling/save_handling.h"
 #include "screen_logic/screen_logic.h"
-
-static int updateGame(GameData* game_data, SDL_Window* window);
 
 static void printGameData(const GameData* game_data);
 
@@ -82,12 +81,12 @@ int main() {
         // paint screen
         paintScreen(screen_data->current_screen, false, screen_data, renderer, game_data, user_data, window);
         // update game
-        int screen_change = -1;
+        ScreenChange screen_change = NO_CHANGE;
         if (screen_data->current_screen == GAME_SCREEN) {
             screen_change = updateGame(game_data, window);
         }
-        if (screen_change != -1) {
-            changeScreen(screen_data, screen_change, renderer, game_data, user_data);
+        if (screen_change != NO_CHANGE) {
+            changeScreen(screen_data, screen_change, renderer, game_data, user_data, window);
         }
         // event handling
         handleEvents(screen_data, renderer, &game_data, &program_running, &event_data, user_data, window);
@@ -120,134 +119,6 @@ int main() {
     SDL_Quit();
     printf("\nProgram run successfully!\n");
     return 0;
-}
-
-static int updateGame(GameData* game_data, SDL_Window* window) {
-    updatePlayer(game_data->player, &game_data->map_grid);
-    movePlayer(game_data->player, &game_data->map_grid);
-    if (game_data->player->primary_selected && game_data->player->primary_weapon != NULL &&
-            game_data->player->primary_weapon->type == WEAPON_AUTOMATIC && game_data->player->attacking) {
-        playerRangedAttack(game_data->player, &game_data->entities, game_data->num_entities);
-    }
-
-    /*
-     * Check if the player has hit a checkpoint
-     */
-
-    const SDL_Point player_pos = {
-        .x = (int) game_data->player->x / GRID_SIZE,
-        .y = (int) game_data->player->y / GRID_SIZE
-    };
-    if (game_data->map_grid[player_pos.y][player_pos.x] == CELL_CHECKPOINT &&
-            !game_data->player->force_checkpoint_inactive) {
-        bool new_checkpoint = true;
-        if (game_data->current_checkpoint != NULL && game_data->current_checkpoint->x != player_pos.x &&
-                game_data->current_checkpoint->y != player_pos.y) {
-            for (int i = 0; i < game_data->num_hit_checkpoints; i++) {
-                if (game_data->hit_checkpoints[i].x == player_pos.x &&
-                        game_data->hit_checkpoints[i].y == player_pos.y) {
-                    new_checkpoint = false;
-                }
-            }
-        } else if (game_data->current_checkpoint != NULL) {
-            game_data->player->checkpoint_active = true;
-            new_checkpoint = false;
-            if (!SDL_SetWindowRelativeMouseMode(window, false)) {
-                SDL_Log("Could not enable relative mouse mode: %s", SDL_GetError());
-            }
-        }
-        if (new_checkpoint) {
-            writeSave(game_data);
-            game_data->player->checkpoint_active = true;
-            if (game_data->last_checkpoint != NULL) {
-                destroyCheckpoint(&game_data->last_checkpoint);
-            }
-            if (game_data->current_checkpoint != NULL) {
-                game_data->last_checkpoint = game_data->current_checkpoint;
-            }
-            game_data->current_checkpoint = dequeueCheckpoint(game_data->checkpoint_queue);
-            game_data->hit_checkpoints[game_data->num_hit_checkpoints] = (SDL_Point) {
-                .x = game_data->current_checkpoint->x,
-                .y = game_data->current_checkpoint->y
-            };
-            game_data->num_hit_checkpoints++;
-            if (!SDL_SetWindowRelativeMouseMode(window, false)) {
-                SDL_Log("Could not enable relative mouse mode: %s", SDL_GetError());
-            }
-        }
-    } else if (game_data->map_grid[player_pos.y][player_pos.x] != CELL_CHECKPOINT) {
-        game_data->player->checkpoint_active = false;
-        game_data->player->force_checkpoint_inactive = false;
-        if (!SDL_SetWindowRelativeMouseMode(window, true)) {
-            SDL_Log("Could not enable relative mouse mode: %s", SDL_GetError());
-        }
-    }
-
-    /*
-     * Check player-entity collisions
-     */
-
-    int i = 0;
-    while (i < game_data->num_entities) {
-        if (!playerEntityCollisionCheck(game_data, i)) {
-            i++;
-        }
-    }
-
-    /*
-     * Check entity-entity collisions and dead enemies
-     */
-
-    i = 0;
-    while (i < game_data->num_entities) {
-        bool entity_removed = false;
-        if (game_data->entities[i]->subtype_id == ENTITY_SUBTYPE_PROJECTILE) {
-            for (int j = 0; j < game_data->num_entities; j++) {
-                if (i == j) continue;
-                entity_removed = entityEntityCollisionCheck(game_data, i, j);
-                if (entity_removed) break;
-            }
-        } else if (getEntityType(game_data->entities[i]) == ENTITY_TYPE_ENEMY && game_data->entities[i]->health <= 0) {
-            removeEntity(game_data, i);
-            entity_removed = true;
-        }
-        if (!entity_removed) {
-            i++;
-        }
-    }
-
-    /*
-     * Check if player has died
-     */
-
-    int screen_change = -1;
-    if (game_data->player->health <= 0) {
-        screen_change = DEATH_SCREEN;
-    }
-
-    /*
-     * move entities
-     */
-
-    i= 0;
-    while (i < game_data->num_entities) {
-        bool entity_removed = false;
-        const int entity_type = getEntityType(game_data->entities[i]);
-        if (entity_type == ENTITY_TYPE_ENEMY) {
-            setEntityDirection(game_data->entities[i], game_data);
-            moveEnemy(game_data->entities[i], &game_data->map_grid, game_data->entities, game_data->num_entities);
-        } else if (entity_type == ENTITY_TYPE_PROJECTILE) {
-            moveProjectile(game_data->entities[i], &game_data->map_grid, &entity_removed);
-            if (entity_removed) {
-                removeEntity(game_data, i);
-            }
-        }
-        if (!entity_removed) {
-            i++;
-        }
-    }
-
-    return screen_change;
 }
 
 static void printGameData(const GameData* game_data) {

@@ -24,6 +24,6 @@ static void mouseMotion(SDL_Renderer* renderer, const EventData* event_data, SDL
 static void keyDown(EventData* event_data, SDL_Event event, const ScreenData* screen_data, const GameData* game_data);
 
 static void keyUp(SDL_Renderer* renderer, const EventData* event_data, SDL_Event event, ScreenData* screen_data,
-    const UserData* user_data, GameData* game_data);
+    const UserData* user_data, GameData* game_data, SDL_Window* window);
 
 #endif //AFLICKEROFSTILLNESS_EVENT_HANDLING_H

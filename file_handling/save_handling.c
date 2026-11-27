@@ -140,7 +140,7 @@ static void setSaveMapGrid(GameData* game_data, char line[500], const int line_n
     }
 }
 
-static void dequeHitCheckpoints(const GameData* game_data, char line[500], int* file_section) {
+static void dequeHitCheckpoints(GameData* game_data, char line[500], int* file_section) {
     const char* token = strtok(line, ",");
     if (token[0] == '"') {
         *file_section += 1;
@@ -149,7 +149,18 @@ static void dequeHitCheckpoints(const GameData* game_data, char line[500], int* 
     char* end_token;
     const int token_as_int = (int) strtol(token, &end_token, 10);
     for (int i = 0; i < token_as_int; i++) {
-        dequeueCheckpoint(game_data->checkpoint_queue);
+        if (game_data->last_checkpoint != NULL) {
+            destroyCheckpoint(&game_data->last_checkpoint);
+        }
+        if (game_data->current_checkpoint != NULL) {
+            game_data->last_checkpoint = game_data->current_checkpoint;
+        }
+        game_data->current_checkpoint = dequeueCheckpoint(game_data->checkpoint_queue);
+        game_data->hit_checkpoints[game_data->num_hit_checkpoints] = (SDL_Point) {
+            .x = game_data->current_checkpoint->x,
+            .y = game_data->current_checkpoint->y
+        };
+        game_data->num_hit_checkpoints++;
     }
 }
 

@@ -36,10 +36,10 @@ typedef struct {
     uint64_t last_paint_time;
     bool do_entrance_animation;
     bool do_exit_animation;
-    int prev_screen;
+    ScreenChange prev_screen_change;
 }SettingsScreen;
 
-void initSettingsScreen(SettingsScreen** settings_screen, const UserData* user_data, int prev_screen);
+void initSettingsScreen(SettingsScreen** settings_screen, const UserData* user_data, ScreenChange prev_screen);
 
 void setSettingsScreenTextures(const SettingsScreen* settings_screen, SDL_Renderer* renderer);
 
@@ -47,7 +47,7 @@ void resetSettingsScreen(SettingsScreen* settings_screen, const UserData* user_d
 
 void destroySettingsScreen(SettingsScreen** settings_screen);
 
-int paintSettingsScreen(SettingsScreen* settings_screen, SDL_Renderer* renderer);
+ScreenChange paintSettingsScreen(SettingsScreen* settings_screen, SDL_Renderer* renderer);
 
 /*
  *----------------------------------------------------------------------------------------------------------------------
@@ -57,7 +57,7 @@ int paintSettingsScreen(SettingsScreen* settings_screen, SDL_Renderer* renderer)
 
 void settingsScreenMousePressed(const SettingsScreen* settings_screen, SDL_FPoint mouse_pos);
 
-int settingsScreenMouseReleased(SettingsScreen* settings_screen, SDL_FPoint mouse_pos, UserData* user_data,
+ScreenChange settingsScreenMouseReleased(SettingsScreen* settings_screen, SDL_FPoint mouse_pos, UserData* user_data,
     SDL_Window* window);
 
 void settingsScreenMouseDragged(SettingsScreen* settings_screen, SDL_FPoint mouse_pos, UserData* user_data);

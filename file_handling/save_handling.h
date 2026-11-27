@@ -14,7 +14,7 @@ void setSaveText(char* save_text, size_t save_text_size, uint8_t save_index);
 
 static void setSaveMapGrid(GameData* game_data, char line[500], int line_num, int* file_section);
 
-static void dequeHitCheckpoints(const GameData* game_data, char line[500], int* file_section);
+static void dequeHitCheckpoints(GameData* game_data, char line[500], int* file_section);
 
 static void setSaveEntities(GameData* game_data, char line[500], int* file_section);
 

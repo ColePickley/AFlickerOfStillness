@@ -30,14 +30,35 @@ static void destroyNode(Node** node) {
 }
 
 void setEntityDirection(Entity* entity, const GameData* game_data) {
-    if (entity->last_path_time == -1) {
+    if (entity->last_path_time == 0) {
         entity->last_path_time = SDL_GetTicks();
     }
     const uint64_t time_elapsed = SDL_GetTicks() - entity->last_path_time;
     if (time_elapsed < 1000) return;
 
-    const SDL_FPoint cell_pos = {.x = (float) fmod(entity->x, 64), .y = (float) fmod(entity->y, 64)};
-    if (cell_pos.x <= 32 + 4 && cell_pos.x >= 32 - 4 && cell_pos.y <= 32 + 4 && cell_pos.y >= 32 - 4) {
+    const SDL_Point entity_grid_pos = {
+        .x = (int) entity->x / GRID_SIZE,
+        .y = (int) entity->y / GRID_SIZE
+    };
+    const SDL_Point player_grid_pos = {
+        .x = (int) game_data->player->x / GRID_SIZE,
+        .y = (int) game_data->player->y / GRID_SIZE
+    };
+    if (entity_grid_pos.x == player_grid_pos.x && entity_grid_pos.y == player_grid_pos.y) {
+        const double vectX = entity->x - game_data->player->x;
+        const double vectY = (entity->y - game_data->player->y) * -1.0;
+        const double rotation = atan2(vectY, vectX) - PI / 2.0;
+        entity->x_direction = sin(rotation);
+        entity->y_direction = cos(rotation);
+        entity->last_path_time = SDL_GetTicks();
+        return;
+    }
+
+    const SDL_FPoint cell_pos = {
+        .x = (float) fmod(entity->x, 64),
+        .y = (float) fmod(entity->y, 64)
+    };
+    if (cell_pos.x <= 32 + 8 && cell_pos.x >= 32 - 8 && cell_pos.y <= 32 + 8 && cell_pos.y >= 32 - 8) {
         setEntityPath(entity, game_data, game_data->player);
         if (entity->path == NULL) {
             entity->last_path_time = SDL_GetTicks();

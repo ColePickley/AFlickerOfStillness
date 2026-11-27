@@ -61,8 +61,6 @@ void initPlayer(Player** player);
 
 void destroyPlayer(Player** player);
 
-void updatePlayer(Player* player, int (*map_grid)[MAX_MAP_SIZE][MAX_MAP_SIZE]);
-
 void movePlayer(Player* player, int (*map_grid)[MAX_MAP_SIZE][MAX_MAP_SIZE]);
 
 void rotatePlayer(Player* player, int sensitivity, double mouse_delta_x);

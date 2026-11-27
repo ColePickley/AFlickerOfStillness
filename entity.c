@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <SDL3/SDL_timer.h>
-
+#include <math.h>
 #include "astar.h"
 #include "functions.h"
 
@@ -24,13 +24,17 @@ void initDefaultEntity(Entity** entity, const int texture_id, const double x, co
     (*entity)->texture_id = texture_id;
     (*entity)->last_move_time = 0;
     (*entity)->last_path_time = 0;
-    (*entity)->last_attack_time = 0;
+    (*entity)->last_melee_attack_time = 0;
+    (*entity)->last_ranged_attack_time = 0;
+    (*entity)->last_force_move_time = 0;
     // type-specific data
     setEntityData(*entity);
     (*entity)->ammo_count = -1;
     (*entity)->mag_count = -1;
     (*entity)->in_range = false;
     (*entity)->in_scope = false;
+    (*entity)->force_move = false;
+    (*entity)->is_friendly = false;
     // movement
     (*entity)->path = NULL;
     (*entity)->x_direction = 0;
@@ -71,7 +75,7 @@ int getEntityType(const Entity* entity) {
 
 void moveEnemy(Entity* entity, int (*map_grid)[MAX_MAP_SIZE][MAX_MAP_SIZE], Entity* entities[MAX_NUM_ENTITIES],
         const int num_entities) {
-    if (entity->last_move_time == -1) {
+    if (entity->last_move_time == 0) {
         entity->last_move_time = SDL_GetTicks();
     }
     if (entity->x_direction == 0 && entity->y_direction == 0) {
@@ -84,26 +88,36 @@ void moveEnemy(Entity* entity, int (*map_grid)[MAX_MAP_SIZE][MAX_MAP_SIZE], Enti
     }
     const uint64_t time_elapsed = SDL_GetTicks() - entity->last_move_time;
     const double speed = (double) time_elapsed / 300.0;
+    const uint64_t force_move_time_elapsed = SDL_GetTicks() - entity->last_force_move_time;
     const double delta_x = entity->x_direction * speed * entity->speed;
     const double delta_y = entity->y_direction * speed * entity->speed;
-    // check if there is another entity in this entity's next cell
-    for (int i = 0; i < num_entities; i++) {
-        if (entities[i] == entity || getEntityType(entities[i]) != ENTITY_TYPE_ENEMY) {
-            continue;
-        }
-        if ((int) entities[i]->x / 64 == entity->path->start_node->next_node->pos.x &&
-                (int) entities[i]->y / 64 == entity->path->start_node->next_node->pos.y) {
-            entity->last_move_time = SDL_GetTicks();
-            return;
+    // check if there is another enemy it's going to collide with
+    if (!entity->force_move) {
+        for (int i = 0; i < num_entities; i++) {
+            if (entities[i] == entity || getEntityType(entities[i]) != ENTITY_TYPE_ENEMY) {
+                continue;
+            }
+            const double min_distance = (double) (entities[i]->scale + entity->scale) / 4.0;
+            if (fabs(entities[i]->x - (entity->x + delta_x)) <= min_distance &&
+                    fabs(entities[i]->y - (entity->y + delta_y)) <= min_distance) {
+                entities[i]->force_move = true;
+                entity->last_move_time = SDL_GetTicks();
+                entity->last_force_move_time = SDL_GetTicks();
+                return;
+            }
         }
     }
+
     // check for wall collisions and move entity
     const SDL_FPoint entity_position = (SDL_FPoint) {.x = (float) entity->x, .y = (float) entity->y};
-    if (!isXCollision(entity_position, map_grid, delta_x, 32)) {
+    if (!isXCollision(entity_position, map_grid, delta_x, 28)) {
         entity->x += delta_x;
     }
-    if (!isYCollision(entity_position, map_grid, delta_y, 32)) {
+    if (!isYCollision(entity_position, map_grid, delta_y, 28)) {
         entity->y += delta_y;
+    }
+    if (force_move_time_elapsed > 500) {
+        entity->force_move = false;
     }
     entity->last_move_time = SDL_GetTicks();
 }
@@ -137,9 +151,9 @@ void moveProjectile(Entity* entity, int (*map_grid)[MAX_MAP_SIZE][MAX_MAP_SIZE],
 }
 
 int enemyMeleeAttack(Entity* entity) {
-    const uint64_t time_elapsed = SDL_GetTicks() - entity->last_attack_time;
+    const uint64_t time_elapsed = SDL_GetTicks() - entity->last_melee_attack_time;
     if (time_elapsed < entity->melee_cool_down) return 0;
-    entity->last_attack_time = SDL_GetTicks();
+    entity->last_melee_attack_time = SDL_GetTicks();
     return entity->melee_damage;
 }
 

@@ -59,7 +59,7 @@ void destroySavesScreen(SavesScreen** saves_screen) {
     *saves_screen = NULL;
 }
 
-int paintSavesScreen(const SavesScreen* saves_screen, SDL_Renderer* renderer) {
+ScreenChange paintSavesScreen(const SavesScreen* saves_screen, SDL_Renderer* renderer) {
     SDL_RenderTexture(renderer, saves_screen->textures->left_panel_texture, NULL,
         &saves_screen->left_panel_rect);
     SDL_RenderTexture(renderer, saves_screen->textures->right_panel_texture, NULL,
@@ -95,7 +95,7 @@ int paintSavesScreen(const SavesScreen* saves_screen, SDL_Renderer* renderer) {
         SDL_RenderTexture(renderer, saves_screen->textures->delete_save_texture, NULL,
             &saves_screen->delete_save_button->label->rect);
     }
-    return -1;
+    return NO_CHANGE;
 }
 
 /*
@@ -144,7 +144,7 @@ void savesScreenMousePressed(const SavesScreen* saves_screen, const SDL_FPoint m
     }
 }
 
-int savesScreenMouseReleased(SavesScreen* saves_screen, const SDL_FPoint mouse_pos, GameData* game_data) {
+ScreenChange savesScreenMouseReleased(SavesScreen* saves_screen, const SDL_FPoint mouse_pos, GameData* game_data) {
     bool button_released = false;
     for (int i = 0; i < 3; i++) {
         if (saves_screen->save_buttons[i]->is_selected) {
@@ -154,7 +154,7 @@ int savesScreenMouseReleased(SavesScreen* saves_screen, const SDL_FPoint mouse_p
         }
     }
 
-    int screen_change = -1;
+    ScreenChange screen_change = NO_CHANGE;
     if (buttonReleaseCheck(saves_screen->back_button, mouse_pos)) {
         for (int i = 0; i < 3; i++) {
             saves_screen->save_buttons[i]->is_selected = false;

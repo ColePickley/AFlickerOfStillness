@@ -41,7 +41,7 @@ void setSavesScreenTextures(const SavesScreen* saves_screen, SDL_Renderer* rende
 
 void destroySavesScreen(SavesScreen** saves_screen);
 
-int paintSavesScreen(const SavesScreen* saves_screen, SDL_Renderer* renderer);
+ScreenChange paintSavesScreen(const SavesScreen* saves_screen, SDL_Renderer* renderer);
 
 /*
  *----------------------------------------------------------------------------------------------------------------------
@@ -51,7 +51,7 @@ int paintSavesScreen(const SavesScreen* saves_screen, SDL_Renderer* renderer);
 
 void savesScreenMousePressed(const SavesScreen* saves_screen, SDL_FPoint mouse_pos);
 
-int savesScreenMouseReleased(SavesScreen* saves_screen, SDL_FPoint mouse_pos, GameData* game_data);
+ScreenChange savesScreenMouseReleased(SavesScreen* saves_screen, SDL_FPoint mouse_pos, GameData* game_data);
 
 void savesScreenMouseDragged(const SavesScreen* saves_screen, SDL_FPoint mouse_pos);
 

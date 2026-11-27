@@ -8,7 +8,7 @@
 #include "../functions.h"
 #include "start_screen.h"
 
-void initSettingsScreen(SettingsScreen** settings_screen, const UserData* user_data, const int prev_screen) {
+void initSettingsScreen(SettingsScreen** settings_screen, const UserData* user_data, const ScreenChange prev_screen) {
     *settings_screen = malloc(sizeof(SettingsScreen));
     (*settings_screen)->surfaces = malloc(sizeof(SettingsScreenSurfaces));
     (*settings_screen)->textures = malloc(sizeof(SettingsScreenTextures));
@@ -31,7 +31,7 @@ void initSettingsScreen(SettingsScreen** settings_screen, const UserData* user_d
         .w = WINDOW_WIDTH,
         .h = WINDOW_HEIGHT
     };
-    (*settings_screen)->prev_screen = prev_screen;
+    (*settings_screen)->prev_screen_change = prev_screen;
 }
 
 void setSettingsScreenTextures(const SettingsScreen* settings_screen, SDL_Renderer* renderer) {
@@ -73,8 +73,8 @@ void destroySettingsScreen(SettingsScreen** settings_screen) {
     *settings_screen = NULL;
 }
 
-int paintSettingsScreen(SettingsScreen* settings_screen, SDL_Renderer* renderer) {
-    int screen_change = -1;
+ScreenChange paintSettingsScreen(SettingsScreen* settings_screen, SDL_Renderer* renderer) {
+    ScreenChange screen_change = NO_CHANGE;
 
     /*
      * checking for entrance animation
@@ -117,7 +117,7 @@ int paintSettingsScreen(SettingsScreen* settings_screen, SDL_Renderer* renderer)
         if (settings_screen->left_background_rect.x == -2.0f * WINDOW_WIDTH / 3) {
             settings_screen->do_exit_animation = false;
             settings_screen->last_paint_time = 0;
-            screen_change = settings_screen->prev_screen;
+            screen_change = settings_screen->prev_screen_change;
         }
     }
 
@@ -185,8 +185,8 @@ void settingsScreenMousePressed(const SettingsScreen* settings_screen, const SDL
     buttonPressCheck(settings_screen->save_button, mouse_pos);
 }
 
-int settingsScreenMouseReleased(SettingsScreen* settings_screen, const SDL_FPoint mouse_pos, UserData* user_data,
-        SDL_Window* window) {
+ScreenChange settingsScreenMouseReleased(SettingsScreen* settings_screen, const SDL_FPoint mouse_pos,
+        UserData* user_data, SDL_Window* window) {
     turnOffButton(settings_screen->fps_button);
     turnOffButton(settings_screen->graphics_quality_button);
     turnOffButton(settings_screen->sensitivity_button);
@@ -230,7 +230,7 @@ int settingsScreenMouseReleased(SettingsScreen* settings_screen, const SDL_FPoin
     settings_screen->fps_button->is_selected = false;
     settings_screen->graphics_quality_button->is_selected = false;
     settings_screen->sensitivity_button->is_selected = false;
-    return -1;
+    return NO_CHANGE;
 }
 
 void settingsScreenMouseDragged(SettingsScreen* settings_screen, const SDL_FPoint mouse_pos,

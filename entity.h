@@ -31,7 +31,7 @@ typedef struct {
     // universal data
     double x, y, vect_x, vect_y, vect_mag;
     int subtype_id, texture_id, scale, height;
-    uint64_t last_move_time, last_path_time, last_attack_time;
+    uint64_t last_move_time, last_path_time, last_melee_attack_time, last_ranged_attack_time, last_force_move_time;
     // type-specific data
     int health_amount; // collectable health
     int weapon_index, ammo_count, mag_count; // collectable weapon
@@ -39,7 +39,7 @@ typedef struct {
     // enemies
     int melee_range, projectile_range, melee_cool_down, projectile_cool_down, melee_damage, projectile_damage,
         projectile_index, speed, health;
-    bool in_range, in_scope;
+    bool in_range, in_scope, force_move, is_friendly;
     // movement
     EntityPath* path;
     double x_direction, y_direction;

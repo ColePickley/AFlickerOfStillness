@@ -14,18 +14,18 @@ typedef struct {
     GameData* game_data;
     const UserData* user_data;
     SDL_Renderer* renderer;
-    int screen_id;
     SDL_AtomicInt is_done;
 } ThreadLoadingData;
 
 struct ScreenData {
-    uint8_t prev_screen, current_screen;
+    ScreenChange prev_screen, current_screen, next_screen;
     StartScreen* start_screen;
     SavesScreen* saves_screen;
     GameScreen* game_screen;
     PauseScreen* pause_screen;
     SettingsScreen* settings_screen;
     DeathScreen* death_screen;
+    bool do_exit_animation;
     bool is_loading_game;
 
     bool is_loading_in_background;
@@ -37,15 +37,15 @@ void initScreenData(ScreenData** screen_data, SDL_Renderer* renderer, const User
 
 void destroyScreenData(ScreenData** screen_data);
 
-void loadScreenTextures(ScreenData* screen_data, SDL_Renderer* renderer, SDL_Window* window);
+void loadScreenTextures(ScreenData* screen_data, SDL_Renderer* renderer, SDL_Window* window, const GameData* game_data);
 
 static int asyncScreenChange(void* data);
 
-void changeScreen(ScreenData* screen_data, int screen_id, SDL_Renderer* renderer, GameData* game_data,
-    const UserData* user_data);
-
-void paintScreen(int screen_id, bool is_recursive, ScreenData* screen_data, SDL_Renderer* renderer, GameData* game_data,
+void changeScreen(ScreenData* screen_data, ScreenChange screen_change, SDL_Renderer* renderer, GameData* game_data,
     const UserData* user_data, SDL_Window* window);
+
+void paintScreen(ScreenChange screen_change, bool is_recursive, ScreenData* screen_data, SDL_Renderer* renderer,
+    GameData* game_data, const UserData* user_data, SDL_Window* window);
 
 /*
  *----------------------------------------------------------------------------------------------------------------------
@@ -69,6 +69,6 @@ void keyPressed(const ScreenData* screen_data, SDL_Keycode keycode, const GameDa
 void keyReleased(const ScreenData* screen_data, SDL_Keycode keycode, const GameData* game_data);
 
 void keyClicked(ScreenData* screen_data, SDL_Keycode keycode, SDL_Renderer* renderer, GameData* game_data,
-    const UserData* user_data);
+    const UserData* user_data, SDL_Window* window);
 
 #endif //AFLICKEROFSTILLNESS_SCREEN_LOGIC_H

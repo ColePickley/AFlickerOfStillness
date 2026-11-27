@@ -51,6 +51,8 @@ void addEntity(GameData* game_data, Entity* entity);
 
 void removeEntity(GameData* game_data, int entity_index);
 
+void resetEntityClocks(const GameData* game_data);
+
 /*
  *----------------------------------------------------------------------------------------------------------------------
  * Entity Collection Functions

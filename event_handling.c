@@ -21,7 +21,7 @@ void handleEvents(ScreenData* screen_data, SDL_Renderer* renderer, GameData** ga
                 keyDown(event_data, event, screen_data, *game_data);
                 break;
             case SDL_EVENT_KEY_UP:
-                keyUp(renderer, event_data, event, screen_data, user_data, *game_data);
+                keyUp(renderer, event_data, event, screen_data, user_data, *game_data, window);
                 break;
             default:
                 break;
@@ -79,14 +79,14 @@ static void keyDown(EventData* event_data, const SDL_Event event, const ScreenDa
 }
 
 static void keyUp(SDL_Renderer* renderer, const EventData* event_data, const SDL_Event event, ScreenData* screen_data,
-        const UserData* user_data, GameData* game_data) {
+        const UserData* user_data, GameData* game_data, SDL_Window* window) {
     keyReleased(screen_data, event.key.key, game_data);
     if (event.key.key == event_data->current_keycode) {
         const uint64_t key_up_time = SDL_GetPerformanceCounter();
         const double time_elapsed = (double) (key_up_time - event_data->key_press_time) /
             (double) SDL_GetPerformanceFrequency();
         if (time_elapsed < 0.2) {
-            keyClicked(screen_data, event_data->current_keycode, renderer, game_data, user_data);
+            keyClicked(screen_data, event_data->current_keycode, renderer, game_data, user_data, window);
         }
     }
 }

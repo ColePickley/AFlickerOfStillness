@@ -39,7 +39,7 @@ void destroyGameScreen(GameScreen** game_screen);
  *----------------------------------------------------------------------------------------------------------------------
  */
 
-int paintGameScreen(GameScreen* game_screen, SDL_Renderer* renderer, GameData* game_data,
+ScreenChange paintGameScreen(GameScreen* game_screen, SDL_Renderer* renderer, GameData* game_data,
     const UserData* user_data);
 
 static void drawSky(const GameScreen* game_screen, SDL_Renderer* renderer, const GameData* game_data);
@@ -65,7 +65,7 @@ static void drawEntities(const GameScreen* game_screen, SDL_Renderer* renderer, 
 
 void gameScreenMousePressed(GameScreen* game_screen, SDL_FPoint mouse_pos, const GameData* game_data);
 
-int gameScreenMouseReleased(GameScreen* game_screen, SDL_FPoint mouse_pos, const GameData* game_data,
+ScreenChange gameScreenMouseReleased(GameScreen* game_screen, SDL_FPoint mouse_pos, const GameData* game_data,
     SDL_Window* window);
 
 void gameScreenMouseClicked(GameScreen* game_screen, SDL_FPoint mouse_pos, GameData* game_data);
@@ -80,7 +80,7 @@ void gameScreenKeyPressed(SDL_Keycode keycode, const GameData* game_data);
 
 void gameScreenKeyReleased(SDL_Keycode keycode, const GameData* game_data);
 
-int gameScreenKeyClicked(SDL_Keycode keycode, const GameData* game_data);
+ScreenChange gameScreenKeyClicked(SDL_Keycode keycode, const GameData* game_data);
 
 /*
  *----------------------------------------------------------------------------------------------------------------------

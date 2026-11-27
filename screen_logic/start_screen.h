@@ -37,7 +37,7 @@ void setStartScreenTextures(const StartScreen* start_screen, SDL_Renderer* rende
 
 void destroyStartScreen(StartScreen** start_screen);
 
-int paintStartScreen(const StartScreen* start_screen, SDL_Renderer* renderer);
+ScreenChange paintStartScreen(const StartScreen* start_screen, SDL_Renderer* renderer);
 
 /*
  *----------------------------------------------------------------------------------------------------------------------
@@ -47,7 +47,7 @@ int paintStartScreen(const StartScreen* start_screen, SDL_Renderer* renderer);
 
 void startScreenMousePressed(const StartScreen* start_screen, SDL_FPoint mouse_pos);
 
-int startScreenMouseReleased(const StartScreen* start_screen, SDL_FPoint mouse_pos, bool* program_running);
+ScreenChange startScreenMouseReleased(const StartScreen* start_screen, SDL_FPoint mouse_pos, bool* program_running);
 
 void startScreenMouseDragged(const StartScreen* start_screen, SDL_FPoint mouse_pos);
 

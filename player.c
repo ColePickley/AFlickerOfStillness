@@ -38,8 +38,8 @@ void initPlayer(Player** player) {
     (*player)->checkpoint_active = false;
     (*player)->force_checkpoint_inactive = false;
     (*player)->num_keys = 0;
-    (*player)->last_update_time = -1;
-    (*player)->last_sprint_time = -1;
+    (*player)->last_update_time = 0;
+    (*player)->last_sprint_time = 0;
     (*player)->health = 100;
     (*player)->sprint_time = MAX_SPRINT_TIME;
     (*player)->x_velocity = 0;
@@ -66,29 +66,6 @@ void destroyPlayer(Player** player) {
     }
     free(*player);
     *player = NULL;
-}
-
-void updatePlayer(Player* player, int (*map_grid)[MAX_MAP_SIZE][MAX_MAP_SIZE]) {
-    if (player->last_update_time == -1) {
-        player->last_update_time = SDL_GetTicks();
-    }
-    movePlayer(player, map_grid);
-    bool is_moving = false;
-    if (player->x_velocity != 0.0 || player->y_velocity != 0.0) {
-        is_moving = true;
-    }
-    const uint64_t time_elapsed = SDL_GetTicks() - player->last_update_time;
-    if (player->is_sprinting && is_moving) {
-        player->sprint_time = max(0, player->sprint_time - (int) time_elapsed * SPRINT_DEPLETION_SPEED);
-        player->last_sprint_time = SDL_GetTicks();
-    } else if (!player->is_sprinting && SPRINT_COOLDOWN_TIME < SDL_GetTicks() - player->last_sprint_time &&
-            player->sprint_time < MAX_SPRINT_TIME) {
-        player->sprint_time = min(MAX_SPRINT_TIME, player->sprint_time + (int) time_elapsed * SPRINT_REGEN_SPEED);
-    }
-    if (player->sprint_time == 0 && player->is_sprinting) {
-        player->is_sprinting = false;
-    }
-    player->last_update_time = SDL_GetTicks();
 }
 
 void movePlayer(Player* player, int (*map_grid)[MAX_MAP_SIZE][MAX_MAP_SIZE]) {
@@ -143,14 +120,16 @@ Entity* playerRangedAttack(const Player* player, Entity* const (*entities)[MAX_N
         const double y = player->y + cos(toRadians(rotation)) * 20;
         Entity* entity;
         initDefaultEntity(&entity, player->primary_weapon->projectile_index, x, y);
+        entity->is_friendly = true;
         entity->x_direction = sin(toRadians(rotation));
         entity->y_direction = cos(toRadians(rotation));
         player->primary_weapon->last_attack_time = SDL_GetTicks();
         return entity;
     }
-    for (int i = 0; i < num_entities; i++) {
+    for (int i = num_entities - 1; i >= 0; i--) {
         if ((*entities)[i]->in_scope && (*entities)[i]->vect_mag <= player->primary_weapon->range) {
             (*entities)[i]->health -= player->primary_weapon->damage;
+            break;
         }
     }
     player->primary_weapon->last_attack_time = SDL_GetTicks();

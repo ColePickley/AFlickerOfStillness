@@ -15,7 +15,6 @@ void initPauseScreen(PauseScreen** pause_screen) {
     setPauseScreenButtons(*pause_screen);
     (*pause_screen)->last_paint_time = 0;
     (*pause_screen)->do_entrance_animation = false;
-    (*pause_screen)->do_exit_animation = false;
     (*pause_screen)->animation_state = 0.0f;
     (*pause_screen)->animation_speed = 0.0f;
 }
@@ -60,8 +59,8 @@ void shuffleTextureSet(SDL_Texture* (*textures)[12]) {
     }
 }
 
-int paintPauseScreen(PauseScreen* pause_screen, SDL_Renderer* renderer) {
-    int screen_change = -1;
+ScreenChange paintPauseScreen(PauseScreen* pause_screen, SDL_Renderer* renderer, bool* do_exit_animation) {
+    ScreenChange screen_change = NO_CHANGE;
 
     /*
      * checking for entrance animation
@@ -108,7 +107,7 @@ int paintPauseScreen(PauseScreen* pause_screen, SDL_Renderer* renderer) {
      * painting buttons
      */
 
-    if (!pause_screen->do_exit_animation && !pause_screen->do_entrance_animation) {
+    if (!*do_exit_animation && !pause_screen->do_entrance_animation) {
         paintLabel(renderer, pause_screen->resume_button->label);
         paintLabel(renderer, pause_screen->last_checkpoint_button->label);
         paintLabel(renderer, pause_screen->restart_level_button->label);
@@ -120,12 +119,12 @@ int paintPauseScreen(PauseScreen* pause_screen, SDL_Renderer* renderer) {
      * adjusting animation
      */
 
-    if (pause_screen->do_exit_animation) {
+    if (*do_exit_animation) {
         pause_screen->animation_speed = 2.0f;
     }
     const uint64_t time_elapsed = SDL_GetTicks() - pause_screen->last_paint_time;
     pause_screen->animation_state += (float) time_elapsed * pause_screen->animation_speed;
-    if (pause_screen->animation_state > 1084.5f && !pause_screen->do_exit_animation) {
+    if (pause_screen->animation_state > 1084.5f && !*do_exit_animation) {
         while (pause_screen->animation_state > 1084.5f) {
             pause_screen->animation_state -= 1084.5f;
         }
@@ -143,9 +142,9 @@ int paintPauseScreen(PauseScreen* pause_screen, SDL_Renderer* renderer) {
     }
 
     if (pause_screen->animation_state >= 2169.0f + 50.0f) {
-        pause_screen->do_exit_animation = false;
+        *do_exit_animation = false;
         pause_screen->last_paint_time = 0;
-        screen_change = pause_screen->next_screen;
+        screen_change = ANIMATION_FINISHED;
     }
 
     /*
@@ -173,22 +172,21 @@ void pauseScreenMousePressed(const PauseScreen* pause_screen, const SDL_FPoint m
     buttonPressCheck(pause_screen->exit_button, mouse_pos);
 }
 
-int pauseScreenMouseReleased(PauseScreen* pause_screen, const SDL_FPoint mouse_pos, GameData** game_data) {
+ScreenChange pauseScreenMouseReleased(const PauseScreen* pause_screen, const SDL_FPoint mouse_pos,
+        GameData** game_data) {
+    ScreenChange screen_change = NO_CHANGE;
     if (buttonReleaseCheck(pause_screen->resume_button, mouse_pos)) {
-        pause_screen->next_screen = GAME_SCREEN;
-        pause_screen->do_exit_animation = true;
+        screen_change = GAME_SCREEN;
     }
     if (buttonReleaseCheck(pause_screen->last_checkpoint_button, mouse_pos)) {
-        pause_screen->next_screen = GAME_SCREEN;
-        pause_screen->do_exit_animation = true;
+        screen_change = GAME_SCREEN;
         destroyGameData(game_data);
         initGameData(game_data);
         readMap(*game_data);
         loadSave(*game_data);
     }
     if (buttonReleaseCheck(pause_screen->restart_level_button, mouse_pos)) {
-        pause_screen->next_screen = GAME_SCREEN;
-        pause_screen->do_exit_animation = true;
+        screen_change = GAME_SCREEN;
         destroyGameData(game_data);
         initGameData(game_data);
         readMap(*game_data);
@@ -196,15 +194,14 @@ int pauseScreenMouseReleased(PauseScreen* pause_screen, const SDL_FPoint mouse_p
         loadSave(*game_data);
     }
     if (buttonReleaseCheck(pause_screen->settings_button, mouse_pos)) {
-        return SETTINGS_SCREEN;
+        screen_change = SETTINGS_SCREEN;
     }
     if (buttonReleaseCheck(pause_screen->exit_button, mouse_pos)) {
-        pause_screen->next_screen = START_SCREEN;
-        pause_screen->do_exit_animation = true;
+        screen_change = START_SCREEN;
         destroyGameData(game_data);
         initGameData(game_data);
     }
-    return -1;
+    return screen_change;
 }
 
 void pauseScreenMouseDragged(const PauseScreen* pause_screen, const SDL_FPoint mouse_pos) {

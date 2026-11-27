@@ -79,7 +79,7 @@ void destroyGameScreen(GameScreen** game_screen) {
  *----------------------------------------------------------------------------------------------------------------------
  */
 
-int paintGameScreen(GameScreen* game_screen, SDL_Renderer* renderer, GameData* game_data,
+ScreenChange paintGameScreen(GameScreen* game_screen, SDL_Renderer* renderer, GameData* game_data,
         const UserData* user_data) {
     drawSky(game_screen, renderer, game_data);
     setPlayerRays(game_data->player, game_data->num_map_rows, game_data->num_map_cols, game_data->map_grid);
@@ -110,7 +110,7 @@ int paintGameScreen(GameScreen* game_screen, SDL_Renderer* renderer, GameData* g
     if (game_data->player->checkpoint_active) {
         paintCheckpoint(renderer, game_data->current_checkpoint);
     }
-    return -1;
+    return NO_CHANGE;
 }
 
 static void drawSky(const GameScreen* game_screen, SDL_Renderer* renderer, const GameData* game_data) {
@@ -321,14 +321,14 @@ void gameScreenMousePressed(GameScreen* game_screen, const SDL_FPoint mouse_pos,
     game_data->player->attacking = true;
 }
 
-int gameScreenMouseReleased(GameScreen* game_screen, const SDL_FPoint mouse_pos, const GameData* game_data,
+ScreenChange gameScreenMouseReleased(GameScreen* game_screen, const SDL_FPoint mouse_pos, const GameData* game_data,
         SDL_Window* window) {
     if (game_data->player->checkpoint_active) {
         checkpointMouseReleased(mouse_pos, game_data->current_checkpoint, game_data->player, window);
-        return -1;
+        return NO_CHANGE;
     }
     game_data->player->attacking = false;
-    return -1;
+    return NO_CHANGE;
 }
 
 void gameScreenMouseClicked(GameScreen* game_screen, SDL_FPoint mouse_pos, GameData* game_data) {
@@ -413,8 +413,8 @@ void gameScreenKeyReleased(const SDL_Keycode keycode, const GameData* game_data)
     }
 }
 
-int gameScreenKeyClicked(const SDL_Keycode keycode, const GameData* game_data) {
-    int screen_change = -1;
+ScreenChange gameScreenKeyClicked(const SDL_Keycode keycode, const GameData* game_data) {
+    ScreenChange screen_change = NO_CHANGE;
     switch (keycode) {
         case SDLK_ESCAPE:
             screen_change = PAUSE_SCREEN;
