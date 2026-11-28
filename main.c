@@ -9,10 +9,7 @@
 #include "event_handling.h"
 #include "game_updates.h"
 #include "program_data.h"
-#include "file_handling/save_handling.h"
 #include "screen_logic/screen_logic.h"
-
-static void printGameData(const GameData* game_data);
 
 int main() {
     SDL_SetHint(SDL_HINT_RENDER_DRIVER, "opengl");
@@ -119,68 +116,4 @@ int main() {
     SDL_Quit();
     printf("\nProgram run successfully!\n");
     return 0;
-}
-
-static void printGameData(const GameData* game_data) {
-    printf("Game Data:\n");
-    printf("\t Map Grid:\n");
-    for (int i = 0; i < game_data->num_map_rows; i++) {
-        for (int j = 0; j < game_data->num_map_cols; j++) {
-            printf("\t\t %d, ", game_data->map_grid[i][j]);
-        }
-        printf("\n");
-    }
-    printf("\t Chunk Grid:\n");
-    for (int i = 0; i < game_data->num_map_rows; i++) {
-        for (int j = 0; j < game_data->num_map_cols; j++) {
-            printf("\t\t %d, ", game_data->chunk_grid[i][j]);
-        }
-        printf("\n");
-    }
-    printf("\t Texture Locations:\n");
-    for (int x = 0; x < game_data->num_map_cols; x++) {
-        for (int side = 0; side < 6; side++) {
-            printf("\t\t ");
-            for (int y = 0; y < game_data->num_map_rows; y++) {
-                printf("%d, %d, %d, %d | ", y, x, side, game_data->texture_locations[y][x][side]);
-            }
-            printf("\n");
-        }
-    }
-    printf("\t Checkpoints:\n");
-    CheckpointQueue* temp_queue;
-    initCheckpointQueue(&temp_queue);
-    while (!isEmptyCheckpointQueue(game_data->checkpoint_queue)) {
-        Checkpoint* current_checkpoint = dequeueCheckpoint(game_data->checkpoint_queue);
-        enqueueCheckpoint(temp_queue, current_checkpoint);
-        printf("\t\t x: %d, y: %d\n", current_checkpoint->x, current_checkpoint->y);
-        const CheckpointPage* current_page = current_checkpoint->current_page;
-        int page_num = 0;
-        while (current_page != NULL) {
-            printf("\t\t\t Page: %d\n", page_num);
-            for (int i = 0; current_page->page_labels[i] != NULL; i++) {
-                for (int j = 0; j < current_page->page_labels[i]->text_data.num_lines; j++) {
-                    printf("\t\t\t\t %s\n", current_page->page_labels[i]->text_data.text[j]);
-                }
-                printf("\n");
-            }
-            current_page = current_page->next_page;
-            page_num++;
-        }
-    }
-    while (!isEmptyCheckpointQueue(temp_queue)) {
-        enqueueCheckpoint(game_data->checkpoint_queue, dequeueCheckpoint(temp_queue));
-    }
-    printf("\t Entities:\n");
-    for (int i = 0; i < game_data->num_entities; i++) {
-        printf("\t\t Entity %d:\n", i);
-        printf("\t\t\t Type Index: %d\n", game_data->entities[i]->subtype_id);
-        printf("\t\t\t X: %lf\n", game_data->entities[i]->x);
-        printf("\t\t\t Y: %lf\n", game_data->entities[i]->y);
-    }
-    printf("\t Sky Texture: %d\n", game_data->sky_texture_index);
-    printf("\t Player:\n");
-    printf("\t\t X: %lf\n", game_data->player->x);
-    printf("\t\t Y: %lf\n", game_data->player->y);
-    printf("\t\t Rotation: %lf\n", game_data->player->rotation);
 }

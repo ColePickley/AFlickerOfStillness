@@ -205,8 +205,9 @@ bool playerEntityCollisionCheck(GameData* game_data, const int entity_index) {
             if (!game_data->entities[entity_index]->is_friendly) {
                 game_data->player->health -= game_data->entities[entity_index]->projectile_damage;
                 removeEntity(game_data, entity_index);
+                return true;
             }
-            return true;
+            return false;
         default:
             return false;
     }

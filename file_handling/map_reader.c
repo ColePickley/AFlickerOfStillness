@@ -289,18 +289,17 @@ static void setEntities(GameData* game_data, char line[500], int* file_section) 
     }
     int token_num = 0;
     int texture_id = -1;
-    double x = -1;
-    double y = -1;
+    int x = -1;
+    int y = -1;
     while (token != NULL && token_num < 4) {
         char* end_token;
         const int token_as_int = (int) strtol(token, &end_token, 10);
-        const double token_as_double = strtod(token, &end_token);
         switch (token_num) {
             case 0:
-                x = token_as_double * GRID_SIZE + GRID_SIZE / 2.0;
+                x = token_as_int;
                 break;
             case 1:
-                y = token_as_double * GRID_SIZE + GRID_SIZE / 2.0;
+                y = token_as_int;
                 break;
             case 2:
                 texture_id = token_as_int;
@@ -312,7 +311,9 @@ static void setEntities(GameData* game_data, char line[500], int* file_section) 
         token_num++;
     }
     Entity* entity;
-    initDefaultEntity(&entity, texture_id, x, y);
+    initDefaultEntity(&entity, texture_id, (double) x * GRID_SIZE + GRID_SIZE / 2.0,
+        (double) y  * GRID_SIZE + GRID_SIZE / 2.0);
+    entity->chunk_id = game_data->chunk_grid[y][x];
     game_data->entities[game_data->num_entities] = entity;
     game_data->num_entities++;
 }

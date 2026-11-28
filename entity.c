@@ -22,6 +22,7 @@ void initDefaultEntity(Entity** entity, const int texture_id, const double x, co
     (*entity)->vect_mag = 0.0;
     (*entity)->subtype_id = -1;
     (*entity)->texture_id = texture_id;
+    (*entity)->chunk_id = 0;
     (*entity)->last_move_time = 0;
     (*entity)->last_path_time = 0;
     (*entity)->last_melee_attack_time = 0;

@@ -30,7 +30,7 @@ typedef struct {
 typedef struct {
     // universal data
     double x, y, vect_x, vect_y, vect_mag;
-    int subtype_id, texture_id, scale, height;
+    int subtype_id, texture_id, scale, height, chunk_id;
     uint64_t last_move_time, last_path_time, last_melee_attack_time, last_ranged_attack_time, last_force_move_time;
     // type-specific data
     int health_amount; // collectable health
